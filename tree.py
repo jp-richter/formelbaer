@@ -1,7 +1,9 @@
+from tokens import Token
+
 class Tree:
 
 	def __init__(self):
-		self.type = None 
+		self.token = None 
 		self.children = []
 
 	def leaf(self):
@@ -28,20 +30,41 @@ class Tree:
 			if not child.saturated():
 				return False
 
-		return self.type.arity == length(children)
+		return self.token.arity == length(children)
 
 	def clone(self):
 		tree = Tree()
-		tree.type = self.type
+		tree.token = self.token
 		tree.children = list(map(clone, self.children))
 
 		return tree
 
-
 	def string(self):
-		tmp = self.expression.name + '['
+		tmp = self.token.name + '['
 
-		for child in children:
+		for child in self.children:
 			tmp += child.string() + ','
 
+		if not self.children:
+			return tmp[:-1]
+
 		return tmp[:-1] + ']'
+
+	def latex(self):
+		info = self.token.value
+
+		assert(info.arity == len(self.children))
+		assert(info.arity >= 0 and info.arity <= 3)
+
+		# stdl string does not allow (generic) partial string formatting
+		if info.arity == 0:
+			return info.latex 
+
+		if info.arity == 1:
+			return info.latex.format(self.children[0].latex())
+
+		if info.arity == 2:
+			return info.latex.format(self.children[0].latex(),self.children[1].latex())
+
+		if info.arity == 3:
+			return info.latex.format(self.children[0].latex(),self.children[1].latex(),self.children[2].latex())

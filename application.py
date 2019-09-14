@@ -1,18 +1,38 @@
+from numpy.random import choice
+from tokens import *
+from tree import *
+
 class Application:
 
-	def policy(self):
-		"""Get the policy vector from the net"""
+	def policy(self, state):
+		# state -> generator network
+		# generator network -> policy vector
 		pass
 
-	def decision(self):
-		"""Normalize the vector and make a choice for an action"""
-		pass
+	def decision(self, policy):
+		choices = list(Token)
 
-	def generate(self):
-		"""Put the generated node in the tree appropriately"""
-		pass
+		assert(len(choices) == len(policy))
+		action  = choice(choices, p=policy)
 
-	def reward(self):
+		return action
+
+	def generate(self, tree, action):
+		node = Tree()
+		node.token = action
+
+		assert(tree.next())
+		unsaturated = tree.next()
+		unsaturated.children.append(node)
+
+		return tree
+
+	def reward(self, tree):
+		latex = tree.latex()
+
+		# benutz png tool darauf
+		# input fuers zweite netz
+		# output reward
 		pass
 
 	def update_policy(self):
