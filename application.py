@@ -32,6 +32,9 @@ class Application:
 
 		# benutz png tool darauf
 		# input fuers zweite netz
+
+		# jonathan fragen
+		
 		# output reward
 		pass
 
