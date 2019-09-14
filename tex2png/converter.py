@@ -15,7 +15,6 @@ def copytemplate(targetpath, templatepath, subfoldername, newfilename):
 
 
 def insertintotemplate(subfoldername, templatename, placeholder, string):
-
     reltemptexpath = hlp.concatinatepath(c.TARGETFOLDER, subfoldername, templatename)
     abstemptexpath = hlp.concatinatepath(c.ROOTTEX2PNG, reltemptexpath)
 

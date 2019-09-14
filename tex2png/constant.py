@@ -1,5 +1,6 @@
 import subprocess
 
+#
 ROOTTEX2PNG = subprocess.check_output('pwd').decode('utf-8').replace('\n', '')
 # Parent folder of the archives
 ROOTARCHIVES = '/home/fpdmws2018/arxiv/tex-files/'
