@@ -1,70 +1,113 @@
-from tokens import Token
+from itertools import chain
+import tokens
 
 class Tree:
 
-	def __init__(self):
-		self.token = None 
-		self.children = []
+    def __init__(self, token):
 
-	def leaf(self):
-		return not self.children
+        assert token
 
-	def size(self):
-		return sum(map(size, self.children), 1)
+        self.token = token 
+        self.children = []
 
-	def next(self):
-		if self.saturated():
-			return False
+    def __iter__(self):
 
-		if self.leaf():
-			return self
+        yield self
 
-		for child in self.children:
-			if not child.saturated():
-				return child.next()
+        for generator in chain(map(iter, self.children)):
+            for child in generator:
+                yield child
 
-		raise SystemError()
+    def leaf(self):
 
-	def saturated(self):
-		for child in children:
-			if not child.saturated():
-				return False
+        return not self.children
 
-		return self.token.arity == length(children)
+    def size(self):
 
-	def clone(self):
-		tree = Tree()
-		tree.token = self.token
-		tree.children = list(map(clone, self.children))
+        return sum(map(self.size, self.children), 1)
 
-		return tree
+    def append(self,node):
 
-	def string(self):
-		tmp = self.token.name + '['
+        if self.saturated():
+            return False
 
-		for child in self.children:
-			tmp += child.string() + ','
+        for child in self.children:
+            if child.append(node):
+                return True
 
-		if not self.children:
-			return tmp[:-1]
+        if not self.token.arity == len(self.children):
+            self.children.append(node)
+            return True
 
-		return tmp[:-1] + ']'
+        raise SystemError()
 
-	def latex(self):
-		info = self.token.value
+    def saturated(self):
 
-		assert(info.arity == len(self.children))
-		assert(info.arity >= 0 and info.arity <= 3)
+        for child in self.children:
+            if not child.saturated():
+                return False
 
-		# stdl string does not allow (generic) partial string formatting
-		if info.arity == 0:
-			return info.latex 
+        return self.token.arity == len(self.children)
 
-		if info.arity == 1:
-			return info.latex.format(self.children[0].latex())
+    def clone(self):
 
-		if info.arity == 2:
-			return info.latex.format(self.children[0].latex(),self.children[1].latex())
+        tree = Tree(self.token)
+        tree.children = list(map(self.clone, self.children))
 
-		if info.arity == 3:
-			return info.latex.format(self.children[0].latex(),self.children[1].latex(),self.children[2].latex())
+        return tree
+
+    def string(self):
+
+        tmp = self.token.name + '['
+        for child in self.children:
+            tmp += child.string() + ','
+
+        if not self.children:
+            return tmp[:-1]
+
+        return tmp[:-1] + ']'
+
+    def latex(self):
+
+        assert self.token.arity == len(self.children)
+        assert self.token.arity >= 0 and self.token.arity <= 3
+
+        # stdl string does not allow generic partial string formatting
+        if self.token.arity == 0:
+            return self.token.latex
+
+        if self.token.arity == 1:
+            return self.token.latex.format(self.children[0].latex())
+
+        if self.token.arity == 2:
+            return self.token.latex.format(self.children[0].latex(), 
+                self.children[1].latex())
+
+        if self.token.arity == 3:
+            return self.token.latex.format(self.children[0].latex(), 
+                self.children[1].latex(), self.children[2].latex())
+
+
+def parse(sequence):
+    
+    root = Tree(tokens.get(sequence[0]))
+
+    for code in sequence[1:]:
+        node = Tree(tokens.get(code))
+        saturated = not root.append(node)
+
+        if saturated:
+            break
+      
+    return root
+
+
+def sequence(tree):
+
+    sequence = []
+    
+    for node in iter(tree):
+        id = tokens.id(node.token.onehot)
+        sequence.append(id)
+
+    return sequence

@@ -1,59 +1,49 @@
-from numpy.random import choice
-from tokens import *
-from tree import *
+import generator
+import discriminator
+import constants
+import torch
+import tokens
 
-class Application:
 
-	def policy(self, state):
-		# state -> generator network
-		# generator network -> policy vector
-		pass
+its = constants.ITERATIONS
+gsteps = constants.GSTEPS
+dsteps = constants.DSTEPS
+sqlength = constants.SEQ_LENGTH
+mcarlo = constants.MONTECARLO
 
-	def decision(self, policy):
-		choices = list(Token)
 
-		assert(len(choices) == len(policy))
-		action  = choice(choices, p=policy)
+def main():
+	# pre training
 
-		return action
+	# adversarial training
+	for iteration in range(its):
 
-	def generate(self, tree, action):
-		node = Tree()
-		node.token = action
+		for _ in range(dsteps):
+			pass
 
-		assert(tree.next())
-		unsaturated = tree.next()
-		unsaturated.children.append(node)
+		generator.update_rollout()
 
-		return tree
+		for _ in range(gsteps):
+			batch = h = None
 
-	def reward(self, tree):
-		latex = tree.latex()
+			for length in range(sqlength):
+				batch, h = generator.step(batch, h)
 
-		# benutz png tool darauf
-		# input fuers zweite netz
+				rewards = None
+				for _ in range(mcarlo):
+					samples = generator.rollout(batch, h)
+					# verwandel batch in liste von baeumen
+					# feede die baumlatex formeln in converter
+					# bekomme liste von files zurueck
+					# diese muessen in den discriminator
+					# ergebnis sind die rewards
 
-		# jonathan fragen
+				# rewards = torch.ones([batch.shape[0]])
 		
-		# output reward
-		pass
+				generator.feedback(rewards)
 
-	def update_policy(self):
-		pass
+			generator.update_policy()
 
-	def update_generator(self):
-		pass
 
-	def main(self):
-
-		# get policy
-		# make decision
-		# generate tree
-		# repeat until tree is saturated
-
-		# calculate reward
-		# update policy
-
-		# update generator every n cycles
-
-		pass
+if __name__ == "__main__":
+	main()
