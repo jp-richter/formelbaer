@@ -1,6 +1,6 @@
 from numpy.random import choice
 from numpy import empty, finfo, float32
-from policy import PolicyNetwork
+from nn_policy import PolicyNetwork
 
 import tokens
 import torch
@@ -8,10 +8,10 @@ import constants
 
 
 _policy = PolicyNetwork().to(constants.DEVICE)
-_optimizer = torch.optim.Adam(_policy.parameters(), lr=constants.LEARN_RATE)
+_optimizer = torch.optim.Adam(_policy.parameters(), lr=constants.GRU_LEARN_RATE)
 _eps = finfo(float32).eps.item()
 
-_default_batch_size = constants.BATCH_SIZE
+_default_batch_size = constants.GRU_BATCH_SIZE
 _default_batch = torch.zeros([_default_batch_size,1,tokens.count()])
 
 _rollout = PolicyNetwork().to(constants.DEVICE).eval()
@@ -36,11 +36,13 @@ def step(batch=None, h=None):
 
 def rollout(batch=None, h=None):
 
-    batch = _default_batch if batch is None else batch
-    h = _policy.init_hidden(batch.shape[0]) if h is None else h
+    with torch.no_grad():
 
-    for _ in range(constants.SEQ_LENGTH - batch.shape[1]):
-        _, _, batch, h = decision(_rollout, batch, h)
+        batch = _default_batch if batch is None else batch
+        h = _policy.init_hidden(batch.shape[0]) if h is None else h
+
+        for _ in range(constants.SEQ_LENGTH - batch.shape[1]):
+            _, _, batch, h = decision(_rollout, batch, h)
 
     return batch
 
@@ -71,7 +73,7 @@ def update_policy():
     returns = []
 
     for r in _policy.rewards[::-1]:
-        total = r + constants.GAMMA * total
+        total = r + constants.GRU_GAMMA * total
         returns.insert(0, total)
 
     returns = returns[0]

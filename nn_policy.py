@@ -7,11 +7,11 @@ import torch.nn.functional as F
 
 _device = constants.DEVICE
 
-_input_dim = constants.INPUT_DIM
-_output_dim = constants.OUTPUT_DIM
-_hidden_dim = constants.HIDDEN_DIM
+_input_dim = constants.GRU_INPUT_DIM
+_output_dim = constants.GRU_OUTPUT_DIM
+_hidden_dim = constants.GRU_HIDDEN_DIM
 _layers = constants.GRU_LAYERS
-_dropout = constants.DROP_OUT
+_dropout = constants.GRU_DROP_OUT
 
 
 class PolicyNetwork(nn.Module):
@@ -28,6 +28,7 @@ class PolicyNetwork(nn.Module):
         self.rewards = []
         
     def forward(self, x, h):
+        
         out, h = self.gru(x, h)
 
         out = out[:,-1]

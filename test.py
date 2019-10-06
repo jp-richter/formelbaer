@@ -3,6 +3,11 @@ from numpy import random
 import tree
 import tokens
 
+test = '{} hello {}'
+
+test.format('baaa')
+
+
 #
 # test: latex translation of example trees
 #

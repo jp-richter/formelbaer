@@ -69,8 +69,10 @@ class Tree:
 
     def latex(self):
 
-        assert self.token.arity == len(self.children)
-        assert self.token.arity >= 0 and self.token.arity <= 3
+        stub = Tree(tokens.TokenInfo(None, 0, None, ''))
+
+        for _ in range(self.token.arity - len(self.children)):
+            self.children.append(stub)
 
         # stdl string does not allow generic partial string formatting
         if self.token.arity == 0:

@@ -5,6 +5,10 @@ import shutil
 import shlex
 import datetime
 import tree
+import multiprocessing
+import multiprocessing.sharedctypes
+import math
+import ctypes
 
 template = '''
 \\documentclass{{standalone}}
@@ -22,25 +26,47 @@ template = '''
 '''
 
 
-def convert(batch):
+def convert(expressions):
 
-    folder = constants.HOME + '/'+ datetime.datetime.now.strftime("%d-%m-%Y_%H:%M:%S")
-    name = 0
+    batch_folder = constants.HOME + '/'+ str(datetime.datetime.now())[-15:]
+    class_folder = batch_folder + '/generated'
 
-    # TODO in parallel?
-    files = []
-    for sample in batch:
-        tree = tree.parse(sample)
-        latex = tree.latex()
+    os.mkdir(batch_folder)
+    os.mkdir(class_folder)
+    expr_id = 0
 
-        file = pdflatex(latex, folder, folder + '/' + str(sample))
-        file = croppdf(folder, file, str(sample))
-        file = pdf2png(folder, file, str(name))
+    free = multiprocessing.cpu_count()
+    offset = math.ceil(len(expressions) / free)
 
-        files.append(file)
-        name += 1
+    def processing(pid):
 
-    return files
+        start_id = pid.value  * offset
+        next_start_id = pid.value * offset + offset - 1
+
+        print(pid.value)
+        print(offset)
+        print(next_start_id-start_id)
+
+        for expr_id in range(next_start_id - start_id):
+            latex = expressions[expr_id]
+            file = pdflatex(latex, class_folder, class_folder + '/' + str(expr_id) + '.tex')
+            file = croppdf(class_folder, file, str(expr_id))
+            file = pdf2png(class_folder, file, str(expr_id))
+
+            expr_id += 1
+
+    for processor in range(free):
+        pid = multiprocessing.sharedctypes.RawValue(ctypes.c_int, processor)
+        p = multiprocessing.Process(target=processing, args=(pid,))
+        p.start()
+        p.join()
+
+    for file in os.listdir(class_folder): 
+        if not file.endswith('.png'): 
+            os.remove(class_folder + '/' + file)
+
+    return batch_folder
+
 
 def pdflatex(expr, folder, file):
 
@@ -69,7 +95,7 @@ def croppdf(folder, file, expr_id):
         '-dNOPAUSE '
         '-sDEVICE=pdfwrite '
         '-sOutputFile={}/crop_{}.pdf '
-        '-c [/CropBox [550 0 850 100] '
+        '-c [/CropBox [550 0 850 100] ' # (x,y) (x',y')
         '-c /PAGES pdfmark '
         '-f {} '
         '> /Users/jan/formelbaer/log.txt')
@@ -103,3 +129,5 @@ def pdf2png(folder, file, expr_id):
 
     return folder + '/' + expr_id + '.png'
 
+expressions = ['hello', 'helaaaau', 'hellooo', 'halooooo']
+convert(expressions)
