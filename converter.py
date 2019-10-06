@@ -26,7 +26,11 @@ template = '''
 '''
 
 
-def convert(expressions):
+def convert(expressions, latex=False):
+
+    if not latex:
+        trees = tree.batch2tree(expressions)
+        expressions = [tree.latex() for tree in trees]
 
     batch_folder = constants.HOME + '/'+ str(datetime.datetime.now())[-15:]
     class_folder = batch_folder + '/generated'
@@ -125,6 +129,3 @@ def pdf2png(folder, file, expr_id):
         print(e)
 
     return folder + '/' + expr_id + '.png'
-
-expressions = ['hello', 'helaaaau', 'hellooo', 'halooooo']
-convert(expressions)

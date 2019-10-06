@@ -90,7 +90,7 @@ class Tree:
                 self.children[1].latex(), self.children[2].latex())
 
 
-def parse(sequence):
+def seq2tree(sequence):
     
     root = Tree(tokens.get(sequence[0]))
 
@@ -104,7 +104,7 @@ def parse(sequence):
     return root
 
 
-def sequence(tree):
+def tree2seq(tree):
 
     sequence = []
     
@@ -113,3 +113,17 @@ def sequence(tree):
         sequence.append(id)
 
     return sequence
+
+
+def batch2tree(batch):
+
+    trees = []
+    for sample in batch:
+        sequence = []
+
+        for onehot in sample:
+            sequence.append(tokens.id(onehot))
+
+        trees.append(seq2tree(sequence))
+
+    return trees

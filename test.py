@@ -2,10 +2,14 @@ from tokens import *
 from numpy import random
 import tree
 import tokens
+import torch
 
-test = '{} hello {}'
+test = torch.empty([10,0])
+print(test.size())
 
-test.format('baaa')
+test2 = torch.ones([10,1])
+
+print(torch.cat([test,test2],dim=1).size())
 
 
 #

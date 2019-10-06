@@ -7,61 +7,50 @@ import tree
 import converter
 
 
-its = constants.ITERATIONS
+cycles = constants.ITERATIONS
 gsteps = constants.GSTEPS
 dsteps = constants.DSTEPS
-sqlength = constants.SEQ_LENGTH
+seqlength = constants.SEQ_LENGTH
 mcarlo = constants.MONTECARLO
 
 
-def parse(batch):
+def train_discriminator():
 
-    trees = []
-    for sample in batch:
-        sequence = []
+    samples = generator.rollout()
+    folder = converter.convert(samples)
+    rewards.train(negatives=folder)
 
-        for onehot in sample:
-            sequence.append(tokens.id(onehot))
 
-        trees.append(tree.parse(sequence))
+def train_generator():
 
-    return trees
+    for _ in range(seqlength):
+        batch, h = generator.step()
+        reward = torch.empty([batch.shape[0],0])
+
+        for _ in range(mcarlo):
+            samples = generator.rollout(batch, h)
+            folder = converter.convert(samples)
+            reward = torch.cat([reward, rewards.rewards(folder)], dim=1)
+
+        reward = torch.mean(reward, dim=1)
+        generator.feedback(reward)
+
+    generator.update_policy()
 
 
 def main():
     # pre training
 
     # adversarial training
-    for iteration in range(its):
+    for _ in range(cycles):
 
         for _ in range(dsteps):
-            pass
+            train_discriminator()
 
         generator.update_rollout()
 
         for _ in range(gsteps):
-            batch = h = None
-
-            for length in range(sqlength):
-                batch, h = generator.step(batch, h)
-                reward = None
-
-                for _ in range(mcarlo):
-                    
-                    samples = generator.rollout(batch, h)
-                    trees = parse(samples)
-                    latexs = [tree.latex() for tree in trees]
-                    folder = converter.convert(latexs)
-
-                    if reward is None:
-                        reward = rewards.rewards(folder)
-                    else:
-                        reward = torch.cat([reward, rewards.rewards(folder)], dim=1)
-
-                rewards = torch.mean(reward, dim=1)
-                generator.feedback(rewards)
-
-            generator.update_policy()
+            train_generator()
 
 
 if __name__ == "__main__":

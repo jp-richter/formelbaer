@@ -30,6 +30,6 @@ def rewards(folder):
 
     return rewards
 
-def train():
+def train(negatives):
 
     pass
