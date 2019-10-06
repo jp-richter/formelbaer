@@ -41,13 +41,10 @@ def convert(expressions):
     def processing(pid):
 
         start_id = pid.value  * offset
-        next_start_id = pid.value * offset + offset - 1
+        next_start_id = pid.value * offset + offset
 
-        print(pid.value)
-        print(offset)
-        print(next_start_id-start_id)
-
-        for expr_id in range(next_start_id - start_id):
+        for id in range(next_start_id - start_id):
+            expr_id = start_id + id
             latex = expressions[expr_id]
             file = pdflatex(latex, class_folder, class_folder + '/' + str(expr_id) + '.tex')
             file = croppdf(class_folder, file, str(expr_id))
