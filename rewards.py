@@ -32,4 +32,10 @@ def rewards(folder):
 
 def train(negatives):
 
+    # die negativen und positiven beispiele muessen in zwei verschiedene 
+    # subordner in einen ordner
+    # dataset laed dann den hauptordner und labeled nach subordner
+    # dann mit einem dataloader einen batch laden und loss berechnen etc
+    # anzahl der batches nicht hier bestimmt sondern in der mainloop
+
     pass

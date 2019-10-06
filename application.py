@@ -41,9 +41,7 @@ def train_generator():
 def main():
     # pre training
 
-    # adversarial training
     for _ in range(cycles):
-
         for _ in range(dsteps):
             train_discriminator()
 
