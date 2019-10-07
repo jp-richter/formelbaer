@@ -46,6 +46,7 @@ class Discriminator(nn.Module):
 		out = self.relu(out)
 
 		out = self.fc5(out)
+		out = self.relu(out)
 
 		return out
 

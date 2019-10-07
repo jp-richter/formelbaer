@@ -26,23 +26,11 @@ template = '''
 '''
 
 
-def convert(expressions, latex=False, folder=None):
+def convert(sequences, folder):
 
-    if not latex:
-        trees = tree.batch2tree(expressions)
-        expressions = [tree.latex() for tree in trees]
-
-    if not folder:
-        batch_folder = constants.HOME_DIR + '/'+ str(datetime.datetime.now())[-15:]
-        class_folder = batch_folder + '/generated'
-
-        os.mkdir(batch_folder)
-        os.mkdir(class_folder)
-        expr_id = 0
-
-    else:
-        class_folder = folder
-        expr_id = len(os.listdir(class_folder))
+    trees = tree.batch2tree(sequences)
+    expressions = [tree.latex() for tree in trees]
+    expr_id = len(os.listdir(folder))
 
     free = multiprocessing.cpu_count()
     offset = math.ceil(len(expressions) / free)
@@ -55,9 +43,9 @@ def convert(expressions, latex=False, folder=None):
         for id in range(next_start_id - start_id):
             expr_id = start_id + id
             latex = expressions[expr_id]
-            file = pdflatex(latex, class_folder, class_folder + '/' + str(expr_id) + '.tex')
-            # file = croppdf(class_folder, file, str(expr_id)) -> torchvision.transforms
-            file = pdf2png(class_folder, file, str(expr_id))
+            file = pdflatex(latex, folder, folder + '/' + str(expr_id) + '.tex')
+            # file = croppdf(folder, file, str(expr_id)) -> torchvision.transforms
+            file = pdf2png(folder, file, str(expr_id))
 
             expr_id += 1
 
@@ -67,15 +55,10 @@ def convert(expressions, latex=False, folder=None):
         p.start()
         p.join()
 
-    for file in os.listdir(class_folder): 
-        if not file.endswith('.png'): 
-            os.remove(class_folder + '/' + file)
-
-    if not folder:
-        return batch_folder
-
-    else:
-        return class_folder
+    with os.scandir(folder) as iterator:
+        for entry in iterator:
+            if entry.is_file() and not entry.name.endswith('.png'): 
+                os.remove(folder + '/' + entry.name)
 
 
 def pdflatex(expr, folder, file):

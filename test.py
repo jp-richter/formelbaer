@@ -4,13 +4,6 @@ import tree
 import tokens
 import torch
 
-test = torch.empty([10,0])
-print(test.size())
-
-test2 = torch.ones([10,1])
-
-print(torch.cat([test,test2],dim=1).size())
-
 
 #
 # test: latex translation of example trees

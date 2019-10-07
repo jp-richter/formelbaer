@@ -41,7 +41,7 @@ def rollout(batch=None, h=None):
         batch = _default_batch if batch is None else batch
         h = _policy.init_hidden(batch.shape[0]) if h is None else h
 
-        for _ in range(constants.SEQ_LENGTH - batch.shape[1]):
+        for _ in range(constants.SEQUENCE_LENGTH - batch.shape[1]):
             _, _, batch, h = decision(_rollout, batch, h)
 
     return batch

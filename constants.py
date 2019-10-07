@@ -1,30 +1,33 @@
+import torch
+from os import path, makedirs
+from pathlib import Path
+
 #
 # APPLICATION PARAMETERS
 #
 
-from pathlib import Path
-HOME_DIR = str(Path.home()) + '/formelbaer'
-GDIR = HOME_DIR + '/generator'
-DDIR = HOME_DIR + '/discriminator'
-DPOS_DIR = DDIR + '/arxiv'
-DNEG_DIR = DDIR + '/generated'
+HOME = str(Path.home()) + '/formelbaer'
+ARXIV = HOME + '/arxiv'
+GENERATED = HOME + '/generated'
 
-from os import path, makedirs
-if not path.exists(HOME_DIR):
-    makedirs(GDIR)
-    makedirs(DDIR)
+if not path.exists(HOME):
+	makedirs(HOME)
 
-import torch
+if not path.exists(GENERATED):
+    makedirs(GENERATED)
+
+if not path.exists(ARXIV):
+    raise ValueError('Please save the training set of arxiv .png or .pt files in ' \
+    	+ ARXIV + ' or change the ARXIV directory in constants.py accordingly.')
+
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-DSTEPS = 2
-GSTEPS = 2
+DISCRIMINATOR_STEPS = 2
+GENERATOR_STEPS = 2
 ITERATIONS = 1
 
-SEQ_LENGTH = 6
+SEQUENCE_LENGTH = 6
 MONTECARLO = 2
-
-NEGATIVE_SAMPLES = 40
 
 #
 # GRU HYPER PARAMETERS
