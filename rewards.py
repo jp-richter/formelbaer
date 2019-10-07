@@ -7,6 +7,8 @@ from torchvision import transforms, datasets
 
 _model = Discriminator().to(constants.DEVICE)
 _optimizer = torch.optim.Adam(_model.parameters(), lr=constants.CNN_LEARN_RATE)
+_criterion = torch.nn.CrossEntropyLoss()
+_loading = lambda path: Image.open(path)
 _transform = transforms.Compose(
     [lambda img: img.convert(mode='LA'),
     transforms.CenterCrop((32, 333)),
@@ -18,24 +20,25 @@ def rewards(folder):
 
     _model.eval()
 
-    loading = lambda path: Image.open(path)
-
-    batch = datasets.ImageFolder(folder, transform=_transform,loader=loading)
+    batch = datasets.ImageFolder(folder, transform=_transform,loader=_loading)
     loader = torch.utils.data.DataLoader(batch,constants.GRU_BATCH_SIZE)
-    images, labels = next(iter(loader))
+    images, _ = next(iter(loader))
     images = images[:,None,:,:]
-
-    with torch.no_grad():
-        rewards = _model(images)
+    rewards = _model(images) 
 
     return rewards
 
-def train(negatives):
+def train():
 
-    # die negativen und positiven beispiele muessen in zwei verschiedene 
-    # subordner in einen ordner
-    # dataset laed dann den hauptordner und labeled nach subordner
-    # dann mit einem dataloader einen batch laden und loss berechnen etc
-    # anzahl der batches nicht hier bestimmt sondern in der mainloop
+    _model.train()
+    _optimizer.zero_grad()
 
-    pass
+    loader = None
+    images = next(iter(loader))
+    inputs, labels = images[0].to(constants.DEVICE), images[1].to(constants.DEVICE)
+
+    outputs = _model(inputs)
+    loss = _criterion(outputs, labels)
+
+    loss.backward()
+    _optimizer.step()

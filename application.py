@@ -5,6 +5,7 @@ import torch
 import tokens
 import tree
 import converter
+import math
 
 
 cycles = constants.ITERATIONS
@@ -12,13 +13,18 @@ gsteps = constants.GSTEPS
 dsteps = constants.DSTEPS
 seqlength = constants.SEQ_LENGTH
 mcarlo = constants.MONTECARLO
+negatives = constants.NEGATIVE_SAMPLES
+dneg_dir = constants.DNEG_DIR
+batch_size = constants.GRU_BATCH_SIZE
 
 
 def train_discriminator():
 
-    samples = generator.rollout()
-    folder = converter.convert(samples)
-    rewards.train(negatives=folder)
+    for _ in range(math.floor(negatives / batch_size)):
+        samples = generator.rollout()
+        converter.convert(samples[-1], folder=dneg_dir)
+    
+    rewards.train()
 
 
 def train_generator():

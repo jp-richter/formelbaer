@@ -3,11 +3,16 @@
 #
 
 from pathlib import Path
-HOME = str(Path.home()) + '/formelbaer'
+HOME_DIR = str(Path.home()) + '/formelbaer'
+GDIR = HOME_DIR + '/generator'
+DDIR = HOME_DIR + '/discriminator'
+DPOS_DIR = DDIR + '/arxiv'
+DNEG_DIR = DDIR + '/generated'
 
 from os import path, makedirs
-if not path.exists(HOME):
-    makedirs(HOME)
+if not path.exists(HOME_DIR):
+    makedirs(GDIR)
+    makedirs(DDIR)
 
 import torch
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -18,6 +23,8 @@ ITERATIONS = 1
 
 SEQ_LENGTH = 6
 MONTECARLO = 2
+
+NEGATIVE_SAMPLES = 40
 
 #
 # GRU HYPER PARAMETERS
