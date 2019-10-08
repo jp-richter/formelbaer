@@ -26,7 +26,7 @@ class PolicyNetwork(nn.Module):
 
         self.lin = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=1)
+        self.softmax = nn.Softmax(dim=0)
 
         self.probs = []
         self.rewards = []

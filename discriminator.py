@@ -18,6 +18,7 @@ transform = transforms.Compose(
     transforms.ToTensor(),
     lambda img: img[1]])
 arxiv_data = Dataset(application.arxiv_dir, label=0, transform=transform)
+running_loss = 0.0
 
 
 def rewards(folder, batch_size):
@@ -30,11 +31,12 @@ def rewards(folder, batch_size):
     images, _ = next(iter(loader))
     images.to(device)
     images = images[:,None,:,:]
-    rewards = model(images) 
+    rewards = model(images)
 
-    return rewards
+    return rewards[:,1] # [:,1] probability that p ~ real distribution
 
 def train(folder, batch_size):
+    global running_loss
 
     model.train()
     optimizer.zero_grad()
@@ -52,7 +54,9 @@ def train(folder, batch_size):
         labels.to(device)
 
         outputs = model(images)
-        loss = criterion(outputs, labels.float()[:,None])
+        loss = criterion(outputs[:,1], labels.float())
+
+        running_loss += loss.item()
 
         loss.backward()
         optimizer.step()

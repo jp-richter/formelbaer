@@ -24,9 +24,9 @@ class Discriminator(nn.Module):
 
 		self.fc3 = nn.Linear(5 * 32, 64)
 		self.fc4 = nn.Linear(64, 32)
-		self.fc5 = nn.Linear(32,1)
+		self.fc5 = nn.Linear(32,2)
 
-		self.relu = nn.ReLU()
+		self.softmax = nn.Softmax(dim=0)
 
 	def forward(self,x):
 
@@ -44,13 +44,13 @@ class Discriminator(nn.Module):
 
 		out = out.view(-1, 5 * 32)
 		out = self.fc3(out)
-		out = self.relu(out)
+		out = gelu(out)
 
 		out = self.fc4(out)
-		out = self.relu(out)
+		out = gelu(out)
 
 		out = self.fc5(out)
-		out = self.relu(out)
+		out = self.softmax(out)
 
 		return out
 

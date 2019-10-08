@@ -14,6 +14,8 @@ eps = finfo(float32).eps.item()
 rollout_net = PolicyNetwork().to(device).eval()
 rollout_net.load_state_dict(policy_net.state_dict())
 
+running_loss = 0.0
+
 
 def step(batch_size, batch=None, h=None):
 
@@ -63,10 +65,11 @@ def feedback(reward):
     policy_net.rewards.append(reward)
 
 
-def updatepolicy():
+def update_policy():
+    global running_loss
 
     total = 0
-    policy_loss = []
+    loss = []
     returns = []
 
     for r in policy_net.rewards[::-1]:
@@ -77,19 +80,19 @@ def updatepolicy():
     returns = (returns - returns.mean()) / (returns.std() + eps)
 
     for log_prob, total in zip(policy_net.probs, returns):
-        policy_loss.append(-log_prob * total)
+        loss.append(-log_prob * total)
 
-    optimizer.zero_grad()
-
-    policy_loss = torch.cat(policy_loss).sum()
-    policy_loss.backward()
-
+    loss = torch.cat(loss).sum()
+    running_loss += loss.item()
+    
+    loss.backward()
     optimizer.step()
+    optimizer.zero_grad()
 
     del policy_net.rewards[:]
     del policy_net.probs[:]
 
 
-def updaterollout():
+def update_rollout():
 
     rollout_net.load_state_dict(policy_net.state_dict())

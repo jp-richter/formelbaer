@@ -5,6 +5,13 @@ import tokens
 import torch
 
 
+test = torch.Tensor([1,2,3,4,5,6,7,8,9])
+
+test2 = torch.cat(test)
+
+print(type(test2))
+
+
 #
 # test: latex translation of example trees
 #
