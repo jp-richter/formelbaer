@@ -21,11 +21,11 @@ home_dir = str(Path.home()) + '/formelbaer'
 arxiv_dir = home_dir + '/arxiv'
 gen_dir = home_dir + '/generated'
 
-iterations = 5
-discriminator_steps = 5
+iterations = 4
+discriminator_steps = 4
 generator_steps = 1
-sequence_length = 2
-montecarlo_steps = 1
+sequence_length = 6
+montecarlo_steps = 6
 
 batch_size = 32
 
