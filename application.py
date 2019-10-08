@@ -81,8 +81,8 @@ def main():
 
                     clear(gen_dir)
 
-                    rewards = torch.mean(rewards, dim=1)
-                    generator.feedback(rewards)
+                rewards = torch.mean(rewards, dim=1)
+                generator.feedback(rewards)
 
             generator.update_policy()
 
