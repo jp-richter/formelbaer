@@ -8,7 +8,7 @@ import torchvision
 
 _protocol = {
     '.png' : lambda path : PIL.Image.open(path),
-    '.pt' : None
+    '.pt' : lambda path : torch.load(path)
 }
 
 

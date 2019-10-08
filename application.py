@@ -1,71 +1,59 @@
 import generator
-import rewards
+import discriminator
 import constants
 import torch
 import tokens
 import tree
-import converter
 import math
 import datetime
 import shutil
 import os
 
+from converter import convert
+
 
 # TODO malus fuer syntaktisch inkorrekte baeume
+# TODO training output
+# TODO default werte und argumente flexibel machen
 
 
-batch_size = constants.BATCH_SIZE
-generated = constants.GENERATED 
-arxiv = constants.ARXIV 
-length = constants.SEQUENCE_LENGTH
-monte = constants.MONTECARLO 
-iterations = constants.ITERATIONS
-gensteps = constants.GENERATOR_STEPS 
-dissteps = constants.DISCRIMINATOR_STEPS
+def clear(folder):
 
-
-def train_discriminator():
-
-    for _ in range(1):
-        samples = generator.rollout()
-        converter.convert(samples, folder=generated)
-    
-    rewards.train()
-
-    shutil.rmtree(generated)
-    os.makedirs(generated)
-
-
-def train_generator():
-
-    for _ in range(length):
-        batch, h = generator.step()
-        reward = torch.empty([batch.shape[0],0])
-
-        for _ in range(monte):
-            samples = generator.rollout(batch, h)
-            folder = generated + '/'+ str(datetime.datetime.now())[-15:]
-            os.makedirs(folder)
-            converter.convert(samples, folder)
-            reward = torch.cat([reward, rewards.rewards(folder)], dim=1)
-
-        reward = torch.mean(reward, dim=1)
-        generator.feedback(reward)
-
-    generator.update_policy()
+    shutil.rmtree(folder)
+    os.makedirs(folder)
 
 
 def main():
     # pre training
 
-    for _ in range(iterations):
-        for _ in range(dissteps):
-            train_discriminator()
+    for _ in range(constants.ITERATIONS):
+        for _ in range(constants.DISCRIMINATOR_STEPS):
+            
+            samples = generator.rollout()
+            convert(samples, folder=constants.GENERATED)
+            discriminator.train()
+            clear(folder=constants.GENERATED)
 
         generator.update_rollout()
 
-        for _ in range(gensteps):
-            train_generator()
+        for _ in range(constants.GENERATOR_STEPS):
+            
+            for _ in range(constants.SEQUENCE_LENGTH):
+                batch, h = generator.step()
+                rewards = torch.empty([batch.shape[0],0])
+
+                for _ in range(constants.MONTECARLO):
+                    samples = generator.rollout(batch, h)
+                    convert(samples, folder=constants.GENERATED )
+                    reward = discriminator.rewards(folder=constants.GENERATED)
+                    rewards = torch.cat([rewards, reward], dim=1)
+
+                    clear(folder=constants.GENERATED )
+
+                    rewards = torch.mean(rewards, dim=1)
+                    generator.feedback(rewards)
+
+            generator.update_policy()
 
 
 if __name__ == "__main__":
