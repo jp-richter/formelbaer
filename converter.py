@@ -1,6 +1,5 @@
 import subprocess
 import os
-import constants
 import shutil
 import shlex
 import datetime

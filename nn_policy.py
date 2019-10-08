@@ -1,17 +1,20 @@
 import time
-import constants
+import tokens
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+input_dim = tokens.count()
+output_dim = tokens.count()
 
-_device = constants.DEVICE
+hidden_dim = 32
+layers = 2
+dropout = 0.2
+learnrate = 0.01
+baseline = 1
+gamma = 0.95
 
-_input_dim = constants.GRU_INPUT_DIM
-_output_dim = constants.GRU_OUTPUT_DIM
-_hidden_dim = constants.GRU_HIDDEN_DIM
-_layers = constants.GRU_LAYERS
-_dropout = constants.GRU_DROP_OUT
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
 class PolicyNetwork(nn.Module):
@@ -19,8 +22,9 @@ class PolicyNetwork(nn.Module):
     def __init__(self):
         super(PolicyNetwork, self).__init__()
         
-        self.gru = nn.GRU(_input_dim, _hidden_dim, _layers, batch_first=True, dropout=_dropout)
-        self.lin = nn.Linear(_hidden_dim, _output_dim)
+        self.gru = nn.GRU(input_dim,hidden_dim,layers,batch_first=True,dropout=dropout)
+
+        self.lin = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)
 
@@ -40,4 +44,4 @@ class PolicyNetwork(nn.Module):
     
     def init_hidden(self, batch_size):
 
-        return torch.zeros(_layers, batch_size, _hidden_dim).to(_device)
+        return torch.zeros(layers, batch_size, hidden_dim).to(device)

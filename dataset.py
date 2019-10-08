@@ -2,7 +2,6 @@ import torch
 import os
 import PIL
 import random
-import constants
 import torchvision
 
 
@@ -46,6 +45,6 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
         self.samples += other
 
-    def random(self):
+    def random(self, amount):
 
-        return random.sample(self.samples, k=constants.BATCH_SIZE)
+        return random.sample(self.samples, k=amount)

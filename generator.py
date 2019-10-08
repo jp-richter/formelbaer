@@ -1,48 +1,45 @@
 from numpy.random import choice
 from numpy import empty, finfo, float32
-from nn_policy import PolicyNetwork
+from nn_policy import PolicyNetwork, learnrate, baseline, gamma
 
 import tokens
 import torch
-import constants
 
 
-_policy = PolicyNetwork().to(constants.DEVICE)
-_optimizer = torch.optim.Adam(_policy.parameters(), lr=constants.GRU_LEARN_RATE)
-_eps = finfo(float32).eps.item()
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+policy_net = PolicyNetwork().to(device)
+optimizer = torch.optim.Adam(policy_net.parameters(), lr=learnrate)
+eps = finfo(float32).eps.item()
 
-_default_batch_size = constants.BATCH_SIZE
-_default_batch = torch.zeros([_default_batch_size,1,tokens.count()])
-
-_rollout = PolicyNetwork().to(constants.DEVICE).eval()
-_rollout.load_state_dict(_policy.state_dict())
+rollout_net = PolicyNetwork().to(device).eval()
+rollout_net.load_state_dict(policy_net.state_dict())
 
 
-def step(batch=None, h=None):
+def step(batch_size, batch=None, h=None):
 
-    batch = _default_batch if batch is None else batch
-    h = _policy.init_hidden(batch.shape[0]) if h is None else h
+    batch = torch.zeros(batch_size,1,tokens.count()) if batch is None else batch
+    h = policy_net.init_hidden(batch.shape[0]) if h is None else h
 
-    _policy.train()
+    policy_net.train()
 
     batch.requires_grad = False
-    batch.to(constants.DEVICE)
+    batch.to(device)
 
-    policies, actions, batch, h = decision(_policy, batch, h)
-    _policy.probs.append(policies.log_prob(actions))
+    policies, actions, batch, h = decision(policy_net, batch, h)
+    policy_net.probs.append(policies.log_prob(actions))
 
     return batch, h
 
 
-def rollout(batch=None, h=None):
+def rollout(batch_size, sequence_length, batch=None, h=None):
 
     with torch.no_grad():
 
-        batch = _default_batch if batch is None else batch
-        h = _policy.init_hidden(batch.shape[0]) if h is None else h
+        batch = torch.zeros([batch_size,1,tokens.count()]) if batch is None else batch
+        h = rollout_net.init_hidden(batch.shape[0]) if h is None else h
 
-        for _ in range(constants.SEQUENCE_LENGTH - batch.shape[1]):
-            _, _, batch, h = decision(_rollout, batch, h)
+        for _ in range(sequence_length - batch.shape[1]):
+            _, _, batch, h = decision(rollout_net, batch, h)
 
     return batch
 
@@ -63,36 +60,36 @@ def decision(net, batch, h):
 
 def feedback(reward):
 
-    _policy.rewards.append(reward)
+    policy_net.rewards.append(reward)
 
 
-def update_policy():
+def updatepolicy():
 
     total = 0
     policy_loss = []
     returns = []
 
-    for r in _policy.rewards[::-1]:
-        total = r + constants.GRU_GAMMA * total
+    for r in policy_net.rewards[::-1]:
+        total = r + gamma * total
         returns.insert(0, total)
 
     returns = returns[0]
-    returns = (returns - returns.mean()) / (returns.std() + _eps)
+    returns = (returns - returns.mean()) / (returns.std() + eps)
 
-    for log_prob, total in zip(_policy.probs, returns):
+    for log_prob, total in zip(policy_net.probs, returns):
         policy_loss.append(-log_prob * total)
 
-    _optimizer.zero_grad()
+    optimizer.zero_grad()
 
     policy_loss = torch.cat(policy_loss).sum()
     policy_loss.backward()
 
-    _optimizer.step()
+    optimizer.step()
 
-    del _policy.rewards[:]
-    del _policy.probs[:]
+    del policy_net.rewards[:]
+    del policy_net.probs[:]
 
 
-def update_rollout():
+def updaterollout():
 
-    _rollout.load_state_dict(_policy.state_dict())
+    rollout_net.load_state_dict(policy_net.state_dict())
