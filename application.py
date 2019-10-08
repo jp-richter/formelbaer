@@ -22,7 +22,7 @@ arxiv_dir = home_dir + '/arxiv'
 gen_dir = home_dir + '/generated'
 
 iterations = 4
-discriminator_steps = 4
+discriminator_steps = 2 # (*2) due to implementation
 generator_steps = 1
 sequence_length = 6
 montecarlo_steps = 6

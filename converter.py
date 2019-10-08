@@ -8,12 +8,13 @@ import multiprocessing
 import multiprocessing.sharedctypes
 import math
 import ctypes
+import pathlib
+
+# preambel preloaded in preambel.fmt
+# pdf compression is set to 3
 
 template = '''
-\\documentclass{{standalone}}
-
-\\usepackage[utf8]{{inputenc}}
-\\usepackage{{amsmath, amssymb}}
+%preambel
 
 \\begin{{document}}
 \\begin{{minipage}}[c][1cm]{{50cm}}
@@ -24,8 +25,12 @@ template = '''
 \\end{{document}}
 '''
 
+preambel = pathlib.PurePath(pathlib.Path(__file__).resolve().parent,'preambel.fmt')
+
 
 def convert(sequences, folder):
+
+    shutil.copyfile(preambel, folder + '/preambel.fmt')
 
     trees = tree.batch2tree(sequences)
     expressions = [tree.latex() for tree in trees]
@@ -43,7 +48,6 @@ def convert(sequences, folder):
             expr_id = start_id + id
             latex = expressions[expr_id]
             file = pdflatex(latex, folder, folder + '/' + str(expr_id) + '.tex')
-            # file = croppdf(folder, file, str(expr_id)) -> torchvision.transforms
             file = pdf2png(folder, file, str(expr_id))
 
             expr_id += 1
