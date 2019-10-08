@@ -9,7 +9,6 @@ import torch
 # test: latex translation of example trees
 #
 
-
 # sequence = [37,146,28,150,26,90,136]
 
 # expr = tree.parse(sequence)

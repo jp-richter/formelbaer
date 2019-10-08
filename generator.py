@@ -11,7 +11,7 @@ _policy = PolicyNetwork().to(constants.DEVICE)
 _optimizer = torch.optim.Adam(_policy.parameters(), lr=constants.GRU_LEARN_RATE)
 _eps = finfo(float32).eps.item()
 
-_default_batch_size = constants.GRU_BATCH_SIZE
+_default_batch_size = constants.BATCH_SIZE
 _default_batch = torch.zeros([_default_batch_size,1,tokens.count()])
 
 _rollout = PolicyNetwork().to(constants.DEVICE).eval()

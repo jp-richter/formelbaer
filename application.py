@@ -14,7 +14,7 @@ import os
 # TODO malus fuer syntaktisch inkorrekte baeume
 
 
-batch_size = constants.GRU_BATCH_SIZE
+batch_size = constants.BATCH_SIZE
 generated = constants.GENERATED 
 arxiv = constants.ARXIV 
 length = constants.SEQUENCE_LENGTH

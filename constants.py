@@ -22,12 +22,14 @@ if not path.exists(ARXIV):
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-DISCRIMINATOR_STEPS = 2
-GENERATOR_STEPS = 2
+DISCRIMINATOR_STEPS = 1
+GENERATOR_STEPS = 1
 ITERATIONS = 1
 
-SEQUENCE_LENGTH = 6
-MONTECARLO = 2
+SEQUENCE_LENGTH = 2
+MONTECARLO = 1
+
+BATCH_SIZE = 32
 
 #
 # GRU HYPER PARAMETERS
@@ -37,7 +39,6 @@ import tokens
 GRU_INPUT_DIM = tokens.count()
 GRU_OUTPUT_DIM = tokens.count()
 
-GRU_BATCH_SIZE = 32
 GRU_HIDDEN_DIM = 32
 GRU_LAYERS = 2
 

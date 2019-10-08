@@ -1,11 +1,10 @@
 import torch
 import os
 import PIL
+import random
 import constants
 import torchvision
-import random
 
-from torch.utils.data import DataLoader
 
 _protocol = {
     '.png' : lambda path : PIL.Image.open(path),
@@ -41,12 +40,12 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         if self.transform is not None:
             image = self.transform(image)
 
-        return image, label, form
+        return image, label
 
-    def random(self, amount):
+    def append(self, other):
 
-        return random.choices(self.samples, k=amount)
+        self.samples += other
 
-    def merge(self, data):
+    def random(self):
 
-        self.samples += data 
+        return random.sample(self.samples, k=constants.BATCH_SIZE)
