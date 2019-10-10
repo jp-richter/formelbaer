@@ -14,9 +14,8 @@ from pathlib import Path
 from converter import convert
 
 
-app_dir = c.DIRECTORY_APPLICATION
-arxiv_dir = c.DIRECTORY_ARXIV_DATA
-gen_dir = c.DIRECTORY_GENERATED_DATA
+arxiv_data_dir = c.DIRECTORY_ARXIV_DATA
+generated_data_dir = c.DIRECTORY_GENERATED_DATA
 
 iterations = c.ADVERSARIAL_ITERATIONS
 discriminator_steps = c.ADVERSARIAL_DISCRIMINATOR_STEPS
@@ -27,8 +26,6 @@ batch_size = c.ADVERSARIAL_PREFERRED_BATCH_SIZE
 
 
 # TODO malus fuer syntaktisch inkorrekte baeume
-# TODO training output
-# TODO irgendwie uebersichtlicher machen?
 
 
 def clear(folder):
@@ -45,30 +42,31 @@ def main():
         for _ in range(discriminator_steps):
             
             samples = generator.rollout(sequence_length, batch_size=batch_size)
-            convert(samples, gen_dir)
+            convert(samples, generated_data_dir)
             discriminator.train()
-            clear(gen_dir)
+            clear(generated_data_dir)
 
         generator.update_rollout()
 
         for _ in range(generator_steps):
             
-            for length in range(sequence_length):
-                batch, h = generator.step(batch_size=batch_size)
-                rewards = torch.empty([batch_size,0])
+            for current_length in range(sequence_length):
+                batch, hidden = generator.step(batch_size=batch_size)
+                state_action_values = torch.empty([batch_size,0])
+                missing_length = sequence_length - current_length
 
                 for _ in range(montecarlo_steps):
-                    missing = sequence_length - length
-                    samples = generator.rollout(missing, batch, h)
-                    convert(samples, gen_dir)
-                    reward = discriminator.rewards(gen_dir)
-                    reward = reward[:,None]
-                    rewards = torch.cat([rewards, reward], dim=1)
+                    samples = generator.rollout(missing_length, batch, hidden)
+                    convert(samples, generated_data_dir)
 
-                    clear(gen_dir)
+                    single_episode = discriminator.rewards(generated_data_dir)
+                    single_episode = single_episode[:,None]
+                    state_action_values = torch.cat([state_action_values, single_episode], dim=1)
 
-                rewards = torch.mean(rewards, dim=1)
-                generator.feedback(rewards)
+                    clear(generated_data_dir)
+
+                state_action_values = torch.mean(state_action_values, dim=1)
+                generator.feedback(state_action_values)
 
             generator.update_policy()
 
