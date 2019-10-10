@@ -6,10 +6,6 @@ import torch
 import pathlib
 
 
-directory = pathlib.Path(__file__).resolve().parent
-print(directory)
-
-
 #
 # test: latex translation of example trees
 #

@@ -36,7 +36,7 @@ _tokens = {
     6   : TokenInfo('inverse',1,6,'{}^{{-1}}'),
     7   : TokenInfo('sin',1,7,'sin {}'),
     8   : TokenInfo('cos',1,8,'cos {}'),
-    9  : TokenInfo('tan',1,9,'tan {}'),
+    9   : TokenInfo('tan',1,9,'tan {}'),
     10  : TokenInfo('sinh',1,10,'sinh {}'),
     11  : TokenInfo('cosh',1,11,'cosh {}'),
     12  : TokenInfo('tanh',1,12,'tanh {}'),

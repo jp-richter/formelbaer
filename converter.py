@@ -10,53 +10,62 @@ import math
 import ctypes
 import pathlib
 
-# preambel preloaded in preambel.fmt
-# pdf compression is set to 3
+# preamble preloaded in preambel.fmt
+# pdf compression set to 0
+preamble = pathlib.PurePath(pathlib.Path(__file__).resolve().parent,'preamble.fmt')
 
-template = '''
-%preambel
+# equation environment doesn't work
+# template = '''
+# %&preambel
+
+# \\begin{{document}}
+# \\begin{{minipage}}[c][1cm]{{50cm}}
+# \\begin{{equation}}
+# {expression}
+# \\end{{equation}}
+# \\end{{minipage}}
+# \\end{{document}}
+# '''
+
+template = '''%&preamble
 
 \\begin{{document}}
 \\begin{{minipage}}[c][1cm]{{50cm}}
-\\begin{{equation}}
-{expression}
-\\end{{equation}}
+\\centering{{
+    $ {expression} $
+}}
 \\end{{minipage}}
 \\end{{document}}
 '''
 
-preambel = pathlib.PurePath(pathlib.Path(__file__).resolve().parent,'preambel.fmt')
+current_start_index = None
+current_folder = None
+
+
+def processing(enumeration):
+    global current_folder, current_start_index
+
+    index, expression = enumeration
+    index += current_start_index
+    
+    file = pdflatex(expression, current_folder, current_folder + '/' + str(index) + '.tex')
+    file = pdf2png(current_folder, file, str(index))
 
 
 def convert(sequences, folder):
+    global current_folder, current_start_index
 
-    shutil.copyfile(preambel, folder + '/preambel.fmt')
+    shutil.copyfile(preamble, folder + '/preamble.fmt')
 
     trees = tree.batch2tree(sequences)
     expressions = [tree.latex() for tree in trees]
-    expr_id = len(os.listdir(folder))
 
-    free = multiprocessing.cpu_count()
-    offset = math.ceil(len(expressions) / free)
+    current_start_index = len(os.listdir(folder))
+    current_folder = folder
+    free_cpus = multiprocessing.cpu_count()
 
-    def processing(pid):
-
-        start_id = pid.value  * offset
-        next_start_id = pid.value * offset + offset
-
-        for id in range(next_start_id - start_id):
-            expr_id = start_id + id
-            latex = expressions[expr_id]
-            file = pdflatex(latex, folder, folder + '/' + str(expr_id) + '.tex')
-            file = pdf2png(folder, file, str(expr_id))
-
-            expr_id += 1
-
-    for processor in range(free):
-        pid = multiprocessing.sharedctypes.RawValue(ctypes.c_int, processor)
-        p = multiprocessing.Process(target=processing, args=(pid,))
-        p.start()
-        p.join()
+    with multiprocessing.Pool(free_cpus) as pool:
+        pool.map(processing, enumerate(expressions))
 
     with os.scandir(folder) as iterator:
         for entry in iterator:

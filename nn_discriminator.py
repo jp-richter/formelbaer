@@ -3,9 +3,6 @@ import math
 from torch import nn
 
 
-learnrate = 0.01
-
-
 class Discriminator(nn.Module):
 
 	def __init__(self):
