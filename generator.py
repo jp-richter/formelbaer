@@ -54,6 +54,7 @@ def rollout(length, batch=None, hidden=None, batch_size=None):
 
     with torch.no_grad():
 
+        # generate a new batch of sequences
         if batch is None:
             batch = torch.zeros([batch_size,1,tokens.count()])
             hidden = rollout_net.init_hidden(layers,batch_size,hidden_dim)
@@ -94,7 +95,7 @@ def update_policy():
     increment = []
     returns = []
 
-    # compute (state,action) values for each step
+    # compute state action values for each step
     for r in policy_net.rewards[::-1]:
         total = r + gamma * total
         returns.insert(0, total)
@@ -103,7 +104,7 @@ def update_policy():
     for i in range(len(returns)):
         returns[i] = (returns[i] - returns[i].mean()) / (returns[i].std() + eps)
 
-    # calculate rewards weighted by log probability
+    # weight state action values by log probability of action
     for log_prob, reward in zip(policy_net.probs, returns):
         increment.append(-log_prob * reward)
 

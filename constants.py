@@ -6,7 +6,6 @@ import multiprocessing
 # APPLICATION 
 #
 
-
 DIRECTORY_APPLICATION = str(pathlib.Path.home()) + '/formelbaer'
 DIRECTORY_GENERATED_DATA = str(pathlib.Path.home()) + '/formelbaer/generated'
 DIRECTORY_ARXIV_DATA = str(pathlib.Path.home()) + '/formelbaer/arxiv'
@@ -33,6 +32,9 @@ ADVERSARIAL_PREFERRED_BATCH_SIZE = 32
 
 if multiprocessing.cpu_count() > 15:
 	ADVERSARIAL_PREFERRED_BATCH_SIZE = multiprocessing.cpu_count()
+	# TODO test with two or three times the amound to justify fork overhead?
+	# batch size vs learning rate
+	# trade off: more generalization with lower batch size and less accurate gradients
 
 #
 # GENERATOR

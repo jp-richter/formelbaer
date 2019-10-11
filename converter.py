@@ -67,10 +67,8 @@ def convert(sequences, folder):
     with multiprocessing.Pool(free_cpus) as pool:
         pool.map(processing, enumerate(expressions))
 
-    with os.scandir(folder) as iterator:
-        for entry in iterator:
-            if entry.is_file() and not entry.name.endswith('.png'): 
-                os.remove(folder + '/' + entry.name)
+        pool.close() # don't remove
+        pool.join() # don't remove
 
 
 def pdflatex(expr, folder, file):
@@ -84,7 +82,7 @@ def pdflatex(expr, folder, file):
         file]
 
     try:
-        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=1)
+        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
     except Exception as e:
         print(e)
 
@@ -128,7 +126,7 @@ def pdf2png(folder, file, expr_id):
         file]
     
     try:
-        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=1)
+        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
     except Exception as e:
         print(e)
 
