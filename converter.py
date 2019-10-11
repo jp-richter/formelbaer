@@ -126,7 +126,7 @@ def pdf2png(folder, file, expr_id):
         file]
     
     try:
-        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
+        subprocess.run(cmd, cwd=folder, timeout=30)
     except Exception as e:
         print(e)
 
