@@ -12,7 +12,16 @@ import pathlib
 
 # preamble preloaded in preambel.fmt
 # pdf compression set to 0
-preamble = pathlib.PurePath(pathlib.Path(__file__).resolve().parent,'preamble.fmt')
+code_folder = pathlib.Path(__file__).resolve().parent
+preamble = pathlib.PurePath(code_folder,'preamble.fmt')
+
+# precompile in case pdflatex versions differ
+precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump"'
+
+try:
+    subprocess.run(precompile_cmd, cwd=code_folder, stdout=subprocess.DEVNULL, shell=True)
+except Exception as e:
+    print(e)
 
 # equation environment doesn't work
 # template = '''
@@ -82,7 +91,7 @@ def pdflatex(expr, folder, file):
         file]
     #  stdout=subprocess.DEVNULL, 
     try:
-        subprocess.run(cmd, cwd=folder, timeout=30)
+        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
     except Exception as e:
         print(e)
 
@@ -126,7 +135,7 @@ def pdf2png(folder, file, expr_id):
         file]
     
     try:
-        subprocess.run(cmd, cwd=folder,  stdout=subprocess.DEVNULL, timeout=30)
+        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
     except Exception as e:
         print(e)
 
