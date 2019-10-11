@@ -84,6 +84,15 @@ def main():
             generator.running_loss = 0.0
             discriminator.running_loss = 0.0
 
+    generator.update_rollout()
+    for _ in range(math.ceil(100 / batch_size)):
+        evaluation = generator.rollout(sequence_length, batch_size=batch_size)
+        convert(evaluation, generated_data_dir)
+
+    with os.scandir(generated_data_dir) as iterator:
+        for entry in iterator:
+            if entry.is_file() and not entry.name.endswith('.png'):
+                os.remove(entry)
 
 if __name__ == "__main__":
     main()
