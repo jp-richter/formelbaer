@@ -9,7 +9,8 @@ import multiprocessing
 DIRECTORY_APPLICATION = str(pathlib.Path.home()) + '/ramdisk/formelbaer'
 DIRECTORY_GENERATED_DATA = str(pathlib.Path.home()) + '/ramdisk/formelbaer/generated'
 DIRECTORY_ARXIV_DATA = str(pathlib.Path.home()) + '/ramdisk/formelbaer/arxiv'
-DIRECTORY_SFB_CLUSTER_ARXIV_DATA = '/rdata/schill/arxiv_processed/all/pngs'
+# DIRECTORY_SFB_CLUSTER_ARXIV_DATA = '/rdata/schill/arxiv_processed/all/pngs'
+DIRECTORY_SFB_CLUSTER_ARXIV_DATA = '/ramdisk/pngs'
 
 if os.path.exists(DIRECTORY_SFB_CLUSTER_ARXIV_DATA):
 	DIRECTORY_ARXIV_DATA = DIRECTORY_SFB_CLUSTER_ARXIV_DATA
@@ -23,18 +24,18 @@ if not os.path.exists(DIRECTORY_GENERATED_DATA):
 if not os.path.exists(DIRECTORY_ARXIV_DATA):
 	raise ValueError()
 
-ADVERSARIAL_ITERATIONS = 2
+ADVERSARIAL_ITERATIONS = 1
 ADVERSARIAL_DISCRIMINATOR_STEPS = 2 # (*2) due to implementation
 ADVERSARIAL_GENERATOR_STEPS = 1
-ADVERSARIAL_SEQUENCE_LENGTH = 16
-ADVERSARIAL_MONTECARLO = 16
+ADVERSARIAL_SEQUENCE_LENGTH = 2
+ADVERSARIAL_MONTECARLO = 2
 ADVERSARIAL_PREFERRED_BATCH_SIZE = 32
 
 if multiprocessing.cpu_count() > 15:
 	ADVERSARIAL_PREFERRED_BATCH_SIZE = multiprocessing.cpu_count()*4
 	# TODO test with two or three times the amound to justify fork overhead?
 	# batch size vs learning rate
-	# trade off: more generalization with lower batch size and less accurate gradients
+	# trade off: more generalization with lower batch size but less accurate gradients
 
 #
 # GENERATOR

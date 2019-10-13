@@ -11,7 +11,6 @@ import os
 import constants as c
 
 from pathlib import Path
-from converter import convert
 
 
 arxiv_data_dir = c.DIRECTORY_ARXIV_DATA
@@ -42,7 +41,7 @@ def main():
         for _ in range(discriminator_steps):
             
             samples = generator.rollout(sequence_length, batch_size=batch_size)
-            convert(samples, generated_data_dir)
+            converter.convert(samples, generated_data_dir)
             discriminator.train()
             clear(generated_data_dir)
 
@@ -57,7 +56,7 @@ def main():
 
                 for _ in range(montecarlo_steps):
                     samples = generator.rollout(missing_length, batch, hidden)
-                    convert(samples, generated_data_dir)
+                    converter.convert(samples, generated_data_dir)
 
                     single_episode = discriminator.rewards(generated_data_dir)
                     single_episode = single_episode[:,None]

@@ -1,16 +1,17 @@
 from numpy.random import choice
 from numpy import empty, finfo, float32
 from nn_policy import PolicyNetwork
+import constants as c
 
 import tokens
 import torch
 
-hidden_dim = 32
-layers = 2
-dropout = 0.2
-learnrate = 0.01
-baseline = 1
-gamma = 0.95
+hidden_dim = c.GENERATOR_HIDDEN_DIM
+layers = c.GENERATOR_LAYERS
+dropout = c.GENERATOR_DROPOUT
+learnrate = c.GENERATOR_LEARNRATE
+baseline = c.GENERATOR_BASELINE
+gamma = c.GENERATOR_GAMMA
 
 running_loss = 0.0
 
