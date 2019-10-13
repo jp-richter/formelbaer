@@ -50,12 +50,7 @@ def train():
     generated_data = Dataset(c.DIRECTORY_GENERATED_DATA, label=generated_label, transform=transform)
     batch_size = min(len(generated_data),len(arxiv_data))
 
-    print('gen data length ' + str(len(generated_data)))
-    print('arxiv data length ' + str(len(arxiv_data)))
-
     generated_data.append(arxiv_data.random(amount=batch_size))
-
-    print('gen data length 2 ' + str(len(generated_data)))
 
     loader = DataLoader(generated_data, batch_size)
     iterator = iter(loader)

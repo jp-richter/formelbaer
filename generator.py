@@ -13,7 +13,7 @@ learnrate = c.GENERATOR_LEARNRATE
 baseline = c.GENERATOR_BASELINE
 gamma = c.GENERATOR_GAMMA
 
-running_loss = 0.0
+running_reward = 0.0
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
@@ -117,7 +117,7 @@ def update_policy():
     batch_size = increment.shape[0]
     increment = torch.sum(increment) / batch_size
 
-    running_loss += increment.item()
+    running_reward += increment.item()
     increment.backward()
     optimizer.step()
 

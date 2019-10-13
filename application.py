@@ -72,22 +72,22 @@ def main():
 
         if iterations % 1 == 0:
 
-            gloss = generator.running_loss / (iteration+1 * generator_steps)
+            greward = -1 * generator.running_reward / (iteration+1 * generator_steps)
             dloss = discriminator.running_loss / (iteration+1 * discriminator_steps)
 
             print('###')
             print('Iteration {}'.format(iteration))
-            print('Generator Loss {}'.format(gloss))
+            print('Generator Reward {}'.format(greward))
             print('Discriminator Loss {}'.format(dloss))
             print('###')
 
-            generator.running_loss = 0.0
+            generator.running_reward = 0.0
             discriminator.running_loss = 0.0
 
     generator.update_rollout()
     for _ in range(math.ceil(100 / batch_size)):
         evaluation = generator.rollout(sequence_length, batch_size=batch_size)
-        convert(evaluation, generated_data_dir)
+        converter.convert(evaluation, generated_data_dir)
 
     with os.scandir(generated_data_dir) as iterator:
         for entry in iterator:
