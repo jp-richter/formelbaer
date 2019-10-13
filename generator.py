@@ -6,36 +6,26 @@ import constants as c
 import tokens
 import torch
 
-hidden_dim = c.GENERATOR_HIDDEN_DIM
-layers = c.GENERATOR_LAYERS
-dropout = c.GENERATOR_DROPOUT
-learnrate = c.GENERATOR_LEARNRATE
-baseline = c.GENERATOR_BASELINE
-gamma = c.GENERATOR_GAMMA
-
 running_reward = 0.0
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-policy_net = PolicyNetwork(hidden_dim, layers, dropout).to(device)
-rollout_net = PolicyNetwork(hidden_dim, layers, dropout).to(device).eval()
+policy_net = PolicyNetwork().to(device)
+rollout_net = PolicyNetwork().to(device)
+rollout_net.eval()
 rollout_net.load_state_dict(policy_net.state_dict())
 
-optimizer = torch.optim.Adam(policy_net.parameters(), lr=learnrate)
+optimizer = torch.optim.Adam(policy_net.parameters(), lr=c.GENERATOR_LEARNRATE)
 eps = finfo(float32).eps.item()
 
 
-def step(batch=None, hidden=None, batchsize=None):
+def step(batch=None, hidden=None):
 
-    if batchsize is None and batch is None:
-        raise ValueError('Either specify a batch size or provide a batch.')
-
-    # generate a new batch of sequences
-    if batch == None:
+    if batch == None: # generate a new batch of sequences
         optimizer.zero_grad()
 
-        batch = torch.zeros(batchsize,1,tokens.count())
-        hidden = policy_net.init_hidden(layers, batchsize, hidden_dim)
+        batch = torch.zeros(c.ADVERSARIAL_BATCHSIZE,1,tokens.count())
+        hidden = policy_net.init_hidden()
 
         batch.requires_grad = False
         batch.to(device)
@@ -48,19 +38,15 @@ def step(batch=None, hidden=None, batchsize=None):
     return batch, hidden
 
 
-def rollout(length, batch=None, hidden=None, batchsize=None):
-
-    if batchsize is None and batch is None:
-        raise ValueError('Either specify a batch size or provide a batch.')
+def rollout(batch=None, hidden=None):
 
     with torch.no_grad():
 
-        # generate a new batch of sequences
-        if batch is None:
-            batch = torch.zeros([batchsize,1,tokens.count()])
-            hidden = rollout_net.init_hidden(layers,batchsize,hidden_dim)
+        if batch is None: # generate a new batch of sequences
+            batch = torch.zeros([c.ADVERSARIAL_BATCHSIZE,1,tokens.count()])
+            hidden = rollout_net.init_hidden()
 
-        for _ in range(length - batch.shape[1]):
+        for _ in range(c.ADVERSARIAL_SEQUENCE_LENGTH - batch.shape[1]):
             _, _, batch, hidden = decision(rollout_net, batch, hidden)
 
     return batch

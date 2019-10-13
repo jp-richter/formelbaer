@@ -9,10 +9,14 @@ from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 
 
+running_loss = 0.0
+
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
 model = Discriminator().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=c.DISCRIMINATOR_LEARNRATE)
 criterion = torch.nn.BCELoss()
+
 transform = transforms.Compose([
     lambda img: img.convert(mode='LA'),
     transforms.CenterCrop((32, 333)),
@@ -23,10 +27,7 @@ generated_label = 1
 arxiv_data = Dataset(c.DIRECTORY_ARXIV_DATA, label=arxiv_label, transform=transform, recursive=True)
 
 
-running_loss = 0.0
-
-
-def rewards(folder):
+def rewards(folder=c.DIRECTORY_GENERATED_DATA):
 
     model.eval()
 
@@ -41,36 +42,33 @@ def rewards(folder):
 
     return rewards[:,0] # [:,0] P(x ~ arxiv)
 
-def train():
+def train(folder=c.DIRECTORY_GENERATED_DATA):
     global running_loss
 
     model.train()
     optimizer.zero_grad()
 
-    generated_data = Dataset(c.DIRECTORY_GENERATED_DATA, label=generated_label, transform=transform)
-    batchsize = min(len(generated_data),len(arxiv_data))
+    generated_data = Dataset(folder, label=generated_label, transform=transform)
+    generated_data.append(arxiv_data.random(amount=len(generated_data)))
 
-    generated_data.append(arxiv_data.random(amount=batchsize))
+    loader = DataLoader(generated_data, half*2)
+    images, labels = next(iter(loader))
 
-    loader = DataLoader(generated_data, batchsize)
-    iterator = iter(loader)
+    images = images[:,None,:,:]
 
-    for images, labels in iterator:
-        images = images[:,None,:,:]
+    images.to(device)
+    labels.to(device)
 
-        images.to(device)
-        labels.to(device)
+    outputs = model(images) 
+    loss = criterion(outputs[:,1], labels.float())
 
-        outputs = model(images) 
-        loss = criterion(outputs[:,1], labels.float())
+    # output[:,0] P(x ~ arxiv)
+    # output[:,1] P(x ~ generator)
 
-        # output[:,0] P(x ~ arxiv)
-        # output[:,1] P(x ~ generator)
+    running_loss += loss.item()
 
-        running_loss += loss.item()
-
-        loss.backward()
-        optimizer.step()
+    loss.backward()
+    optimizer.step()
 
 def save_parameters(folder):
 

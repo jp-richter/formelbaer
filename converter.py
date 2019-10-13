@@ -9,6 +9,7 @@ import multiprocessing.sharedctypes
 import math
 import ctypes
 import pathlib
+import constants as c
 
 # preamble preloaded in preambel.fmt
 # pdf compression set to 0
@@ -69,7 +70,7 @@ def cleanup(folder):
                 os.remove(entry)
 
 
-def convert(sequences, folder):
+def convert_to_png(sequences, folder=c.DIRECTORY_GENERATED_DATA):
     global current_folder, current_start_index
 
     shutil.copyfile(preamble, folder + '/preamble.fmt')
