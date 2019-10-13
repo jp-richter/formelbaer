@@ -90,7 +90,7 @@ def feedback(reward):
 
 
 def update_policy():
-    global running_loss
+    global running_reward
 
     total = 0
     increment = []
