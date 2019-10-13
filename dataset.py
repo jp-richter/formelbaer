@@ -47,7 +47,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
                         self.samples.append((folder + '/' + entry.name, label, '.pt'))
 
                 if entry.is_dir() and recursive:
-                    crawl(folder + '/' + entry.name)
+                    self.crawl(folder + '/' + entry.name, recursive)
 
     def append(self, other):
 
