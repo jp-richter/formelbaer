@@ -19,7 +19,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         self.samples = []
         self.transform = transform
 
-        self.crawl(folder, recursive)
+        self.crawl(folder, label, recursive)
 
     def __len__(self): 
 
@@ -35,7 +35,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
         return image, label
 
-    def crawl(self, folder, recursive):
+    def crawl(self, folder, label, recursive):
 
         with os.scandir(folder) as iterator:
             for entry in iterator:
@@ -47,7 +47,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
                         self.samples.append((folder + '/' + entry.name, label, '.pt'))
 
                 if entry.is_dir() and recursive:
-                    self.crawl(folder + '/' + entry.name, recursive)
+                    self.crawl(folder + '/' + entry.name, label, recursive)
 
     def append(self, other):
 
