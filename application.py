@@ -15,18 +15,6 @@ import constants as c
 from pathlib import Path
 
 
-logfile = c.DIRECTORY_APPLICATION + '/results.log'
-logging.basicConfig(level=logging.INFO, filename=logfile)
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-
-
-# TODO malus fuer syntaktisch inkorrekte baeume
-# trade off: computation time vs batch size effects
-# trade off: more generalization with lower batch size but less accurate gradients
-# TODO tests: make up for high batch sizes with learning rate?
-
-
 def save():
 
     # all results go here
@@ -48,8 +36,8 @@ def save():
     discriminator.save_parameters(folder)
 
     # save result and parameter logs
-    shutil.copyfile(logfile, folder + '/results.log')
-    c.log(folder)
+    shutil.copyfile(c.FILE_RESULT_LOG, folder + '/results.log')
+    shutil.copyfile(c.FILE_PARAMETERS_LOG, folder + '/parameters.log')
 
 
 def clear(folder):
@@ -59,6 +47,10 @@ def clear(folder):
 
 
 def main():
+
+    logging.basicConfig(level=logging.INFO, filename=FILE_RESULT_LOG)
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
 
     # pre training
 

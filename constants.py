@@ -9,10 +9,17 @@ import logging
 
 # DIRECTORY_SFB_CLUSTER_ARXIV_DATA = '/rdata/schill/arxiv_processed/all/pngs'
 
-DIRECTORY_APPLICATION = str(pathlib.Path.home()) + '/ramdisk/formelbaer'
-DIRECTORY_GENERATED_DATA = str(pathlib.Path.home()) + '/ramdisk/formelbaer/generated'
-DIRECTORY_ARXIV_DATA = str(pathlib.Path.home()) + '/ramdisk/formelbaer/arxiv'
-DIRECTORY_SFB_CLUSTER_ARXIV_DATA = '/ramdisk/pngs'
+if os.path.exists('/rdata'):
+    DIRECTORY_APPLICATION = '/ramdisk/formelbaer_data/'
+
+else:
+    DIRECTORY_APPLICATION = str(pathlib.Path.home()) + '/formelbaer'
+
+DIRECTORY_GENERATED_DATA = DIRECTORY_APPLICATION + '/generated'
+DIRECTORY_ARXIV_DATA = DIRECTORY_APPLICATION + '/arxiv'
+
+FILE_RESULT_LOG = c.DIRECTORY_APPLICATION + '/results.log'
+FILE_PARAMETERS_LOG = c.DIRECTORY_APPLICATION + '/parameters.log'
 
 ADVERSARIAL_ITERATIONS = 100
 ADVERSARIAL_DISCRIMINATOR_STEPS = 2 # (*2) due to implementation
@@ -59,40 +66,38 @@ if not os.path.exists(DIRECTORY_ARXIV_DATA):
 # SAVE SETTINGS
 #
 
-def log(folder):
+logging.basicConfig(level=logging.INFO, filename=FILE_PARAMETERS_LOG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
-	logging.basicConfig(level=logging.INFO, filename=folder + '/parameters.log')
-	log = logging.getLogger(__name__)
-	log.setLevel(logging.INFO)
+log.info('''Models Version 1
 
-    log.info('''Models Version 1
+    Total Iterations {}
+    Discriminator Steps {}
+    Generator Steps {}
+    Fixed Sequence Length {}
+    Monte Carlo Trials {}
+    Batch Size {}
 
-        Total Iterations {}
-        Discriminator Steps {}
-        Generator Steps {}
-        Fixed Sequence Length {}
-        Monte Carlo Trials {}
-        Batch Size {}
+    Generator Hidden Dim {}
+    Generator Layers {}
+    Generator Dropout {}
+    Generator Learning Rate {}
+    Generator Baseline {}
+    Generator Gamma {}
 
-        Generator Hidden Dim {}
-        Generator Layers {}
-        Generator Dropout {}
-        Generator Learning Rate {}
-        Generator Baseline {}
-        Generator Gamma {}
-
-        Discriminator Dropout {}
-        Discriminator Learnrate {}'''.format(
-            ADVERSARIAL_ITERATIONS, 
-            ADVERSARIAL_DISCRIMINATOR_STEPS, 
-            ADVERSARIAL_GENERATOR_STEPS, 
-            ADVERSARIAL_SEQUENCE_LENGTH, 
-            ADVERSARIAL_MONTECARLO_TRIALS, 
-            ADVERSARIAL_BATCHSIZE, 
-            GENERATOR_HIDDEN_DIM, 
-            GENERATOR_LAYERS, 
-            GENERATOR_DROPOUT, 
-            GENERATOR_BASELINE,
-            GENERATOR_GAMMA, 
-            DISCRIMINATOR_DROPOUT, 
-            DISCRIMINATOR_LEARNRATE))
+    Discriminator Dropout {}
+    Discriminator Learnrate {}'''.format(
+        ADVERSARIAL_ITERATIONS, 
+        ADVERSARIAL_DISCRIMINATOR_STEPS, 
+        ADVERSARIAL_GENERATOR_STEPS, 
+        ADVERSARIAL_SEQUENCE_LENGTH, 
+        ADVERSARIAL_MONTECARLO_TRIALS, 
+        ADVERSARIAL_BATCHSIZE, 
+        GENERATOR_HIDDEN_DIM, 
+        GENERATOR_LAYERS, 
+        GENERATOR_DROPOUT, 
+        GENERATOR_BASELINE,
+        GENERATOR_GAMMA, 
+        DISCRIMINATOR_DROPOUT, 
+        DISCRIMINATOR_LEARNRATE))
