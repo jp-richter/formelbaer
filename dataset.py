@@ -35,7 +35,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
         return image, label
 
-    def crawl(folder, recursive):
+    def crawl(self, folder, recursive):
 
         with os.scandir(folder) as iterator:
             for entry in iterator:
