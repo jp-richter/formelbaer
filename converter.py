@@ -61,6 +61,14 @@ def processing(enumeration):
     file = pdf2png(current_folder, file, str(index))
 
 
+def cleanup(folder):
+
+    with os.scandir(folder) as iterator:
+        for entry in iterator:
+            if entry.is_file() and not entry.name.endswith('.png'):
+                os.remove(entry)
+
+
 def convert(sequences, folder):
     global current_folder, current_start_index
 

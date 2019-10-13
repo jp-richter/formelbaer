@@ -31,8 +31,8 @@ def rewards(folder):
     model.eval()
 
     dataset = Dataset(folder=folder, label=generated_label, transform=transform)
-    batch_size = len(dataset)
-    loader = DataLoader(dataset, batch_size)
+    batchsize = len(dataset)
+    loader = DataLoader(dataset, batchsize)
 
     images, _ = next(iter(loader))
     images.to(device)
@@ -48,11 +48,11 @@ def train():
     optimizer.zero_grad()
 
     generated_data = Dataset(c.DIRECTORY_GENERATED_DATA, label=generated_label, transform=transform)
-    batch_size = min(len(generated_data),len(arxiv_data))
+    batchsize = min(len(generated_data),len(arxiv_data))
 
-    generated_data.append(arxiv_data.random(amount=batch_size))
+    generated_data.append(arxiv_data.random(amount=batchsize))
 
-    loader = DataLoader(generated_data, batch_size)
+    loader = DataLoader(generated_data, batchsize)
     iterator = iter(loader)
 
     for images, labels in iterator:
@@ -71,3 +71,15 @@ def train():
 
         loss.backward()
         optimizer.step()
+
+def save_parameters(folder):
+
+    file = folder + 'discriminator_parameters.pt'
+    torch.save(model.state_dict(), file)
+
+
+def load_parameters(folder):
+
+    file = folder + 'discriminator_parameters.pt'
+    model.load_state_dict(torch.load(file))
+

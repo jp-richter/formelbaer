@@ -25,17 +25,17 @@ optimizer = torch.optim.Adam(policy_net.parameters(), lr=learnrate)
 eps = finfo(float32).eps.item()
 
 
-def step(batch=None, hidden=None, batch_size=None):
+def step(batch=None, hidden=None, batchsize=None):
 
-    if batch_size is None and batch is None:
+    if batchsize is None and batch is None:
         raise ValueError('Either specify a batch size or provide a batch.')
 
     # generate a new batch of sequences
     if batch == None:
         optimizer.zero_grad()
 
-        batch = torch.zeros(batch_size,1,tokens.count())
-        hidden = policy_net.init_hidden(layers, batch_size, hidden_dim)
+        batch = torch.zeros(batchsize,1,tokens.count())
+        hidden = policy_net.init_hidden(layers, batchsize, hidden_dim)
 
         batch.requires_grad = False
         batch.to(device)
@@ -48,17 +48,17 @@ def step(batch=None, hidden=None, batch_size=None):
     return batch, hidden
 
 
-def rollout(length, batch=None, hidden=None, batch_size=None):
+def rollout(length, batch=None, hidden=None, batchsize=None):
 
-    if batch_size is None and batch is None:
+    if batchsize is None and batch is None:
         raise ValueError('Either specify a batch size or provide a batch.')
 
     with torch.no_grad():
 
         # generate a new batch of sequences
         if batch is None:
-            batch = torch.zeros([batch_size,1,tokens.count()])
-            hidden = rollout_net.init_hidden(layers,batch_size,hidden_dim)
+            batch = torch.zeros([batchsize,1,tokens.count()])
+            hidden = rollout_net.init_hidden(layers,batchsize,hidden_dim)
 
         for _ in range(length - batch.shape[1]):
             _, _, batch, hidden = decision(rollout_net, batch, hidden)
@@ -114,8 +114,8 @@ def update_policy():
     increment = torch.sum(increment, dim=1)
 
     # average rewards over batch
-    batch_size = increment.shape[0]
-    increment = torch.sum(increment) / batch_size
+    batchsize = increment.shape[0]
+    increment = torch.sum(increment) / batchsize
 
     running_reward += increment.item()
     increment.backward()
@@ -128,3 +128,15 @@ def update_policy():
 def update_rollout():
 
     rollout_net.load_state_dict(policy_net.state_dict())
+
+
+def save_parameters(folder):
+
+    file = folder + 'generator_parameters.pt'
+    torch.save(policy_net.state_dict(), file)
+
+
+def load_parameters(folder):
+
+    file = folder + 'generator_parameters.pt'
+    policy_net.load_state_dict(torch.load(file))

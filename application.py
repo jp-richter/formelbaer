@@ -9,31 +9,47 @@ import shutil
 import os
 import converter
 import logging
+import datetime
 
 import constants as c
 from pathlib import Path
 
 
-logging.basicConfig(level=logging.INFO, filename='results.log')
+logfile = c.DIRECTORY_APPLICATION + '/results.log'
+logging.basicConfig(level=logging.INFO, filename=logfile)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-arxiv_data_dir = c.DIRECTORY_ARXIV_DATA
-generated_data_dir = c.DIRECTORY_GENERATED_DATA
-
-iterations = c.ADVERSARIAL_ITERATIONS
-discriminator_steps = c.ADVERSARIAL_DISCRIMINATOR_STEPS
-generator_steps = c.ADVERSARIAL_GENERATOR_STEPS
-sequence_length = c.ADVERSARIAL_SEQUENCE_LENGTH
-montecarlo_steps = c.ADVERSARIAL_MONTECARLO
-batch_size = c.ADVERSARIAL_PREFERRED_BATCH_SIZE
-
 
 # TODO malus fuer syntaktisch inkorrekte baeume
-
 # trade off: computation time vs batch size effects
 # trade off: more generalization with lower batch size but less accurate gradients
 # TODO tests: make up for high batch sizes with learning rate?
+
+
+def save():
+
+    # all results go here
+    folder = constants.DIRECTORY_APPLICATION + '/'+ str(datetime.datetime.now())
+    os.makedirs(folder)
+
+    # save 100 example pngs
+    pngs = folder + '/pngs'
+    os.makedirs(pngs)
+
+    generator.update_rollout()
+    examples = generator.rollout(sequence_length, batchsize=100)
+
+    converter.convert(examples, pngs)
+    converter.cleanup(pngs)
+
+    # save model parameters
+    generator.save_parameters(folder)
+    discriminator.save_parameters(folder)
+
+    # save result and parameter logs
+    shutil.copyfile(logfile, folder + '/results.log')
+    c.log(folder)
 
 
 def clear(folder):
@@ -46,39 +62,39 @@ def main():
 
     # pre training
 
-    for iteration in range(iterations):
-        for _ in range(discriminator_steps):
+    for iteration in range(c.ADVERSARIAL_ITERATIONS):
+        for _ in range(c.ADVERSARIAL_DISCRIMINATOR_STEPS):
             
-            samples = generator.rollout(sequence_length, batch_size=batch_size)
-            converter.convert(samples, generated_data_dir)
+            samples = generator.rollout(c.ADVERSARIAL_SEQUENCE_LENGTH, batchsize=c.ADVERSARIAL_BATCHSIZE)
+            converter.convert(samples, c.DIRECTORY_GENERATED_DATA)
             discriminator.train()
-            clear(generated_data_dir)
+            clear(c.DIRECTORY_GENERATED_DATA)
 
         generator.update_rollout()
 
         for _ in range(generator_steps):
             
-            for current_length in range(sequence_length):
-                batch, hidden = generator.step(batch_size=batch_size)
-                state_action_values = torch.empty([batch_size,0])
-                missing_length = sequence_length - current_length
+            for current_length in range(c.ADVERSARIAL_SEQUENCE_LENGTH):
+                batch, hidden = generator.step(batchsize=c.ADVERSARIAL_BATCHSIZE)
+                state_action_values = torch.empty([c.ADVERSARIAL_BATCHSIZE,0])
+                missing_length = c.ADVERSARIAL_SEQUENCE_LENGTH - current_length
 
-                for _ in range(montecarlo_steps):
+                for _ in range(c.ADVERSARIAL_MONTECARLO_TRIALS):
                     samples = generator.rollout(missing_length, batch, hidden)
-                    converter.convert(samples, generated_data_dir)
+                    converter.convert(samples, c.DIRECTORY_GENERATED_DATA)
 
-                    single_episode = discriminator.rewards(generated_data_dir)
+                    single_episode = discriminator.rewards(c.DIRECTORY_GENERATED_DATA)
                     single_episode = single_episode[:,None]
                     state_action_values = torch.cat([state_action_values, single_episode], dim=1)
 
-                    clear(generated_data_dir)
+                    clear(c.DIRECTORY_GENERATED_DATA)
 
                 state_action_values = torch.mean(state_action_values, dim=1)
                 generator.feedback(state_action_values)
 
             generator.update_policy()
 
-        if iterations % 1 == 0:
+        if iterations+1 % 5 == 0:
 
             greward = -1 * generator.running_reward / (iteration+1 * generator_steps)
             dloss = discriminator.running_loss / (iteration+1 * discriminator_steps)
@@ -92,15 +108,7 @@ def main():
             generator.running_reward = 0.0
             discriminator.running_loss = 0.0
 
-    generator.update_rollout()
-    for _ in range(math.ceil(100 / batch_size)):
-        evaluation = generator.rollout(sequence_length, batch_size=batch_size)
-        converter.convert(evaluation, generated_data_dir)
-
-    with os.scandir(generated_data_dir) as iterator:
-        for entry in iterator:
-            if entry.is_file() and not entry.name.endswith('.png'):
-                os.remove(entry)
+    save()
 
 if __name__ == "__main__":
     main()
