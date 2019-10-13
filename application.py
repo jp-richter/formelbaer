@@ -14,7 +14,7 @@ import constants as c
 from pathlib import Path
 
 
-logging.basicConfig(level=logging.INFO, file='results.log')
+logging.basicConfig(level=logging.INFO, filename='results.log')
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
