@@ -29,13 +29,12 @@ ADVERSARIAL_DISCRIMINATOR_STEPS = 2 # (*2) due to implementation
 ADVERSARIAL_GENERATOR_STEPS = 1
 ADVERSARIAL_SEQUENCE_LENGTH = 16
 ADVERSARIAL_MONTECARLO = 16
-ADVERSARIAL_PREFERRED_BATCH_SIZE = 32
+# ADVERSARIAL_PREFERRED_BATCH_SIZE = 32
+ADVERSARIAL_PREFERRED_BATCH_SIZE = multiprocessing.cpu_count()*4
 
-if multiprocessing.cpu_count() > 15:
-	ADVERSARIAL_PREFERRED_BATCH_SIZE = multiprocessing.cpu_count()*4
-	# TODO test with two or three times the amound to justify fork overhead?
-	# batch size vs learning rate
-	# trade off: more generalization with lower batch size but less accurate gradients
+# trade off: computation time vs batch size effects
+# trade off: more generalization with lower batch size but less accurate gradients
+# TODO tests: make up for high batch sizes with learning rate?
 
 #
 # GENERATOR

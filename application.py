@@ -8,11 +8,15 @@ import datetime
 import shutil
 import os
 import converter
+import logging
 
 import constants as c
-
 from pathlib import Path
 
+
+logging.basicConfig(level=logging.INFO, file='results.log')
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 arxiv_data_dir = c.DIRECTORY_ARXIV_DATA
 generated_data_dir = c.DIRECTORY_GENERATED_DATA
@@ -26,6 +30,10 @@ batch_size = c.ADVERSARIAL_PREFERRED_BATCH_SIZE
 
 
 # TODO malus fuer syntaktisch inkorrekte baeume
+
+# trade off: computation time vs batch size effects
+# trade off: more generalization with lower batch size but less accurate gradients
+# TODO tests: make up for high batch sizes with learning rate?
 
 
 def clear(folder):
@@ -75,11 +83,11 @@ def main():
             greward = -1 * generator.running_reward / (iteration+1 * generator_steps)
             dloss = discriminator.running_loss / (iteration+1 * discriminator_steps)
 
-            print('###')
-            print('Iteration {}'.format(iteration))
-            print('Generator Reward {}'.format(greward))
-            print('Discriminator Loss {}'.format(dloss))
-            print('###')
+            log.info('''###
+                Iteration {iteration}
+                Generator Reward {greward}
+                Discriminator Loss {dloss}
+                ###'''.format(iteration=iteration, greward=greward, dloss=dloss))
 
             generator.running_reward = 0.0
             discriminator.running_loss = 0.0
