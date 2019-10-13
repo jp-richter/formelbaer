@@ -19,7 +19,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         self.samples = []
         self.transform = transform
 
-        crawl(folder, recursive)
+        self.crawl(folder, recursive)
 
     def __len__(self): 
 
