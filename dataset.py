@@ -13,19 +13,13 @@ _protocol = {
 
 class Dataset(torchvision.datasets.vision.VisionDataset):
 
-    def __init__(self, folder, label=None, transform=None):
+    def __init__(self, folder, label=None, transform=None, recursive=False):
         super(Dataset, self).__init__(folder,transform=transform)
 
         self.samples = []
         self.transform = transform
 
-        with os.scandir(folder) as iterator:
-            for entry in iterator:
-                if entry.is_file():
-                    if entry.name.endswith('.png'): 
-                        self.samples.append((folder + '/' + entry.name, label, '.png'))
-                    elif entry.name.endswith('.pt'):
-                        self.samples.append((folder + '/' + entry.name, label, '.pt'))
+        crawl(folder, recursive)
 
     def __len__(self): 
 
@@ -40,6 +34,20 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
             image = self.transform(image)
 
         return image, label
+
+    def crawl(folder, recursive):
+
+        with os.scandir(folder) as iterator:
+            for entry in iterator:
+                
+                if entry.is_file():
+                    if entry.name.endswith('.png'): 
+                        self.samples.append((folder + '/' + entry.name, label, '.png'))
+                    elif entry.name.endswith('.pt'):
+                        self.samples.append((folder + '/' + entry.name, label, '.pt'))
+
+                if entry.is_dir() and recursive:
+                    crawl(folder + '/' + entry.name)
 
     def append(self, other):
 

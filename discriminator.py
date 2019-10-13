@@ -20,7 +20,7 @@ transform = transforms.Compose([
     lambda img: img[1]])
 arxiv_label = 0
 generated_label = 1
-arxiv_data = Dataset(c.DIRECTORY_ARXIV_DATA, label=arxiv_label, transform=transform)
+arxiv_data = Dataset(c.DIRECTORY_ARXIV_DATA, label=arxiv_label, transform=transform, recursive=True)
 
 
 running_loss = 0.0
