@@ -10,17 +10,15 @@ import logging
 # '/rdata/schill/arxiv_processed/all/pngs'
 # '/rdata/schill/equationlearning'
 
-if os.path.exists('/rdata'):
-    DIRECTORY_APPLICATION = '/ramdisk/formelbaer_data/'
-
-else:
-    DIRECTORY_APPLICATION = str(pathlib.Path.home()) + '/formelbaer'
-
-DIRECTORY_GENERATED_DATA = DIRECTORY_APPLICATION + '/generated'
+DIRECTORY_APPLICATION = '/ramdisk/formelbaer_data/'
+DIRECTORY_SYNTHETIC_DATA = DIRECTORY_APPLICATION + '/synthetic'
 DIRECTORY_ARXIV_DATA = DIRECTORY_APPLICATION + '/arxiv'
-FILE_LOG = c.DIRECTORY_APPLICATION + '/results.log'
+DIRECTORY_ORACLE_DATA = DIRECTORY_APPLICATION + '/oracle'
 
-ADVERSARIAL_ITERATIONS = 100
+FILE_LOG = DIRECTORY_APPLICATION + '/results.log'
+FILE_ORACLE = DIRECTORY_APPLICATION + '/oracle.pt'
+
+ADVERSARIAL_ITERATIONS = 2
 ADVERSARIAL_DISCRIMINATOR_STEPS = 2 # (*2) due to computational cost reasons
 ADVERSARIAL_GENERATOR_STEPS = 1
 ADVERSARIAL_SEQUENCE_LENGTH = 16
@@ -28,6 +26,7 @@ ADVERSARIAL_MONTECARLO_TRIALS = 16 # seqGan
 ADVERSARIAL_BATCHSIZE = multiprocessing.cpu_count()*4
 
 ORACLE = False
+ORACLE_SAMPLESIZE = 100
 
 LABEL_SYNTH = 1
 LABEL_ARXIV = 0

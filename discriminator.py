@@ -3,30 +3,30 @@
 # sorge im datenset dafuer, dass alles auf device laeuft
 # biete methoden in dataclasse die die daten entsprechend vorbereitet, get loader ()
 
-def evaluate_single_batch(model, samples):
+def evaluate_single_batch(nn_discriminator, samples):
 
     # samples: (batchsize, height, width)
 
     samples = samples[:,None,:,:]
-    rewards = model(samples)
+    rewards = nn_discriminator(samples)
 
-    return rewards[:,0] # [:,0] P(x ~ arxiv)
+    return rewards[:,0] # [:,0] P(x ~ arxiv / oracle)
 
 
-def evaluate_multiple_batches(model, loader):
+def evaluate_multiple_batches(nn_discriminator, loader):
 
     rewards = []
 
     for images, _ in loader:
 
         images = images[:,None,:,:]
-        reward = model(images)
+        reward = nn_discriminator(images)
         rewards.append(reward)
 
     return rewards
 
 
-def update(model, optimizer, criterion, loader):
+def update(nn_discriminator, d_opt, d_crit, loader):
 
     for images, labels in loader:
 
@@ -36,14 +36,14 @@ def update(model, optimizer, criterion, loader):
         # add channel
         images = images[:,None,:,:]
 
-        outputs = model(images)
-        loss = criterion(outputs[:,1], labels)
+        outputs = nn_discriminator(images)
+        loss = d_crit(outputs[:,1], labels)
 
-        # output[:,0] P(x ~ arxiv)
+        # output[:,0] P(x ~ arxiv / oracle)
         # output[:,1] P(x ~ generator)
 
-        model.running_loss += loss.item()
+        nn_discriminator.running_loss += loss.item()
 
         loss.backward()
-        optimizer.step()
+        d_opt.step()
         

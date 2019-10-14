@@ -75,3 +75,6 @@ class Oracle(Policy):
 
     def __init__(self):
         super(self).__init__(oracle=True)
+
+        self.eval()
+        self.running_loss = 0.0

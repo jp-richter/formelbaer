@@ -3,11 +3,14 @@ import constants as const
 import logging
 import shutil
 
+# TODO oracle einbinden
+
 log = None
 
 # making parsing a bit easier
 generator_loss_sequence = []
 discriminator_loss_sequence = []
+oracle_loss_sequence = []
 
 def start_experiment():
 
@@ -39,6 +42,9 @@ def start_experiment():
 	    Discriminator Dropout {}
 	    Discriminator Learnrate {}
 
+	    Oracle Use {}
+	    Oracle Sample Size {}
+
 	    '''.format(
 	        const.ADVERSARIAL_ITERATIONS, 
 	        const.ADVERSARIAL_DISCRIMINATOR_STEPS, 
@@ -52,26 +58,36 @@ def start_experiment():
 	        const.GENERATOR_BASELINE,
 	        const.GENERATOR_GAMMA, 
 	        const.DISCRIMINATOR_DROPOUT, 
-	        const.DISCRIMINATOR_LEARNRATE))
+	        const.DISCRIMINATOR_LEARNRATE,
+	        const.ORACLE,
+	        const.ORACLE_SAMPLESIZE))
 
 
-def log(iteration, g_steps, d_steps, nn_generator, nn_discriminator):
+def log(iteration, g_steps, d_steps, nn_generator, nn_discriminator, nn_oracle, printout=False):
 
     g_reward = -1 * nn_generator.running_reward / (iteration * g_steps)
-    d_loss = discriminator.running_loss / (iteration * d_steps)
+    o_loss = nn_oracle.running_loss / (iteration * g_steps)
+    d_loss = nn_discriminator.running_loss / (iteration * d_steps)
 
-    log.info('''###
+    entry = '''###
         Iteration {iteration}
         Generator Reward {greward}
         Discriminator Loss {dloss}
+        Oracle Loss {oloss}
 
-        '''.format(iteration=iteration, greward=g_reward, dloss=d_loss))
+        '''.format(iteration=iteration, greward=g_reward, dloss=d_loss, oloss=o_loss)
 
-    generator_loss_sequence.append(generator.running_reward)
-    discriminator_loss_sequence.append(discriminator.running_loss)
+    log.info(entry)
 
-    generator.running_reward = 0.0
-    discriminator.running_loss = 0.0
+    if printout: print(entry)
+
+    generator_loss_sequence.append(nn_generator.running_reward)
+    discriminator_loss_sequence.append(nn_discriminator.running_loss)
+    oracle_loss_sequence.append(nn_oracle.running_loss)
+
+    nn_generator.running_reward = 0.0
+    nn_discriminator.running_loss = 0.0
+    nn_oracle.running_loss = 0.0
 
 
 def finish_experiment(directory):
@@ -82,7 +98,9 @@ def finish_experiment(directory):
 
     generator_loss_sequence = ', '.join(map(str, generator_loss_sequence))
     discriminator_loss_sequence = ', '.join(map(str, discriminator_loss_sequence))
+    oracle_loss_sequence = ', '.join(map(str, oracle_loss_sequence))
     log.info('Generator Loss as Sequence: ' + generator_loss_sequence)
     log.info('Discriminator Loss as Sequence ' + discriminator_loss_sequence)
+    log.info('Oracle Loss as Sequence ' + oracle_loss_sequence)
 
     shutil.copyfile(c.FILE_LOG, directory + '/results.log')

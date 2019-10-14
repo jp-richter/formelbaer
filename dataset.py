@@ -22,6 +22,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         }
 
         self.samples = []
+        self.index = 0
         self.__crawl__(folder, label, recursive)
 
     def __len__(self): 
@@ -57,3 +58,18 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
     def random(self, amount):
 
         return random.sample(self.samples, k=amount)
+
+    def inorder(self, amount):
+
+        if index + amount >= len(self):
+            samples = self.samples[self.index:]
+            samples += self.samples[:(amount-(len(self)-self.index))]
+
+            self.index = amount-(len(self)-self.index)
+
+        else:
+            samples = self.samples[index:index+amount]
+
+            self.index += amount 
+
+        return samples
