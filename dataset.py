@@ -13,10 +13,10 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         super(Dataset, self).__init__(folder)
 
         self.transform = transforms.Compose([
-            lambda img: img.convert(mode='LA'),
+            lambda img: img.convert(mode='L'), # fachprojekt uses LA
             transforms.CenterCrop((32, 333)),
-            transforms.ToTensor(),
-            lambda img: img[1]])
+            transforms.ToTensor()])
+            # lambda img: img[0]]) # fachprojekt takes alpha channel (??)
 
         self.protocol = {
             '.png' : lambda path : PIL.Image.open(path),

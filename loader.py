@@ -54,7 +54,7 @@ def load_single_batch(synthetic_samples):
 
 def get_experiment_directory():
 
-    directory = cfg.paths_cfg.app + '/' + str(datetime.datetime.now())
+    directory = cfg.paths_cfg.app + '/' + str(datetime.datetime.now())[-15:]
     os.makedirs(directory)
 
     return directory

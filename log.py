@@ -67,7 +67,7 @@ def start_experiment():
 def write(iteration, nn_generator, nn_discriminator, nn_oracle, printout=False):
     global log
 
-    g_reward = -1 * nn_generator.running_reward / (iteration * cfg.app_cfg.g_steps)
+    g_reward = nn_generator.running_reward / (iteration * cfg.app_cfg.g_steps)
     o_loss = nn_oracle.running_loss / (iteration * cfg.app_cfg.g_steps)
     d_loss = nn_discriminator.running_loss / (iteration * cfg.app_cfg.d_steps)
 

@@ -9,6 +9,10 @@ import generator
 import discriminator
 import loader
 import log
+import os
+
+
+# TODO wieso kann ich negative rewards bekommen??
 
 
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit):
@@ -91,6 +95,7 @@ def adversarial_training():
     log.finish_experiment(directory)
 
     evaluation = generator.sample(nn_policy, math.ceil(100 / cfg.app_cfg.batchsize))
+    os.makedirs(directory + '/pngs')
     loader.save_pngs(evaluation, directory + '/pngs')
 
 
