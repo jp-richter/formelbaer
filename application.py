@@ -1,124 +1,107 @@
+from nn_policy import Policy, Oracle
+from nn_discriminator import Discriminator
+
+import constants as const
+
+import math
+import torch
 import generator
 import discriminator
-import torch
-import tokens
-import tree
-import math
-import datetime
-import shutil
-import os
-import converter
-import logging
-import datetime
-
-import constants as c
-from pathlib import Path
+import loader
+import log
 
 
-log = None
+def device()
+
+    if torch.cuda.is_available():
+        return torch.device('cuda')
+    else:
+        return torch.device('cpu')
 
 
-def save_experiment():
+def generator_training(policy, rollout, oracle, optimizer, num_steps, seq_length, batchsize, mc_trials):
 
-    # all results go here
-    folder = constants.DIRECTORY_APPLICATION + '/'+ str(datetime.datetime.now())
-    os.makedirs(folder)
+    policy.train()
+    rollout.eval()
 
-    # save 100 example pngs
-    pngs = folder + '/pngs'
-    os.makedirs(pngs)
+    rollout.set_parameters_to(policy)
 
-    generator.update_rollout()
-    examples = generator.rollout(sequence_length, batchsize=100)
+    for _ in range(num_steps):
+        batch, hidden = policy.inital()
 
-    converter.convert(examples, pngs)
-    converter.cleanup(pngs)
+        for length in seq_length:
+            batch, hidden = generator.step(policy, batch, hidden)
+            q_values = torch.empty([batchsize, 0])
 
-    # save model parameters
-    generator.save_parameters(folder)
-    discriminator.save_parameters(folder)
+            for _ in range(mc_trials):
+                samples = generator.rollout(rollout, batch, hidden)
+                samples = loader.load_single_batch(samples)
+                reward = discriminator.evaluate_single_batch(samples)
 
-    # save result and parameter logs
-    shutil.copyfile(c.FILE_RESULT_LOG, folder + '/results.log')
-    shutil.copyfile(c.FILE_PARAMETERS_LOG, folder + '/parameters.log')
+                q_values = torch.cat([q_values, reward], dim=1)
 
+            q_values = torch.mean(q_values, dim=1)
+            generator.reward(q_values)
 
-def log_results(iteration):
-    global log
-
-    if log is None:
-        logging.basicConfig(level=logging.INFO, filename=c.FILE_RESULT_LOG)
-        log = logging.getLogger(__name__)
-        log.setLevel(logging.INFO)
-
-    greward = -1 * generator.running_reward / (iteration * c.ADVERSARIAL_GENERATOR_STEPS)
-    dloss = discriminator.running_loss / (iteration * c.ADVERSARIAL_DISCRIMINATOR_STEPS)
-
-    log.info('''###
-        Iteration {iteration}
-        Generator Reward {greward}
-        Discriminator Loss {dloss}
-        ###'''.format(iteration=iteration, greward=greward, dloss=dloss))
-
-    generator.running_reward = 0.0
-    discriminator.running_loss = 0.0
+        generator.update(policy, optimizer)
 
 
-def clear(folder):
+def discriminator_training(model, generator, oracle, optimizer, criterion, num_steps, seq_length):
 
-    shutil.rmtree(folder)
-    os.makedirs(folder)
+    model.train()
+    generator.eval()
 
+    for _ in range(num_steps):
 
-def discriminator_training():
-
-    samples = generator.rollout()
-    half = samples[:len(samples)//2]
-    converter.convert_to_png(half)
-    discriminator.train()
-    clear(c.DIRECTORY_GENERATED_DATA)
-
-
-def generator_training():
-
-    for current_length in range(c.ADVERSARIAL_SEQUENCE_LENGTH):
-
-        batch, hidden = generator.step()
-        state_action_values = torch.empty([c.ADVERSARIAL_BATCHSIZE,0])
-
-        for _ in range(c.ADVERSARIAL_MONTECARLO_TRIALS):
-
-            samples = generator.rollout(batch, hidden)
-            converter.convert_to_png(samples)
-
-            single_episode = discriminator.rewards()
-            single_episode = single_episode[:,None]
-            state_action_values = torch.cat([state_action_values, single_episode], dim=1)
-
-            clear(c.DIRECTORY_GENERATED_DATA)
-
-        state_action_values = torch.mean(state_action_values, dim=1)
-        generator.feedback(state_action_values)
-
-    generator.update_policy()
+        synthetic = generator.sample(generator, 1, seq_length)
+        loader = loader.get_pos_neg_loader(synthetic)
+        discriminator.update(model, optimizer, criterion, loader)
 
 
 def adversarial_training():
 
-    for iteration in range(c.ADVERSARIAL_ITERATIONS):
+    # initialization
 
-        for _ in range(c.ADVERSARIAL_DISCRIMINATOR_STEPS):
-            discriminator_training()
+    device = device()
 
-        for _ in range(c.ADVERSARIAL_GENERATOR_STEPS):
-            generator_training()
+    nn_discriminator = Discriminator()
+    nn_policy = Policy()
+    nn_rollout = Policy()
+    nn_oracle = None
 
-        generator.update_rollout()
+    if const.ORACLE:
+        nn_oracle = Oracle()
 
-        if iteration+1 % 5 == 0:
-            log_results(iteration+1)
+    d_lr = const.DISCRIMINATOR_LEARNRATE
+    g_lr = const.GENERATOR_LEARNRATE
 
-    save_experiment()
+    d_opt = torch.optim.Adam(nn_discriminator.parameters(), lr=d_lr)
+    d_crit = torch.nn.BCELoss()
+    p_opt = torch.optim.Adam(nn_policy.parameters(), lr=g_lr)
 
-if __name__ == "__main__":
-    adversarial_training()
+    iterations = const.ADVERSARIAL_ITERATIONS
+    g_steps = const.ADVERSARIAL_GENERATOR_STEPS
+    d_steps = const.ADVERSARIAL_DISCRIMINATOR_STEPS
+    seq_length = const.ADVERSARIAL_SEQUENCE_LENGTH
+    mc_trials = const.ADVERSARIAL_MONTECARLO_TRIALS
+    batchsize = const.ADVERSARIAL_BATCHSIZE
+
+    # start adversarial training
+
+    loader.initialize(device)
+    log.start_experiment()
+
+    for i in range(iterations):
+
+        discriminator_training(nn_discriminator, nn_rollout, nn_oracle, d_opt, d_crit, d_steps, seq_length)
+        generator_training(nn_policy, nn_rollout, nn_oracle, g_steps, seq_length, batchsize, mc_trials)
+
+        log.log(i, g_steps, d_steps, nn_policy, nn_discriminator, nn_oracle)
+
+    # finish experiment
+
+    directory = loader.get_experiment_directory()
+    log.finish_experiment(directory)
+
+    evaluation = generator.sample(policy, math.ceil(100 / batchsize), seq_length)
+    loader.save_pngs(evaluation, directory + '/pngs')

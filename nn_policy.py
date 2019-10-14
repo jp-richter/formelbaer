@@ -6,29 +6,30 @@ import torch.nn.functional as F
 import constants
 
 
-input_dim = tokens.count()
-output_dim = tokens.count()
+class Policy(nn.Module):
 
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    def __init__(self, oracle=False):
+        super(Policy, self).__init__()
 
-
-class PolicyNetwork(nn.Module):
-
-    def __init__(self):
-        super(PolicyNetwork, self).__init__()
+        self.input_dim = tokens.count()
+        self.output_dim = tokens.count()
+        self.hidden_dim = constants.GENERATOR_HIDDEN_DIM
+        self.dropout = constants.GENERATOR_DROPOUT
+        self.layers = constants.GENERATOR_LAYERS
         
-        self.gru = nn.GRU(input_dim,
-            constants.GENERATOR_HIDDEN_DIM,
-            constants.GENERATOR_LAYERS,
-            batch_first=True,
-            dropout=constants.GENERATOR_DROPOUT)
-
-        self.lin = nn.Linear(constants.GENERATOR_HIDDEN_DIM, output_dim)
+        self.gru = nn.GRU(input_dim,self.hidden_dim,self.layers,batch_first=True,self.dropout)
+        self.lin = nn.Linear(self.hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=0)
 
+        if oracle:
+            for param in self.parameters():
+                torch.nn.init.normal(p, 0, 1)
+
         self.probs = []
         self.rewards = []
+
+        self.running_reward = 0.0
         
     def forward(self, x, h):
         
@@ -41,8 +42,36 @@ class PolicyNetwork(nn.Module):
 
         return out, h
     
-    def init_hidden(self):
+    def initial(self):
 
-        return torch.zeros(constants.GENERATOR_LAYERS, 
-            constants.ADVERSARIAL_BATCHSIZE, 
-            constants.GENERATOR_HIDDEN_DIM).to(device)
+        batch = torch.zeros(constants.ADVERSARIAL_BATCHSIZE,1,self.input_dim)
+        hidden = torch.zeros(self.layers,constants.ADVERSARIAL_BATCHSIZE,self.hidden_dim)
+        
+        if torch.cuda.is_available():
+            batch.to('cuda')
+            hidden.to('cuda')
+        else:
+            batch.to('cpu')
+            hidden.to('cpu')
+
+        batch.requires_grad = False
+
+        return batch, hidden
+
+    def save(self, file):
+
+        torch.save(self.state_dict(), file)
+
+    def load(self, file):
+
+        self.load_state_dict(torch.load(file))
+
+    def set_parameters_to(self, policy):
+
+        self.load_state_dict(policy.state_dict())
+
+
+class Oracle(Policy):
+
+    def __init__(self):
+        super(self).__init__(oracle=True)
