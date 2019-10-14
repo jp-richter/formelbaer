@@ -3,8 +3,6 @@ import constants as const
 import logging
 import shutil
 
-# TODO oracle einbinden
-
 log = None
 
 # making parsing a bit easier
