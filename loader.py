@@ -1,114 +1,107 @@
-from dataset import Dataset 
+from dataset import Dataset
+from torch.utils.data import DataLoader
 
-import constants as const
-
+import config as cfg
 import converter
 import nn_policy
 import math
+import os
+import shutil
 import generator
+import datetime
 
 
 arxiv_data = None
 oracle_data = None
-device = None
-
-
-def device():
-
-	return device
 
 
 def refresh():
 
-    shutil.rmtree(const.DIRECTORY_GENERATED_DATA)
-    os.makedirs(const.DIRECTORY_GENERATED_DATA)
+    shutil.rmtree(cfg.paths_cfg.synthetic_data)
+    os.makedirs(cfg.paths_cfg.synthetic_data)
 
 
 def save_pngs(samples, directory):
 
-	converter.convert_to_png(samples, directory)
+    converter.convert_to_png(samples, directory)
 
 
 def get_pos_neg_loader(synthetic_samples):
 
-	refresh()
+    refresh()
 
-	save_pngs(synthetic_samples, const.DIRECTORY_GENERATED_DATA)
-    data = Dataset(const.DIRECTORY_GENERATED_DATA, label=const.LABEL_SYNTH)
+    save_pngs(synthetic_samples, cfg.paths_cfg.synthetic_data)
+    data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
 
-	if const.ORACLE:
-		data.append(oracle_data.inordner(const.ADVERSARIAL_BATCHSIZE))
+    if cfg.app_cfg.oracle:
+        data.merge(oracle_data.inorder(cfg.app_cfg.batchsize))
+    else:
+        data.merge(arxiv_data.random(cfg.app_cfg.batchsize))
 
-	else:
-    	data.append(arxiv_data.random(const.ADVERSARIAL_BATCHSIZE))
-
-
-    loader = DataLoader(data, const.ADVERSARIAL_BATCHSIZE)
-
-    return loader
+    return DataLoader(data, batch_size=cfg.app_cfg.batchsize, drop_last=True, shuffle=True)
 
 
 def load_single_batch(synthetic_samples):
 
-	refresh()
+    refresh()
 
-	save_pngs(synthetic_samples, const.DIRECTORY_GENERATED_DATA)
-	data = Dataset(DIRECTORY_GENERATED_DATA, label=const.LABEL_SYNTH)
-	loader = DataLoader(data, const.ADVERSARIAL_BATCHSIZE)
+    save_pngs(synthetic_samples, cfg.paths_cfg.synthetic_data)
+    data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
+    loader = DataLoader(data, cfg.app_cfg.batchsize)
 
-	return next(iter(loader))
+    return next(iter(loader))[0] # (samples, labels)
 
 
 def get_experiment_directory():
 
-    directory = constants.DIRECTORY_APPLICATION + '/'+ str(datetime.datetime.now())
+    directory = cfg.paths_cfg.app + '/' + str(datetime.datetime.now())
     os.makedirs(directory)
 
     return directory
 
 
-def initialize(device):
-	global arxiv_data, oracle_data, device
+def make_directories():
 
-	# make missing directories
+    if not os.path.exists(cfg.paths_cfg.app):
+        os.makedirs(cfg.paths_cfg.app)
 
-	if os.path.exists(const.DIRECTORY_SFB_CLUSTER_ARXIV_DATA):
-		const.DIRECTORY_ARXIV_DATA = const.DIRECTORY_SFB_CLUSTER_ARXIV_DATA
+    if not os.path.exists(cfg.paths_cfg.synthetic_data):
+        os.makedirs(cfg.paths_cfg.synthetic_data)
 
-	if not os.path.exists(const.DIRECTORY_APPLICATION):
-		os.makedirs(const.DIRECTORY_APPLICATION)
+    if not os.path.exists(cfg.paths_cfg.oracle_data):
+        os.makedirs(cfg.paths_cfg.oracle_data)
 
-	if not os.path.exists(const.DIRECTORY_GENERATED_DATA):
-		os.makedirs(const.DIRECTORY_GENERATED_DATA)
+    if not os.path.exists(cfg.paths_cfg.arxiv_data) and not cfg.app_cfg.oracle:
+        raise ValueError('Either train with Oracle or provide training samples.')
 
-	if not os.path.exists(const.DIRECTORY_ORACLE_DATA):
-		os.makedirs(const.DIRECTORY_ORACLE_DATA)
 
-	if not os.path.exists(DIRECTORY_ARXIV_DATA):
-		pass
+def initialize():
+    global arxiv_data, oracle_data
 
-	device = device
+    if cfg.app_cfg.oracle:
 
-	# load positive example data either from oracle or arxiv
+        # save oracle net with random weights
+        if not os.path.exists(cfg.paths_cfg.oracle):
+            nn_oracle = nn_policy.Oracle()
+            nn_oracle.save(cfg.paths_cfg.oracle) 
 
-	if const.ORACLE:
+        # store samples from oracle distribution for adversarial training
+        samplesize = len([name for name in os.listdir(cfg.paths_cfg.oracle_data) 
+            if os.path.isfile(os.path.join(cfg.paths_cfg.oracle_data, name))])
 
-	    # save oracle net with random weights
-	    if not os.path.exists(const.FILE_ORACLE):
-	        nn_policy.Oracle().save(const.FILE_ORACLE) 
+        missing = cfg.app_cfg.oracle_samplesize - samplesize
+        batch_num = math.ceil(missing / cfg.app_cfg.batchsize)
 
-	    # store samples from oracle distribution for adversarial training
-	    samplesize = len([name for name in os.listdir(const.DIRECTORY_ORACLE_DATA) 
-	    	if os.path.isfile(os.path.join(DIRECTORY_ORACLE_DATA, name))])
+        samples = generator.sample(nn_oracle, batch_num)
+        save_pngs(samples, cfg.paths_cfg.oracle_data)
 
-	    missing = const.ORACLE_SAMPLESIZE - samplesize
-        batch_num = math.ceil(missing / const.ADVERSARIAL_BATCHSIZE)
-
-        samples = generator.sample(nn_oracle, batch_num, const.ADVERSARIAL_SEQUENCE_LENGTH)
-        save_pngs(samples, const.DIRECTORY_ORACLE_DATA)
-
-        oracle_data = Dataset(const.DIRECTORY_ORACLE_DATA, label=const.LABEL_ARXIV)
+        oracle_data = Dataset(cfg.paths_cfg.oracle_data, label=cfg.app_cfg.label_arxiv)
 
     else:
 
-        arxiv_data = Dataset(const.DIRECTORY_ARXIV_DATA, label=const.LABEL_ARXIV, recursive=True)
+        arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
+
+        # need at least batchsize * discriminator steps * iterations expressions to match generated data
+        if len(arxiv_data) < cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations:
+            raise ValueError('Either provide more training samples or lower batchsize / d_steps.')
+

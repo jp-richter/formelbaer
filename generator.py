@@ -1,8 +1,8 @@
-from numpy import finfo, float
+from numpy import finfo, float32
 
 import tokens
 import torch
-import const
+import config as cfg
 
 def step(nn_policy, batch, hidden, nn_oracle, o_crit):
 
@@ -11,7 +11,7 @@ def step(nn_policy, batch, hidden, nn_oracle, o_crit):
     policies, hidden = nn_policy(state, hidden)
 
     # in case of oracle training compute oracle loss
-    if const.ORACLE:
+    if cfg.app_cfg.oracle and nn_oracle is not None:
         _, hidden = nn_oracle.inital()
         oracle_policies, _ = nn_oracle(batch, hidden)
         loss = o_crit(policies, oracle_policies)
@@ -32,27 +32,27 @@ def step(nn_policy, batch, hidden, nn_oracle, o_crit):
     return batch, hidden
 
 
-def rollout(nn_policy, batch, hidden, seq_length):
+def rollout(nn_policy, batch, hidden):
 
     _, current_length, _ = batch.size()
 
     with torch.no_grad():
 
-        for _ in range(seq_length - current_length):
-            _, _, batch, hidden = step(nn_policy, batch, hidden)
+        for _ in range(cfg.app_cfg.seq_length - current_length):
+            batch, hidden = step(nn_policy, batch, hidden, None, None)
 
     return batch
 
 
-def sample(nn_policy, num_batches, seq_length):
+def sample(nn_policy, num_batches):
 
-    batches = torch.empty([0,seq_length,nn_policy.input_dim])
+    batches = torch.empty([0,cfg.app_cfg.seq_length,nn_policy.input_dim])
 
     with torch.no_grad():
 
         for _ in range(num_batches):
             batch, hidden = nn_policy.initial()
-            batch = rollout(nn_policy, batch, hidden, seq_length)
+            batch = rollout(nn_policy, batch, hidden)
             batches = torch.cat([batches, batch], dim=0)
 
     return batches
@@ -71,7 +71,7 @@ def update(nn_policy, optimizer):
 
     # compute state action values for each step
     for reward in nn_policy.rewards[::-1]:
-        total = reward + gamma * total
+        total = reward + cfg.g_cfg.gamma * total
         returns.insert(0, total)
 
     # for each step standardize rewards in batch

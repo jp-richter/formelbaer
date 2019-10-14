@@ -9,18 +9,18 @@ import multiprocessing.sharedctypes
 import math
 import ctypes
 import pathlib
-import constants as c
+import config as cfg
 
 # preamble preloaded in preambel.fmt
 # pdf compression set to 0
-code_folder = pathlib.Path(__file__).resolve().parent
-preamble = pathlib.PurePath(code_folder,'preamble.fmt')
+code_directory = pathlib.Path(__file__).resolve().parent
+preamble = pathlib.PurePath(code_directory,'preamble.fmt')
 
 # precompile in case pdflatex versions differ
 precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump"'
 
 try:
-    subprocess.run(precompile_cmd, cwd=code_folder, stdout=subprocess.DEVNULL, shell=True)
+    subprocess.run(precompile_cmd, cwd=code_directory, stdout=subprocess.DEVNULL, shell=True)
 except Exception as e:
     print(e)
 
@@ -49,37 +49,38 @@ template = '''%&preamble
 '''
 
 current_start_index = None
-current_folder = None
+current_directory = None
 
 
 def processing(enumeration):
-    global current_folder, current_start_index
+    global current_directory, current_start_index
 
     index, expression = enumeration
     index += current_start_index
     
-    file = pdflatex(expression, current_folder, current_folder + '/' + str(index) + '.tex')
-    file = pdf2png(current_folder, file, str(index))
+    file = pdflatex(expression, current_directory, current_directory + '/' + str(index) + '.tex')
+    file = croppdf(current_directory, file, str(index))
+    file = pdf2png(current_directory, file, str(index))
 
 
-def cleanup(folder):
+def cleanup(directory):
 
-    with os.scandir(folder) as iterator:
+    with os.scandir(directory) as iterator:
         for entry in iterator:
             if entry.is_file() and not entry.name.endswith('.png'):
                 os.remove(entry)
 
 
-def convert_to_png(sequences, folder=c.DIRECTORY_GENERATED_DATA):
-    global current_folder, current_start_index
+def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
+    global current_directory, current_start_index
 
-    shutil.copyfile(preamble, folder + '/preamble.fmt')
+    shutil.copyfile(preamble, directory + '/preamble.fmt')
 
     trees = tree.batch2tree(sequences)
     expressions = [tree.latex() for tree in trees]
 
-    current_start_index = len(os.listdir(folder))
-    current_folder = folder
+    current_start_index = len(os.listdir(directory))
+    current_directory = directory
     free_cpus = multiprocessing.cpu_count()
 
     with multiprocessing.Pool(free_cpus) as pool:
@@ -89,7 +90,7 @@ def convert_to_png(sequences, folder=c.DIRECTORY_GENERATED_DATA):
         pool.join() # don't remove
 
 
-def pdflatex(expr, folder, file):
+def pdflatex(expr, directory, file):
 
     with open(file,'w') as f:
         f.write(template.format(expression=expr))
@@ -100,14 +101,14 @@ def pdflatex(expr, folder, file):
         file]
     #  stdout=subprocess.DEVNULL, 
     try:
-        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
+        subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=30)
     except Exception as e:
         print(e)
 
     return file[:-3] + 'pdf'
 
 
-def croppdf(folder, file, expr_id):
+def croppdf(directory, file, expr_id):
 
     cmd = ('gs '
         '-dUseCropBox '
@@ -119,19 +120,19 @@ def croppdf(folder, file, expr_id):
         '-c [/CropBox [550 0 850 100] ' # (x,y) (x',y')
         '-c /PAGES pdfmark '
         '-f {} '
-        '> /Users/jan/formelbaer/log.txt')
+        '> /Users/jan/formelbaer_data/dump.log')
 
-    cmd = cmd.format(folder,expr_id,file)
+    cmd = cmd.format(directory,expr_id,file)
 
     try:
-        subprocess.run(cmd, cwd=folder, shell=True)
+        subprocess.run(cmd, cwd=directory, shell=True)
     except Exception as e:
         print(e)
 
-    return folder + '/crop_' + expr_id + '.pdf'
+    return directory + '/crop_' + expr_id + '.pdf'
 
 
-def pdf2png(folder, file, expr_id):
+def pdf2png(directory, file, expr_id):
 
     cmd = ['gs',
         '-dUseCropBox',
@@ -144,8 +145,8 @@ def pdf2png(folder, file, expr_id):
         file]
     
     try:
-        subprocess.run(cmd, cwd=folder, stdout=subprocess.DEVNULL, timeout=30)
+        subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=30)
     except Exception as e:
         print(e)
 
-    return folder + '/' + expr_id + '.png'
+    return directory + '/' + expr_id + '.png'

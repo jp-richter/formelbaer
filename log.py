@@ -1,71 +1,75 @@
-import constants as const
-
+import config as cfg
 import logging
 import shutil
 
+
 log = None
 
-# making parsing a bit easier
 generator_loss_sequence = []
 discriminator_loss_sequence = []
 oracle_loss_sequence = []
 
-def start_experiment():
 
-    logging.basicConfig(level=logging.INFO, filename=const.FILE_LOG)
+def start_experiment():
+    global log
+
+    logging.basicConfig(level=logging.INFO, filename=cfg.paths_cfg.log)
     log = logging.getLogger(__name__)
     log.setLevel(logging.INFO)
 
     log.info('''STARTING EXPERIMENT
 
-    	''')
+        Models Version: 1
+        Systems Version: 1
 
-    log.info('''Models Version: 1
-    	Systems Version: 1
+        Total Iterations {}
+        Discriminator Steps {}
+        Generator Steps {}
+        Fixed Sequence Length {}
+        Monte Carlo Trials {}
+        Batch Size {}
 
-	    Total Iterations {}
-	    Discriminator Steps {}
-	    Generator Steps {}
-	    Fixed Sequence Length {}
-	    Monte Carlo Trials {}
-	    Batch Size {}
+        Generator Hidden Dim {}
+        Generator Layers {}
+        Generator Dropout {}
+        Generator Learning Rate {}
+        Generator Baseline {}
+        Generator Gamma {}
 
-	    Generator Hidden Dim {}
-	    Generator Layers {}
-	    Generator Dropout {}
-	    Generator Learning Rate {}
-	    Generator Baseline {}
-	    Generator Gamma {}
+        Discriminator Dropout {}
+        Discriminator Learnrate {}
 
-	    Discriminator Dropout {}
-	    Discriminator Learnrate {}
+        Oracle Use {}
+        Oracle Sample Size {}
 
-	    Oracle Use {}
-	    Oracle Sample Size {}
+        '''.format(
+            cfg.app_cfg.iterations, 
+            cfg.app_cfg.d_steps, 
+            cfg.app_cfg.g_steps, 
+            cfg.app_cfg.seq_length, 
+            cfg.app_cfg.montecarlo_trials, 
+            cfg.app_cfg.batchsize, 
 
-	    '''.format(
-	        const.ADVERSARIAL_ITERATIONS, 
-	        const.ADVERSARIAL_DISCRIMINATOR_STEPS, 
-	        const.ADVERSARIAL_GENERATOR_STEPS, 
-	        const.ADVERSARIAL_SEQUENCE_LENGTH, 
-	        const.ADVERSARIAL_MONTECARLO_TRIALS, 
-	        const.ADVERSARIAL_BATCHSIZE, 
-	        const.GENERATOR_HIDDEN_DIM, 
-	        const.GENERATOR_LAYERS, 
-	        const.GENERATOR_DROPOUT, 
-	        const.GENERATOR_BASELINE,
-	        const.GENERATOR_GAMMA, 
-	        const.DISCRIMINATOR_DROPOUT, 
-	        const.DISCRIMINATOR_LEARNRATE,
-	        const.ORACLE,
-	        const.ORACLE_SAMPLESIZE))
+            cfg.g_cfg.hidden_dim, 
+            cfg.g_cfg.layers,  
+            cfg.g_cfg.dropout, 
+            cfg.g_cfg.learnrate, 
+            cfg.g_cfg.baseline, 
+            cfg.g_cfg.gamma, 
+
+            cfg.d_cfg.dropout, 
+            cfg.d_cfg.learnrate, 
+
+            cfg.app_cfg.oracle, 
+            cfg.app_cfg.oracle_samplesize))
 
 
-def log(iteration, g_steps, d_steps, nn_generator, nn_discriminator, nn_oracle, printout=False):
+def write(iteration, nn_generator, nn_discriminator, nn_oracle, printout=False):
+    global log
 
-    g_reward = -1 * nn_generator.running_reward / (iteration * g_steps)
-    o_loss = nn_oracle.running_loss / (iteration * g_steps)
-    d_loss = nn_discriminator.running_loss / (iteration * d_steps)
+    g_reward = -1 * nn_generator.running_reward / (iteration * cfg.app_cfg.g_steps)
+    o_loss = nn_oracle.running_loss / (iteration * cfg.app_cfg.g_steps)
+    d_loss = nn_discriminator.running_loss / (iteration * cfg.app_cfg.d_steps)
 
     entry = '''###
         Iteration {iteration}
@@ -89,10 +93,11 @@ def log(iteration, g_steps, d_steps, nn_generator, nn_discriminator, nn_oracle, 
 
 
 def finish_experiment(directory):
+    global log, generator_loss_sequence, discriminator_loss_sequence, oracle_loss_sequence
 
-	log.info('''FINISHING EXPERIMENT
+    log.info('''FINISHING EXPERIMENT
 
-		''')
+        ''')
 
     generator_loss_sequence = ', '.join(map(str, generator_loss_sequence))
     discriminator_loss_sequence = ', '.join(map(str, discriminator_loss_sequence))
@@ -101,4 +106,4 @@ def finish_experiment(directory):
     log.info('Discriminator Loss as Sequence ' + discriminator_loss_sequence)
     log.info('Oracle Loss as Sequence ' + oracle_loss_sequence)
 
-    shutil.copyfile(c.FILE_LOG, directory + '/results.log')
+    shutil.copyfile(cfg.paths_cfg.log, directory + '/results.log')

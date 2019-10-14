@@ -3,7 +3,7 @@ import tokens
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import constants
+import config as cfg
 
 
 class Policy(nn.Module):
@@ -13,18 +13,18 @@ class Policy(nn.Module):
 
         self.input_dim = tokens.count()
         self.output_dim = tokens.count()
-        self.hidden_dim = constants.GENERATOR_HIDDEN_DIM
-        self.dropout = constants.GENERATOR_DROPOUT
-        self.layers = constants.GENERATOR_LAYERS
+        self.hidden_dim = cfg.g_cfg.hidden_dim
+        self.dropout = cfg.g_cfg.dropout
+        self.layers = cfg.g_cfg.layers
         
-        self.gru = nn.GRU(input_dim,self.hidden_dim,self.layers,batch_first=True,self.dropout)
-        self.lin = nn.Linear(self.hidden_dim, output_dim)
+        self.gru = nn.GRU(self.input_dim,self.hidden_dim,self.layers,batch_first=True,dropout=self.dropout)
+        self.lin = nn.Linear(self.hidden_dim, self.output_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=0)
 
         if oracle:
             for param in self.parameters():
-                torch.nn.init.normal(p, 0, 1)
+                torch.nn.init.normal_(param, 0, 1)
 
         self.probs = []
         self.rewards = []
@@ -44,16 +44,11 @@ class Policy(nn.Module):
     
     def initial(self):
 
-        batch = torch.zeros(constants.ADVERSARIAL_BATCHSIZE,1,self.input_dim)
-        hidden = torch.zeros(self.layers,constants.ADVERSARIAL_BATCHSIZE,self.hidden_dim)
+        batch = torch.zeros(cfg.app_cfg.batchsize, 1, self.input_dim)
+        hidden = torch.zeros(self.layers, cfg.app_cfg.batchsize, self.hidden_dim)
         
-        if torch.cuda.is_available():
-            batch.to('cuda')
-            hidden.to('cuda')
-        else:
-            batch.to('cpu')
-            hidden.to('cpu')
-
+        batch.to(cfg.app_cfg.device)
+        hidden.to(cfg.app_cfg.device)
         batch.requires_grad = False
 
         return batch, hidden
@@ -74,7 +69,7 @@ class Policy(nn.Module):
 class Oracle(Policy):
 
     def __init__(self):
-        super(self).__init__(oracle=True)
+        super().__init__(oracle=True)
 
         self.eval()
         self.running_loss = 0.0

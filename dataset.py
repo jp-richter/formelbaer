@@ -4,6 +4,8 @@ import PIL
 import random
 import torchvision
 
+from torchvision import transforms
+
 
 class Dataset(torchvision.datasets.vision.VisionDataset):
 
@@ -23,6 +25,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
         self.samples = []
         self.index = 0
+        
         self.__crawl__(folder, label, recursive)
 
     def __len__(self): 
@@ -35,7 +38,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         image = self.protocol[form](path)
         image = self.transform(image)
 
-        return image, float(label)
+        return image, label
 
     def __crawl__(self, folder, label, recursive):
 
@@ -61,14 +64,14 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
     def inorder(self, amount):
 
-        if index + amount >= len(self):
+        if self.index + amount >= len(self):
             samples = self.samples[self.index:]
             samples += self.samples[:(amount-(len(self)-self.index))]
 
             self.index = amount-(len(self)-self.index)
 
         else:
-            samples = self.samples[index:index+amount]
+            samples = self.samples[self.index:self.index+amount]
 
             self.index += amount 
 
