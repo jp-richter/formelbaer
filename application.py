@@ -57,8 +57,12 @@ def adversarial_training():
 
     # INITIALIZATION
 
+    print('Loading data..')
+
     loader.make_directories()
     loader.initialize() # must be called first
+
+    print('Data successfully loaded.')
 
     nn_discriminator = Discriminator()
     nn_policy = Policy()
@@ -75,6 +79,8 @@ def adversarial_training():
 
     # START ADVERSARIAL TRAINING
 
+    print('Starting experiment.')
+
     log.start_experiment()
 
     for i in range(cfg.app_cfg.iterations):
@@ -86,6 +92,8 @@ def adversarial_training():
         log.write(i+1, nn_policy, nn_discriminator, nn_oracle, printout=True)
 
     # FINISH EXPERIMENT AND WRITE LOGS
+
+    print('Finishing experiment.')
 
     directory = loader.get_experiment_directory()
     nn_policy.save(directory + '/policy_net.pt')
