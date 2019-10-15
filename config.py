@@ -17,6 +17,8 @@ class Paths:
 	log: str
 	oracle: str
 
+	dump: str
+
 
 @dataclass
 class AppConfig:
@@ -86,7 +88,7 @@ DEFAULT_PATHS_CFG = Paths(
 	oracle = '/ramdisk/oracle.pt',
 
 	dump = '/ramdisk/dump.log'
-	
+
 	)
 
 paths_cfg = DEFAULT_PATHS_CFG
