@@ -56,7 +56,8 @@ class DiscriminatorConfig:
 
 
 # '/rdata/schill/arxiv_processed/all/pngs'
-# '/rdata/schill/equationlearning'
+
+# '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs'
 
 # '/ramdisk/arxiv'
 
@@ -78,7 +79,7 @@ DEFAULT_PATHS_CFG = Paths(
 
 	app = '/ramdisk/formelbaer_data',
 	synthetic_data = '/ramdisk/synthetic',
-	arxiv_data = '/rdata/schill/equationlearning',
+	arxiv_data = '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs',
 	oracle_data = '/ramdisk/oracle',
 	
 	log = '/ramdisk/results.log',
@@ -93,7 +94,7 @@ DEFAULT_APP_CFG = AppConfig(
 
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 150,
+	iterations = 100,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
 	seq_length = 16, # 16

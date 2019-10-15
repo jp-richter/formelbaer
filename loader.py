@@ -106,8 +106,7 @@ def initialize():
         provided = len(arxiv_data)
         needed = cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations
 
-        if provided < needed:
-            raise ValueError('''Either provide more training samples or parameters:
+        message = '''Either provide more training samples or parameters:
                 Batchsize {}
                 Discriminator Steps {}
                 Iterations {}
@@ -117,4 +116,7 @@ def initialize():
                     cfg.app_cfg.d_steps,
                     cfg.app_cfg.iterations,
                     needed,
-                    provided))
+                    provided)
+
+        if provided < needed:
+            raise ValueError(message)
