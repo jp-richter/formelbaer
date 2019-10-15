@@ -58,47 +58,50 @@ class DiscriminatorConfig:
 # '/rdata/schill/arxiv_processed/all/pngs'
 # '/rdata/schill/equationlearning'
 
+# '/ramdisk/arxiv'
 
-DEFAULT_PATHS_CFG = Paths(
 
-	app = str(pathlib.Path.home()) + '/formelbaer_data',
-	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic_samples',
-	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv_samples',
-	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle_samples',
+# DEFAULT_PATHS_CFG = Paths(
+
+# 	app = str(pathlib.Path.home()) + '/formelbaer_data',
+# 	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic_samples',
+# 	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv_samples',
+# 	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle_samples',
 	
-	log = str(pathlib.Path.home()) + '/formelbaer_data/results.log',
-	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle_net.pt'
+# 	log = str(pathlib.Path.home()) + '/formelbaer_data/results.log',
+# 	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle_net.pt'
+
+# 	)
+
+
+default_paths = Paths(
+
+	app = '/ramdisk/formelbaer_data',
+	synthetic_data = '/ramdisk/synthetic',
+	arxiv_data = '/rdata/schill/equationlearning',
+	oracle_data = '/ramdisk/oracle',
+	
+	log = '/ramdisk/results.log',
+	oracle = '/ramdisk/oracle.pt'
 
 	)
 
 paths_cfg = DEFAULT_PATHS_CFG
 
 
-# default_paths = Paths(
-
-# 	app = '/ramdisk/formelbaer_data',
-# 	synthetic_data = '/ramdisk/synthetic',
-# 	arxiv_data = '/ramdisk/arxiv',
-# 	oracle_data = '/ramdisk/oracle',
-	
-# 	log = '/ramdisk/results.log',
-# 	oracle = '/ramdisk/oracle.pt'
-
-# 	)
-
-
 DEFAULT_APP_CFG = AppConfig(
 
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 4,
+	iterations = 150,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
-	seq_length = 2, # 16
-	montecarlo_trials = 2, # 16
-	batchsize = multiprocessing.cpu_count()*4, # computational cost reasons
+	seq_length = 16, # 16
+	montecarlo_trials = 16, # 16
+	# batchsize = multiprocessing.cpu_count()*4, # computational cost reasons
+	batchsize = multiprocessing.cpu_count(),
 
-	oracle = True,
+	oracle = False,
 	oracle_samplesize = 100,
 
 	label_synth = 1,
