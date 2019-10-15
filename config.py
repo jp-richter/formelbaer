@@ -74,7 +74,7 @@ class DiscriminatorConfig:
 # 	)
 
 
-default_paths = Paths(
+DEFAULT_PATHS_CFG = Paths(
 
 	app = '/ramdisk/formelbaer_data',
 	synthetic_data = '/ramdisk/synthetic',
