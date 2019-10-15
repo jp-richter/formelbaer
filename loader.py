@@ -103,7 +103,18 @@ def initialize():
 
         arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
 
-        # need at least batchsize * discriminator steps * iterations expressions to match generated data
-        if len(arxiv_data) < cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations:
-            raise ValueError('Either provide more training samples or lower batchsize / d_steps.')
+        provided = len(arxiv_data)
+        needed = cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations
 
+        if provided < needed:
+            raise ValueError('''Either provide more training samples or parameters:
+                Batchsize {}
+                Discriminator Steps {}
+                Iterations {}
+                Positive Samples Needed {}
+                Arxiv Samples Provided {}'''.format(
+                    cfg.app_cfg.batchsize,
+                    cfg.app_cfg.d_steps,
+                    cfg.app_cfg.iterations,
+                    needed,
+                    provided))
