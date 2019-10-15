@@ -2,7 +2,9 @@ from numpy import finfo, float32
 
 import tokens
 import torch
+import math
 import config as cfg
+
 
 def step(nn_policy, batch, hidden, nn_oracle, o_crit):
 
@@ -12,17 +14,25 @@ def step(nn_policy, batch, hidden, nn_oracle, o_crit):
 
     # in case of oracle training compute oracle loss
     if cfg.app_cfg.oracle and nn_oracle is not None:
-        _, hidden = nn_oracle.inital()
+        _, hidden = nn_oracle.initial()
         oracle_policies, _ = nn_oracle(batch, hidden)
-        loss = o_crit(policies, oracle_policies)
+
+        # kl divergence module expects input prob logs
+        log_policies = torch.log(policies)
+
+        loss = o_crit(log_policies, oracle_policies)
         nn_oracle.running_loss += loss.item()
 
     # sample next actions
     policies = torch.distributions.Categorical(policies)
     actions = policies.sample() 
 
-    # save probabilities for gradient computation
-    nn_policy.probs.append(policies.log_prob(actions))
+    # actions is a tensor of size batchsize with an indices in range num_features
+    # each index can be seen as a choice for the action with the respective int code
+
+    # save log probabilities for gradient computation
+    log_probs = policies.log_prob(actions) 
+    nn_policy.probs.append(log_probs)
 
     # concat onehot tokens with the batch of sequences
     encodings = torch.Tensor(list(map(tokens.onehot, actions)))
@@ -66,7 +76,7 @@ def reward(nn_policy, rewards):
 def update(nn_policy, optimizer):
 
     total = 0
-    increment = []
+    loss = []
     returns = []
 
     # compute state action values for each step
@@ -81,19 +91,26 @@ def update(nn_policy, optimizer):
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
-        increment.append(-log_prob * reward)
+        loss.append(-log_prob * reward)
 
     # sum rewards over all steps for each sample
-    increment = torch.stack(increment)
-    increment = torch.sum(increment, dim=1)
+    loss = torch.stack(loss)
+    loss = torch.sum(loss, dim=1)
 
     # average rewards over batch
-    batchsize = increment.shape[0]
-    increment = torch.sum(increment) / batchsize
+    batchsize = loss.shape[0]
+    loss = torch.sum(loss) / batchsize
 
-    nn_policy.running_reward += -1 * increment.item()
-    increment.backward()
+    loss.backward()
     optimizer.step()
+
+    # max reward * prob ~> max reward * log prob ~> min -(reward * log prob)
+    # the loss is positive (even if we multiplied with - log_prob) because the log prob
+    # itsself is negative. instead of starting negative and max reward we start positive
+    # and minimize the negative reward. for clarity we still keep track of the negative
+    # reward we're going to max
+
+    nn_policy.running_reward += -1 * loss.item()
 
     del nn_policy.rewards[:]
     del nn_policy.probs[:]

@@ -13,14 +13,13 @@ import os
 
 
 # TODO wieso kann ich negative rewards bekommen??
+# TODO wieso benutzen seqgans cross entropy und keine verteilungs divergenz?
 
 
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit):
 
     nn_policy.train()
     nn_rollout.eval()
-
-    nn_rollout.set_parameters_to(nn_policy)
 
     for _ in range(cfg.app_cfg.g_steps):
         batch, hidden = nn_policy.initial()
@@ -72,13 +71,14 @@ def adversarial_training():
     d_opt = torch.optim.Adam(nn_discriminator.parameters(), lr=cfg.d_cfg.learnrate)
     d_crit = torch.nn.BCELoss()
     g_opt = torch.optim.Adam(nn_policy.parameters(), lr=cfg.g_cfg.learnrate)
-    o_crit = torch.nn.CrossEntropyLoss()
+    o_crit = torch.nn.KLDivLoss()
 
     # START ADVERSARIAL TRAINING
 
     log.start_experiment()
 
     for i in range(cfg.app_cfg.iterations):
+        nn_rollout.set_parameters_to(nn_policy)
 
         discriminator_training(nn_discriminator, nn_rollout, d_opt, d_crit)
         generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit)
@@ -88,9 +88,9 @@ def adversarial_training():
     # FINISH EXPERIMENT AND WRITE LOGS
 
     directory = loader.get_experiment_directory()
-    nn_policy.save(directory + '/policy.pt')
-    nn_discriminator.save(directory + '/discriminator.pt')
-    nn_oracle.save(directory + '/oracle.pt')
+    nn_policy.save(directory + '/policy_net.pt')
+    nn_discriminator.save(directory + '/discriminator_net.pt')
+    nn_oracle.save(directory + '/oracle_net.pt')
 
     log.finish_experiment(directory)
 

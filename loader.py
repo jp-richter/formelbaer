@@ -79,11 +79,13 @@ def initialize():
     global arxiv_data, oracle_data
 
     if cfg.app_cfg.oracle:
+        nn_oracle = nn_policy.Oracle()
 
         # save oracle net with random weights
         if not os.path.exists(cfg.paths_cfg.oracle):
-            nn_oracle = nn_policy.Oracle()
             nn_oracle.save(cfg.paths_cfg.oracle) 
+        else:
+            nn_oracle.load(cfg.paths_cfg.oracle)
 
         # store samples from oracle distribution for adversarial training
         samplesize = len([name for name in os.listdir(cfg.paths_cfg.oracle_data) 

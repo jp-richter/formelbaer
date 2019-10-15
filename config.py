@@ -62,12 +62,12 @@ class DiscriminatorConfig:
 DEFAULT_PATHS_CFG = Paths(
 
 	app = str(pathlib.Path.home()) + '/formelbaer_data',
-	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic',
-	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv',
-	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle',
+	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic_samples',
+	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv_samples',
+	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle_samples',
 	
 	log = str(pathlib.Path.home()) + '/formelbaer_data/results.log',
-	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle.pt'
+	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle_net.pt'
 
 	)
 
@@ -91,14 +91,14 @@ DEFAULT_APP_CFG = AppConfig(
 
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 2,
+	iterations = 4,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
 	seq_length = 2, # 16
 	montecarlo_trials = 2, # 16
 	batchsize = multiprocessing.cpu_count()*4, # computational cost reasons
 
-	oracle = False,
+	oracle = True,
 	oracle_samplesize = 100,
 
 	label_synth = 1,

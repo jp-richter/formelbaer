@@ -20,7 +20,7 @@ class Policy(nn.Module):
         self.gru = nn.GRU(self.input_dim,self.hidden_dim,self.layers,batch_first=True,dropout=self.dropout)
         self.lin = nn.Linear(self.hidden_dim, self.output_dim)
         self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=0)
+        self.softmax = nn.Softmax(dim=1) # in forward (batch_size, num_features)
 
         if oracle:
             for param in self.parameters():
@@ -69,7 +69,7 @@ class Policy(nn.Module):
 class Oracle(Policy):
 
     def __init__(self):
-        super().__init__(oracle=True)
+        super(Oracle, self).__init__(oracle=True)
 
         self.eval()
         self.running_loss = 0.0
