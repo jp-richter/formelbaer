@@ -83,8 +83,10 @@ DEFAULT_PATHS_CFG = Paths(
 	oracle_data = '/ramdisk/oracle',
 	
 	log = '/ramdisk/results.log',
-	oracle = '/ramdisk/oracle.pt'
+	oracle = '/ramdisk/oracle.pt',
 
+	dump = '/ramdisk/dump.log'
+	
 	)
 
 paths_cfg = DEFAULT_PATHS_CFG

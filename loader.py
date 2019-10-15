@@ -74,6 +74,9 @@ def make_directories():
     if not os.path.exists(cfg.paths_cfg.arxiv_data) and not cfg.app_cfg.oracle:
         raise ValueError('Either train with Oracle or provide training samples.')
 
+    if not os.path.exists(cfg.paths_cfg.dump):
+        os.makedirs(cfg.paths_cfg.dump)
+
 
 def initialize():
     global arxiv_data, oracle_data

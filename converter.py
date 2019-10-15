@@ -120,9 +120,9 @@ def croppdf(directory, file, expr_id):
         '-c [/CropBox [550 0 850 100] ' # (x,y) (x',y')
         '-c /PAGES pdfmark '
         '-f {} '
-        '> /Users/jan/formelbaer_data/dump.log')
+        '> {}')
 
-    cmd = cmd.format(directory,expr_id,file)
+    cmd = cmd.format(directory,expr_id,file,cfg.paths_cfg.dump)
 
     try:
         subprocess.run(cmd, cwd=directory, shell=True)
