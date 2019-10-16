@@ -27,9 +27,9 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
             log.start_mc(1)
             batch, hidden = generator.step(nn_policy, batch, hidden, nn_oracle, o_crit, save_prob=True)
             log.end_mc(1)
+            q_values = torch.empty([cfg.app_cfg.batchsize, 0])
 
             if batch.shape[1] < cfg.app_cfg.seq_length:
-                q_values = torch.empty([cfg.app_cfg.batchsize, 0])
 
                 for _ in range(cfg.app_cfg.montecarlo_trials):
                     samples = generator.rollout(nn_rollout, batch, hidden)
