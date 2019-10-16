@@ -105,7 +105,7 @@ DEFAULT_APP_CFG = AppConfig(
 
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 1,
+	iterations = 150,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
 	seq_length = 16, # 16

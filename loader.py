@@ -102,10 +102,11 @@ def load_oracle_data():
     oracle_data = Dataset(cfg.paths_cfg.oracle_data, label=cfg.app_cfg.label_arxiv)
 
 
-def load_arxiv_data():
+def load_arxiv_data(log):
     global arxiv_data
 
     arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
+    print(len(arxiv_data))
 
     provided = len(arxiv_data)
     needed = cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations
@@ -123,10 +124,11 @@ def load_arxiv_data():
                 provided)
 
     if provided < needed:
+        log.log.info(message)
         raise ValueError(message)
 
 
-def initialize():
+def initialize(log):
 
     make_directories()
 
@@ -134,5 +136,5 @@ def initialize():
         load_oracle_data()
 
     else:
-        load_arxiv_data()
+        load_arxiv_data(log)
         

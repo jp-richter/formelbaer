@@ -1,11 +1,47 @@
 # This import registers the 3D projection, but is otherwise unused.
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
 
+import timeit
+
+
+class Options(Enum):
+
+	ITERATION 
+	GSTEP 
+	DSTEP 
+	LOAD 
+	GUPDATE
+	DUPDATE
+	SINGLESTEP
+	MONTECARLO 
+
+
+timer = {}
+
+
+
+
+def start_timer(keyword):
+
+	start = timeit.default_timer()
+	timer[keyword] = start
+
+
+def read_timer(keyword):
+
+	start = timer[keyword]
+	stop = timeit.default_timer()
+	time = stop - start 
+
+	return time
+
+
+def estimate()
 
 
 # fig.savefig('test.jpg')

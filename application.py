@@ -62,7 +62,7 @@ def adversarial_training():
     # INITIALIZATION
 
     log.start_loading_data()
-    loader.initialize() # must be called first
+    loader.initialize(log) # must be called first
     log.finish_loading_data()
 
     nn_discriminator = Discriminator()
