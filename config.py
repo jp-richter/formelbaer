@@ -80,12 +80,13 @@ class DiscriminatorConfig:
 DEFAULT_PATHS_CFG = Paths(
 
 	app = '/ramdisk/formelbaer_data',
-	synthetic_data = '/ramdisk/synthetic',
-	arxiv_data = '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs',
-	oracle_data = '/ramdisk/oracle',
+	synthetic_data = '/ramdisk/formelbaer_data/synthetic_data',
+	# arxiv_data = '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs',
+	arxiv_data = '/ramdisk/formelbaer_data/arxiv_data',
+	oracle_data = '/ramdisk/formelbaer_data/oracle_data',
 	
-	log = '/ramdisk/results.log',
-	oracle = '/ramdisk/oracle.pt',
+	log = '/ramdisk/formelbaer_data/results.log',
+	oracle = '/ramdisk/formelbaer_data/oracle_net.pt',
 
 	dump = '/ramdisk/dump.log'
 
@@ -98,7 +99,7 @@ DEFAULT_APP_CFG = AppConfig(
 
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 100,
+	iterations = 2,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
 	seq_length = 16, # 16

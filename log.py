@@ -3,19 +3,31 @@ import logging
 import shutil
 
 
-log = None
+logging.basicConfig(level=logging.INFO, filename=cfg.paths_cfg.log)
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 generator_loss_sequence = []
 discriminator_loss_sequence = []
 oracle_loss_sequence = []
 
 
+def start_loading_data():
+    global log 
+
+    log.info('Start loading data..')
+    print('Start loading data..')
+
+
+def finish_loading_data():
+    global log 
+
+    log.info('Data successfully loaded.')
+    print('Data successfully loaded.')
+
+
 def start_experiment():
     global log
-
-    logging.basicConfig(level=logging.INFO, filename=cfg.paths_cfg.log)
-    log = logging.getLogger(__name__)
-    log.setLevel(logging.INFO)
 
     log.info('''STARTING EXPERIMENT
 

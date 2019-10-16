@@ -12,7 +12,6 @@ import log
 import os
 
 
-# TODO wieso kann ich negative rewards bekommen??
 # TODO wieso benutzen seqgans cross entropy und keine verteilungs divergenz?
 
 
@@ -57,12 +56,9 @@ def adversarial_training():
 
     # INITIALIZATION
 
-    print('Loading data..')
-
-    loader.make_directories()
+    log.start_loading_data()
     loader.initialize() # must be called first
-
-    print('Data successfully loaded.')
+    log.finish_loading_data()
 
     nn_discriminator = Discriminator()
     nn_policy = Policy()

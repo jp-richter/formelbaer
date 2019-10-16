@@ -78,48 +78,60 @@ def make_directories():
         open(cfg.paths_cfg.dump, 'w+')
 
 
+def load_oracle_data():
+
+    nn_oracle = nn_policy.Oracle()
+
+    # generate oracle net with random weights
+    if not os.path.exists(cfg.paths_cfg.oracle):
+        nn_oracle.save(cfg.paths_cfg.oracle) 
+    else:
+        nn_oracle.load(cfg.paths_cfg.oracle)
+
+    # store samples from oracle distribution for adversarial training
+    samplesize = len([name for name in os.listdir(cfg.paths_cfg.oracle_data) 
+        if os.path.isfile(os.path.join(cfg.paths_cfg.oracle_data, name))])
+
+    missing = cfg.app_cfg.oracle_samplesize - samplesize
+    batch_num = math.ceil(missing / cfg.app_cfg.batchsize)
+
+    samples = generator.sample(nn_oracle, batch_num)
+    save_pngs(samples, cfg.paths_cfg.oracle_data)
+
+    oracle_data = Dataset(cfg.paths_cfg.oracle_data, label=cfg.app_cfg.label_arxiv)
+
+
+def load_arxiv_data():
+
+    arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
+
+    provided = len(arxiv_data)
+    needed = cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations
+
+    message = '''Either provide more training samples or parameters:
+            Batchsize {}
+            Discriminator Steps {}
+            Iterations {}
+            Positive Samples Needed {}
+            Arxiv Samples Provided {}'''.format(
+                cfg.app_cfg.batchsize,
+                cfg.app_cfg.d_steps,
+                cfg.app_cfg.iterations,
+                needed,
+                provided)
+
+    if provided < needed:
+        raise ValueError(message)
+
+
 def initialize():
     global arxiv_data, oracle_data
 
+    make_directories()
+
     if cfg.app_cfg.oracle:
-        nn_oracle = nn_policy.Oracle()
-
-        # save oracle net with random weights
-        if not os.path.exists(cfg.paths_cfg.oracle):
-            nn_oracle.save(cfg.paths_cfg.oracle) 
-        else:
-            nn_oracle.load(cfg.paths_cfg.oracle)
-
-        # store samples from oracle distribution for adversarial training
-        samplesize = len([name for name in os.listdir(cfg.paths_cfg.oracle_data) 
-            if os.path.isfile(os.path.join(cfg.paths_cfg.oracle_data, name))])
-
-        missing = cfg.app_cfg.oracle_samplesize - samplesize
-        batch_num = math.ceil(missing / cfg.app_cfg.batchsize)
-
-        samples = generator.sample(nn_oracle, batch_num)
-        save_pngs(samples, cfg.paths_cfg.oracle_data)
-
-        oracle_data = Dataset(cfg.paths_cfg.oracle_data, label=cfg.app_cfg.label_arxiv)
+        load_oracle_data()
 
     else:
-
-        arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
-
-        provided = len(arxiv_data)
-        needed = cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations
-
-        message = '''Either provide more training samples or parameters:
-                Batchsize {}
-                Discriminator Steps {}
-                Iterations {}
-                Positive Samples Needed {}
-                Arxiv Samples Provided {}'''.format(
-                    cfg.app_cfg.batchsize,
-                    cfg.app_cfg.d_steps,
-                    cfg.app_cfg.iterations,
-                    needed,
-                    provided)
-
-        if provided < needed:
-            raise ValueError(message)
+        load_arxiv_data()
+        
