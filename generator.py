@@ -62,6 +62,7 @@ def sample(nn_policy, num_batches):
 
         for _ in range(num_batches):
             batch, hidden = nn_policy.initial()
+            batch, hidden = step(nn_policy, batch, hidden, None, None)
             batch = rollout(nn_policy, batch, hidden)
             batches = torch.cat([batches, batch], dim=0)
 
