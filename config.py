@@ -90,7 +90,7 @@ DEFAULT_PATHS_CFG_CLUSTER = Paths(
 	log = '/ramdisk/formelbaer_data/results.log',
 	oracle = '/ramdisk/formelbaer_data/oracle_net.pt',
 
-	dump = '/ramdisk/dump.log'
+	dump = '/ramdisk/formelbaer_data/dump.log'
 
 	)
 
