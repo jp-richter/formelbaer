@@ -16,6 +16,15 @@ discriminator_loss_sequence = []
 oracle_loss_sequence = []
 
 
+def start_mc():
+    global log 
+    log.info('Start MC')
+
+def end_mc():
+    global log 
+    log.info('End MC')
+
+
 def start_loading_data():
     global log 
 

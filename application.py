@@ -28,11 +28,13 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
             q_values = torch.empty([cfg.app_cfg.batchsize, 0])
 
             for _ in range(cfg.app_cfg.montecarlo_trials):
+                log.start_mc()
                 samples = generator.rollout(nn_rollout, batch, hidden)
                 samples = loader.load_single_batch(samples)
                 reward = discriminator.evaluate_single_batch(nn_discriminator, samples)
 
                 q_values = torch.cat([q_values, reward], dim=1)
+                log.end_mc()
 
             # calculate reward for last step without montecarlo approximation
             samples = loader.load_single_batch(batch)
