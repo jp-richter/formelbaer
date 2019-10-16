@@ -29,6 +29,8 @@ def finish_loading_data():
 def start_experiment():
     global log
 
+    print('Starting experiment..')
+
     log.info('''STARTING EXPERIMENT
 
         Models Version: 1
@@ -106,6 +108,8 @@ def write(iteration, nn_generator, nn_discriminator, nn_oracle, printout=False):
 
 def finish_experiment(directory):
     global log, generator_loss_sequence, discriminator_loss_sequence, oracle_loss_sequence
+
+    print('Finishing experiment..')
 
     log.info('''FINISHING EXPERIMENT
 

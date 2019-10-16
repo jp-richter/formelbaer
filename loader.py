@@ -79,6 +79,7 @@ def make_directories():
 
 
 def load_oracle_data():
+    global oracle_data
 
     nn_oracle = nn_policy.Oracle()
 
@@ -102,6 +103,7 @@ def load_oracle_data():
 
 
 def load_arxiv_data():
+    global arxiv_data
 
     arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
 
@@ -125,7 +127,6 @@ def load_arxiv_data():
 
 
 def initialize():
-    global arxiv_data, oracle_data
 
     make_directories()
 
