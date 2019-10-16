@@ -105,11 +105,11 @@ DEFAULT_APP_CFG = AppConfig(
 
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 2,
+	iterations = 25,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
-	seq_length = 1, # 16
-	montecarlo_trials = 1, # 16
+	seq_length = 16, # 16
+	montecarlo_trials = 16, # 16
 	# batchsize = multiprocessing.cpu_count()*4, # computational cost reasons
 	batchsize = multiprocessing.cpu_count(),
 
