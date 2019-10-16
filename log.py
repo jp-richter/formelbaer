@@ -1,9 +1,13 @@
 import config as cfg
 import logging
 import shutil
+import os
 
 
-logging.basicConfig(level=logging.INFO, filename=cfg.paths_cfg.log)
+if os.path.exists(cfg.paths_cfg.log):
+    os.remove(cfg.paths_cfg.log)
+
+logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, filename=cfg.paths_cfg.log)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 

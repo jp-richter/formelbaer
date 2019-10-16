@@ -12,7 +12,7 @@ import log
 import os
 
 
-# TODO wieso benutzen seqgans cross entropy und keine verteilungs divergenz?
+# 
 
 
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit):
