@@ -119,4 +119,6 @@ def estimate_runtime_per_iteration(d_steps, g_steps, seq_len, montecarlo_trials)
 
 	return fixcosts + sampling + load_samples_and_update + steps + rollout_steps + update
 
-plot_runtime_per_iteration(2,1,16,16)
+#plot_runtime_per_iteration(2,1,16,16)
+
+print(estimate_runtime_per_iteration(2,1,16,16) // 1000)

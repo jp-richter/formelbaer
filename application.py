@@ -33,8 +33,6 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
 
                     q_values = torch.cat([q_values, reward], dim=1)
 
-                q_values = torch.mean(q_values, dim=1)
-
             else:
                 # calculate reward for last step without montecarlo approximation
                 samples = loader.load_single_batch(batch)
@@ -58,9 +56,6 @@ def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit):
         synthetic = generator.sample(nn_generator, 1)
         torch_loader = loader.get_pos_neg_loader(synthetic)
         discriminator.update(nn_discriminator, d_opt, d_crit, torch_loader)
-
-    log.log.info('DISCR END')
-
 
 def adversarial_training():
 
