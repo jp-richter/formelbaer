@@ -6,7 +6,7 @@ import math
 import config as cfg
 
 
-def step(nn_policy, batch, hidden, nn_oracle, o_crit):
+def step(nn_policy, batch, hidden, nn_oracle, o_crit, save_prob=False):
 
     # avoid feeding whole sequences redundantly
     state = batch[:,-1,:][:,None,:]
@@ -27,28 +27,28 @@ def step(nn_policy, batch, hidden, nn_oracle, o_crit):
     policies = torch.distributions.Categorical(policies)
     actions = policies.sample() 
 
-    # actions is a tensor of size batchsize with an indices in range num_features
-    # each index can be seen as a choice for the action with the respective int code
-
     # save log probabilities for gradient computation
-    log_probs = policies.log_prob(actions) 
-    nn_policy.probs.append(log_probs)
+    if save_prob:
+        log_probs = policies.log_prob(actions) 
+        nn_policy.probs.append(log_probs)
 
     # concat onehot tokens with the batch of sequences
     encodings = torch.Tensor(list(map(tokens.onehot, actions)))
     encodings = encodings[:,None,:]
     batch = torch.cat((batch,encodings),dim=1)
 
+    # if batch still has the empty start token remove it
+    if torch.sum(batch[:,0,:]) == 0:
+        batch = batch[:,1:,:]
+
     return batch, hidden
 
 
 def rollout(nn_policy, batch, hidden):
 
-    _, current_length, _ = batch.size()
-
     with torch.no_grad():
 
-        for _ in range(cfg.app_cfg.seq_length - current_length):
+        while batch.shape[1] < cfg.app_cfg.seq_length:
             batch, hidden = step(nn_policy, batch, hidden, None, None)
 
     return batch
@@ -88,6 +88,8 @@ def update(nn_policy, optimizer):
     eps = finfo(float32).eps.item()
     for i in range(len(returns)):
         returns[i] = (returns[i] - returns[i].mean()) / (returns[i].std() + eps)
+
+    assert len(nn_policy.probs) == len(returns)
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):

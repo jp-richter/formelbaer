@@ -225,7 +225,7 @@ def id(onehot):
         if onehot[i] == 1:
             return i
 
-    return 0
+    raise ValueError('Got encoding of empty start token, but start token has no ID.')
 
 
 def onehot(id):
@@ -238,6 +238,7 @@ def onehot(id):
 
 assert len(_tokens) == 159
 assert not [i for i in _tokens.keys() if i < 0 or i > 158]
+assert not [(i,(k,t)) for (i,(k,t)) in enumerate(_tokens.items()) if not i == k]
 
 
 for i,t in _tokens.items():

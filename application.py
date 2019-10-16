@@ -24,7 +24,7 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
         batch, hidden = nn_policy.initial()
 
         for length in range(cfg.app_cfg.seq_length):
-            batch, hidden = generator.step(nn_policy, batch, hidden, nn_oracle, o_crit)
+            batch, hidden = generator.step(nn_policy, batch, hidden, nn_oracle, o_crit, save_prob=True)
             q_values = torch.empty([cfg.app_cfg.batchsize, 0])
 
             for _ in range(cfg.app_cfg.montecarlo_trials):
@@ -34,6 +34,12 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
 
                 q_values = torch.cat([q_values, reward], dim=1)
 
+            # calculate reward for last step without montecarlo approximation
+            samples = loader.load_single_batch(batch)
+            reward = discriminator.evaluate_single_batch(nn_discriminator, samples)
+            q_values = torch.cat([q_values, reward], dim=1)
+
+            # average the reward over 
             q_values = torch.mean(q_values, dim=1)
             generator.reward(nn_policy, q_values)
 

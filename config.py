@@ -64,20 +64,22 @@ class DiscriminatorConfig:
 # '/ramdisk/arxiv'
 
 
-# DEFAULT_PATHS_CFG = Paths(
-
-# 	app = str(pathlib.Path.home()) + '/formelbaer_data',
-# 	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic_samples',
-# 	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv_samples',
-# 	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle_samples',
-	
-# 	log = str(pathlib.Path.home()) + '/formelbaer_data/results.log',
-# 	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle_net.pt'
-
-# 	)
-
-
 DEFAULT_PATHS_CFG = Paths(
+
+	app = str(pathlib.Path.home()) + '/formelbaer_data',
+	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic_samples',
+	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv_samples',
+	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle_samples',
+	
+	log = str(pathlib.Path.home()) + '/formelbaer_data/results.log',
+	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle_net.pt',
+
+	dump = str(pathlib.Path.home()) + '/formelbaer_data/dump.log'
+
+	)
+
+
+DEFAULT_PATHS_CFG_CLUSTER = Paths(
 
 	app = '/ramdisk/formelbaer_data',
 	synthetic_data = '/ramdisk/formelbaer_data/synthetic_data',
@@ -92,7 +94,11 @@ DEFAULT_PATHS_CFG = Paths(
 
 	)
 
-paths_cfg = DEFAULT_PATHS_CFG
+
+if multiprocessing.cpu_count() > 4:
+	paths_cfg = DEFAULT_PATHS_CFG_CLUSTER
+else:
+	paths_cfg = DEFAULT_PATHS_CFG
 
 
 DEFAULT_APP_CFG = AppConfig(
