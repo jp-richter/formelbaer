@@ -108,8 +108,8 @@ DEFAULT_APP_CFG = AppConfig(
 	iterations = 2,
 	d_steps = 2, # (*2) due to computational cost reasons
 	g_steps = 1,
-	seq_length = 2, # 16
-	montecarlo_trials = 2, # 16
+	seq_length = 1, # 16
+	montecarlo_trials = 1, # 16
 	# batchsize = multiprocessing.cpu_count()*4, # computational cost reasons
 	batchsize = multiprocessing.cpu_count(),
 
