@@ -8,6 +8,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Paths:
+	"""Configuration data class which contains all path variables of the script. To change
+	paths make changes to the DEFAULT_PATHS_CFG instance or overwrite the cfg_paths variable
+	with your own instance."""
 
 	app: str 
 	synthetic_data: str
@@ -22,6 +25,9 @@ class Paths:
 
 @dataclass
 class AppConfig:
+	"""Configuration data class which contains various training parameters. To change training
+	parameters make changes to the DEFAUT_APP_CFG instance or overwrite the cfg_app variable
+	with your own instance."""
 	
 	device: None
 
@@ -41,6 +47,9 @@ class AppConfig:
 
 @dataclass 
 class GeneratorConfig:
+	"""Configuration data class which contains various training and structural parameters specific to
+	the generating neural net. To change parameters make changes to the DEFAUT_GENERATOR_CFG instance or 
+	overwrite the cfg_g variable with your own instance."""
 
 	hidden_dim: int 
 	layers: int
@@ -52,6 +61,9 @@ class GeneratorConfig:
 
 @dataclass
 class DiscriminatorConfig:
+	"""Configuration data class which contains various training parameters specific to the discriminating 
+	neural net. To change training parameters make changes to the DEFAUT_DISCRIMINATOR_CFG instance or overwrite 
+	the cfg_d variable with your own instance."""
 
 	dropout: int 
 	learnrate: int
@@ -110,8 +122,7 @@ DEFAULT_APP_CFG = AppConfig(
 	g_steps = 1,
 	seq_length = 16, # 16
 	montecarlo_trials = 16, # 16
-	# batchsize = multiprocessing.cpu_count()*4, # computational cost reasons
-	batchsize = multiprocessing.cpu_count(),
+	batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
 	oracle = False,
 	oracle_samplesize = 100,
@@ -121,7 +132,8 @@ DEFAULT_APP_CFG = AppConfig(
 
 	)
 
-app_cfg = DEFAULT_APP_CFG
+# overwrite this to change parameters
+app_cfg = DEFAULT_APP_CFG 
 
 
 DEFAULT_GENERATOR_CFG = GeneratorConfig(
@@ -135,7 +147,8 @@ DEFAULT_GENERATOR_CFG = GeneratorConfig(
 
 	)
 
-g_cfg = DEFAULT_GENERATOR_CFG
+# overwrite this to change parameters
+g_cfg = DEFAULT_GENERATOR_CFG 
 
 
 DEFAULT_DISCRIMINATOR_CFG = DiscriminatorConfig(
@@ -145,4 +158,5 @@ DEFAULT_DISCRIMINATOR_CFG = DiscriminatorConfig(
 
 	)
 
-d_cfg = DEFAULT_DISCRIMINATOR_CFG
+# overwrite this to change parameters
+d_cfg = DEFAULT_DISCRIMINATOR_CFG 
