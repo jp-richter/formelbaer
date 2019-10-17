@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 
@@ -135,6 +135,14 @@ def estimate_runtime_per_iteration(d_steps, g_steps, seq_len, montecarlo_trials)
 	return fixcosts + d_total + g_total
 
 
-plot_runtime_per_iteration(2,1,16,16)
+def estimate_finish_time(iterations, d_steps, g_steps, seq_len, montecarlo_trials):
 
-print(estimate_runtime_per_iteration(2,1,32,16) // 1000)
+	runtime = iterations * estimate_runtime_per_iteration(d_steps,g_steps,seq_len,montecarlo_trials)
+
+	date = datetime.now()
+	date = date + timedelta(milliseconds=runtime)
+
+	return 'Estimated finish time: ' + str(date)[:-10]
+
+
+# plot_runtime_per_iteration(2,1,16,16)
