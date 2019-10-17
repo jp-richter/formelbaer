@@ -143,8 +143,11 @@ def adversarial_training():
     log.finish_experiment(directory)
 
     evaluation = generator.sample(nn_policy, math.ceil(100 / cfg.app_cfg.batchsize))
+    
     os.makedirs(directory + '/pngs')
+    os.makedirs(directory + '/sequences')
     loader.save_pngs(evaluation, directory + '/pngs')
+    loader.save_sequences(evaluation, directory + '/sequences')
 
 
 if __name__ == '__main__':

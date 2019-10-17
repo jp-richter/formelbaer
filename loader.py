@@ -9,6 +9,8 @@ import os
 import shutil
 import generator
 import datetime
+import tree
+import tokens
 
 
 arxiv_data = None
@@ -24,6 +26,27 @@ def refresh():
 def save_pngs(samples, directory):
 
     converter.convert_to_png(samples, directory)
+
+
+def save_sequences(samples, directory):
+
+    with open(directory + '/sequences.txt','w') as f:
+
+        sequences = []
+        strings = []
+
+        for sample in samples:
+            sequence = []
+
+            for onehot in sample:
+                sequence.append(tokens.id(onehot))
+
+            sequences.append(sequence)
+            strings.append(', '.join(str(s) for s in sequence))
+
+        all_sequences = '\n'.join(str(s) for s in sequences)
+
+        f.write(all_sequences)
 
 
 def get_pos_neg_loader(synthetic_samples):
@@ -106,7 +129,9 @@ def load_arxiv_data(log):
     global arxiv_data
 
     arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
-    print(len(arxiv_data))
+
+    print('{} samples loaded.'.format(len(arxiv_data)))
+    log.log.info('{} samples loaded.'.format(len(arxiv_data)))
 
     provided = len(arxiv_data)
     needed = cfg.app_cfg.batchsize * cfg.app_cfg.d_steps * cfg.app_cfg.iterations
