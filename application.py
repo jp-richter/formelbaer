@@ -12,6 +12,10 @@ import log
 import os
 
 
+# TODO experimente mit 2 1 16 16
+# TODO mit vielversprechenden settings auch ein experiment mit _ _ 32 _ (dauert ca 60 h)
+
+
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit):
 
     nn_policy.train()
