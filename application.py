@@ -54,8 +54,8 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
             else:
                 # calculate reward for last step without montecarlo approximation
                 samples = loader.load_single_batch(batch)
-                rewardibus = discriminator.evaluate_single_batch(nn_discriminator, samples)
-                q_values = torch.cat([q_values, rewardibus], dim=1)
+                reward = discriminator.evaluate_single_batch(nn_discriminator, samples)
+                q_values = torch.cat([q_values, reward], dim=1)
 
             # average the reward over 
             q_values = torch.mean(q_values, dim=1)
@@ -85,6 +85,7 @@ def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit):
         synthetic = generator.sample(nn_generator, 1)
         torch_loader = loader.get_pos_neg_loader(synthetic)
         discriminator.update(nn_discriminator, d_opt, d_crit, torch_loader)
+
 
 def adversarial_training():
     """The main loop of the script. To change parameters of the adversarial training parameters
