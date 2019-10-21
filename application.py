@@ -152,7 +152,7 @@ def adversarial_training():
 
 def application():
 
-    experiment = AppConfig(
+    experiment = cfg.AppConfig(
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
@@ -174,7 +174,7 @@ def application():
     cfg.app_cfg = experiment
     adversarial_training()
 
-    experiment = AppConfig(
+    experiment = cfg.AppConfig(
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
@@ -196,7 +196,7 @@ def application():
     cfg.app_cfg = experiment
     adversarial_training()
 
-    experiment = AppConfig(
+    experiment = cfg.AppConfig(
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
