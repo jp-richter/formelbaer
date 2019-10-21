@@ -73,7 +73,7 @@ def processing(pid):
     start_index = current_start_index + pid * offset
     next_index = current_start_index + (pid+1) * offset
 
-    for i in range(start_index - next_index):
+    for i in range(start_index, next_index):
         name = str(index)
 
         if not i < num_seqs:
