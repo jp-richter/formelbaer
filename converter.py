@@ -78,7 +78,7 @@ def processing(pid):
 
     num_seqs = len(current_expressions)
     free_cpus = multiprocessing.cpu_count()
-    cpus_used = min(len(num_seqs), free_cpus)
+    cpus_used = min(num_seqs, free_cpus)
 
     offset = num_seqs // cpus_used
     start_index = current_start_index + pid * offset
