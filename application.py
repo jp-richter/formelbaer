@@ -150,5 +150,74 @@ def adversarial_training():
     loader.save_sequences(evaluation, directory + '/sequences')
 
 
+def application():
+
+    experiment = AppConfig(
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
+
+    iterations = 2,
+    d_steps = 2, # (*2) due to computational cost reasons
+    g_steps = 1,
+    seq_length = 10, # 15
+    montecarlo_trials = 10, # 15
+    batchsize = multiprocessing.cpu_count(), # computational cost reasons
+
+    oracle = False,
+    oracle_samplesize = 100,
+
+    label_synth = 1,
+    label_arxiv = 0
+
+    )
+
+    cfg.app_cfg = experiment
+    adversarial_training()
+
+    experiment = AppConfig(
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
+
+    iterations = 2,
+    d_steps = 2, # (*2) due to computational cost reasons
+    g_steps = 1,
+    seq_length = 30, # 15
+    montecarlo_trials = 10, # 15
+    batchsize = multiprocessing.cpu_count(), # computational cost reasons
+
+    oracle = False,
+    oracle_samplesize = 100,
+
+    label_synth = 1,
+    label_arxiv = 0
+
+    )
+
+    cfg.app_cfg = experiment
+    adversarial_training()
+
+    experiment = AppConfig(
+
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
+
+    iterations = 2,
+    d_steps = 2, # (*2) due to computational cost reasons
+    g_steps = 1,
+    seq_length = 20, # 15
+    montecarlo_trials = 10, # 15
+    batchsize = multiprocessing.cpu_count(), # computational cost reasons
+
+    oracle = False,
+    oracle_samplesize = 100,
+
+    label_synth = 1,
+    label_arxiv = 0
+
+    )
+
+    cfg.app_cfg = experiment
+    adversarial_training()
+
+
 if __name__ == '__main__':
-      adversarial_training()  
+      application()  

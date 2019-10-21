@@ -146,3 +146,5 @@ def estimate_finish_time(iterations, d_steps, g_steps, seq_len, montecarlo_trial
 
 
 # plot_runtime_per_iteration(2,1,16,16)
+
+

@@ -48,19 +48,10 @@ template = '''%&preamble
 \\end{{document}}
 '''
 
+
 current_start_index = None
 current_directory = None
-
-
-def processing(enumeration):
-    global current_directory, current_start_index
-
-    index, expression = enumeration
-    index += current_start_index
-    
-    file = pdflatex(expression, current_directory, current_directory + '/' + str(index) + '.tex')
-    file = croppdf(current_directory, file, str(index))
-    file = pdf2png(current_directory, file, str(index))
+current_expressions = None
 
 
 def cleanup(directory):
@@ -71,23 +62,53 @@ def cleanup(directory):
                 os.remove(entry)
 
 
+# def processing(enumeration):
+#     global current_directory, current_start_index
+
+#     index, expression = enumeration
+#     index += current_start_index
+    
+#     file = pdflatex(expression, current_directory, current_directory + '/' + str(index) + '.tex')
+#     file = croppdf(current_directory, file, str(index))
+#     file = pdf2png(current_directory, file, str(index))
+
+
+def processing(pid):
+    global current_directory, current_start_index, current_expressions
+
+    latex = expressions[current_expressions]
+    name = str(current_start_index + pid)
+
+    file = pdflatex(latex, current_directory, current_directory + '/' + name + '.tex')
+    file = croppdf(current_directory, file, name)
+    file = pdf2png(current_directory, file, name)
+
+
 def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
-    global current_directory, current_start_index
+    global current_directory, current_start_index, current_expressions
 
     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
     trees = tree.batch2tree(sequences)
-    expressions = [tree.latex() for tree in trees]
+    current_expressions = [tree.latex() for tree in trees]
 
     current_start_index = len(os.listdir(directory))
     current_directory = directory
     free_cpus = multiprocessing.cpu_count()
 
-    with multiprocessing.Pool(free_cpus) as pool:
-        pool.map(processing, enumerate(expressions))
+    assert len(sequences) == free_cpus
 
-        pool.close() # don't remove
-        pool.join() # don't remove
+    for pid in range(free_cpus):
+        # pid = multiprocessing.sharedctypes.RawValue(ctypes.c_int, processor)
+        p = multiprocessing.Process(target=processing, args=(pid,))
+        p.start()
+        p.join()
+
+    # with multiprocessing.Pool(free_cpus) as pool:
+    #     pool.map(processing, enumerate(expressions))
+
+    #     pool.close() # don't remove
+    #     pool.join() # don't remove
 
 
 def pdflatex(expr, directory, file):
@@ -101,7 +122,7 @@ def pdflatex(expr, directory, file):
         file]
     #  stdout=subprocess.DEVNULL, 
     try:
-        subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=30)
+        subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)
     except Exception as e:
         print(e)
 
@@ -145,7 +166,7 @@ def pdf2png(directory, file, expr_id):
         file]
     
     try:
-        subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=30)
+        subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)
     except Exception as e:
         print(e)
 

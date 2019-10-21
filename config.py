@@ -78,31 +78,31 @@ class DiscriminatorConfig:
 
 DEFAULT_PATHS_CFG = Paths(
 
-	app = str(pathlib.Path.home()) + '/formelbaer_data',
-	synthetic_data = str(pathlib.Path.home()) + '/formelbaer_data/synthetic_samples',
-	arxiv_data = str(pathlib.Path.home()) + '/formelbaer_data/arxiv_samples',
-	oracle_data = str(pathlib.Path.home()) + '/formelbaer_data/oracle_samples',
+	app = str(pathlib.Path.home()) + '/formelbaer-data',
+	synthetic_data = str(pathlib.Path.home()) + '/formelbaer-data/synthetic_samples',
+	arxiv_data = str(pathlib.Path.home()) + '/formelbaer-data/arxiv_samples',
+	oracle_data = str(pathlib.Path.home()) + '/formelbaer-data/oracle_samples',
 	
-	log = str(pathlib.Path.home()) + '/formelbaer_data/results.log',
-	oracle = str(pathlib.Path.home()) + '/formelbaer_data/oracle_net.pt',
+	log = str(pathlib.Path.home()) + '/formelbaer-data/results.log',
+	oracle = str(pathlib.Path.home()) + '/formelbaer-data/oracle_net.pt',
 
-	dump = str(pathlib.Path.home()) + '/formelbaer_data/dump.log'
+	dump = str(pathlib.Path.home()) + '/formelbaer-data/dump.log'
 
 	)
 
 
 DEFAULT_PATHS_CFG_CLUSTER = Paths(
 
-	app = '/ramdisk/formelbaer_data',
-	synthetic_data = '/ramdisk/formelbaer_data/synthetic_data',
+	app = '/ramdisk/formelbaer-data',
+	synthetic_data = '/ramdisk/formelbaer-data/synthetic_data',
 	# arxiv_data = '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs',
-	arxiv_data = '/ramdisk/formelbaer_data/arxiv_data',
-	oracle_data = '/ramdisk/formelbaer_data/oracle_data',
+	arxiv_data = '/ramdisk/formelbaer-data/arxiv_data',
+	oracle_data = '/ramdisk/formelbaer-data/oracle_data',
 	
-	log = '/ramdisk/formelbaer_data/results.log',
-	oracle = '/ramdisk/formelbaer_data/oracle_net.pt',
+	log = '/ramdisk/formelbaer-data/results.log',
+	oracle = '/ramdisk/formelbaer-data/oracle_net.pt',
 
-	dump = '/ramdisk/formelbaer_data/dump.log'
+	dump = '/ramdisk/formelbaer-data/dump.log'
 
 	)
 
