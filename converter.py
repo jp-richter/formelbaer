@@ -54,6 +54,44 @@ current_directory = None
 current_expressions = None
 
 
+import psutil
+import ray
+
+num_cpus = psutil.cpu_count(logical=False)
+ray.init(num_cpus=num_cpus)
+
+@ray.remote
+def process_with_ray(pid):
+    global current_directory, current_file_count, current_expressions
+
+    num_seqs = len(current_expressions)
+    free_cpus = multiprocessing.cpu_count()
+    cpus_used = min(num_seqs, free_cpus)
+
+    offset = math.ceil(num_seqs / cpus_used)
+    start_index = pid * offset
+    end_index = (pid+1) * offset
+
+    for i in range(start_index, end_index):
+        name = str(current_file_count + i)
+
+        if not i < num_seqs:
+            break
+
+        file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
+        file = croppdf(current_directory, file, name)
+        file = pdf2png(current_directory, file, name)
+
+    return True
+
+
+def convert_with_ray(sequences, directory):
+
+    num_seqs = len(sequences)
+    cpus_used = min(num_seqs, cpus_free)
+
+
+
 def clean_up(directory):
 
     with os.scandir(directory) as iterator:

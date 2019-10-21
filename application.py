@@ -57,7 +57,7 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
                 reward = discriminator.evaluate_single_batch(nn_discriminator, samples)
                 q_values = torch.cat([q_values, reward], dim=1)
 
-            # average the reward over 
+            # average the reward over all trials
             q_values = torch.mean(q_values, dim=1)
             generator.reward(nn_policy, q_values)
 
@@ -141,28 +141,6 @@ def adversarial_training():
 
 
 def application():
-
-    experiment = cfg.AppConfig(
-
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
-
-    iterations = 2,
-    d_steps = 2, # (*2) due to computational cost reasons
-    g_steps = 1,
-    seq_length = 10, # 15
-    montecarlo_trials = 10, # 15
-    batchsize = multiprocessing.cpu_count(), # computational cost reasons
-
-    oracle = True,
-    oracle_samplesize = 100,
-
-    label_synth = 1,
-    label_arxiv = 0
-
-    )
-
-    cfg.app_cfg = experiment
-    adversarial_training()
 
     experiment = cfg.AppConfig(
 

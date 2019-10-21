@@ -59,7 +59,7 @@ def get_pos_neg_loader(synthetic_samples):
     if cfg.app_cfg.oracle:
         data.merge(oracle_data.inorder(cfg.app_cfg.batchsize))
     else:
-        data.merge(arxiv_data.random(cfg.app_cfg.batchsize))
+        data.merge(arxiv_data.inorder(cfg.app_cfg.batchsize))
 
     return DataLoader(data, batch_size=cfg.app_cfg.batchsize, drop_last=True, shuffle=True)
 
@@ -67,7 +67,7 @@ def get_pos_neg_loader(synthetic_samples):
 def load_single_batch(synthetic_samples):
 
     refresh()
-    
+
     save_pngs(synthetic_samples, cfg.paths_cfg.synthetic_data)
     data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
     loader = DataLoader(data, cfg.app_cfg.batchsize)
