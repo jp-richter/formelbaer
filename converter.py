@@ -60,46 +60,46 @@ current_expressions = None
 # num_cpus = psutil.cpu_count(logical=False)
 # ray.init(num_cpus=num_cpus)
 
-@ray.remote
-def process_with_ray(pid):
-    global current_directory, current_file_count, current_expressions
+# @ray.remote
+# def process_with_ray(pid):
+#     global current_directory, current_file_count, current_expressions
 
-    num_seqs = len(current_expressions)
-    free_cpus = multiprocessing.cpu_count()
-    cpus_used = min(num_seqs, free_cpus)
+#     num_seqs = len(current_expressions)
+#     free_cpus = multiprocessing.cpu_count()
+#     cpus_used = min(num_seqs, free_cpus)
 
-    offset = math.ceil(num_seqs / cpus_used)
-    start_index = pid * offset
-    end_index = (pid+1) * offset
+#     offset = math.ceil(num_seqs / cpus_used)
+#     start_index = pid * offset
+#     end_index = (pid+1) * offset
 
-    for i in range(start_index, end_index):
-        name = str(current_file_count + i)
+#     for i in range(start_index, end_index):
+#         name = str(current_file_count + i)
 
-        if not i < num_seqs:
-            break
+#         if not i < num_seqs:
+#             break
 
-        file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
-        file = croppdf(current_directory, file, name)
-        file = pdf2png(current_directory, file, name)
+#         file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
+#         file = croppdf(current_directory, file, name)
+#         file = pdf2png(current_directory, file, name)
 
-    return True
+#     return True
 
 
-def convert_with_ray(sequences, directory):
+# def convert_with_ray(sequences, directory):
 
-    shutil.copyfile(preamble, directory + '/preamble.fmt')
+#     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
-    trees = tree.batch2tree(sequences)
-    current_expressions = [tree.latex() for tree in trees]
+#     trees = tree.batch2tree(sequences)
+#     current_expressions = [tree.latex() for tree in trees]
 
-    current_file_count = len(os.listdir(directory))
-    current_directory = directory
+#     current_file_count = len(os.listdir(directory))
+#     current_directory = directory
 
-    free_cpus = multiprocessing.cpu_count()
-    cpus_used = min(len(current_expressions), free_cpus)
+#     free_cpus = multiprocessing.cpu_count()
+#     cpus_used = min(len(current_expressions), free_cpus)
 
-    sequence_ids = ray.put(current_expressions)
-    processes = []
+#     sequence_ids = ray.put(current_expressions)
+#     processes = []
 
 
 
