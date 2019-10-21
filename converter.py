@@ -74,7 +74,7 @@ def processing(pid):
     next_index = current_start_index + (pid+1) * offset
 
     for i in range(start_index, next_index):
-        name = str(index)
+        name = str(i)
 
         if not i < num_seqs:
             break
