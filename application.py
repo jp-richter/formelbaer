@@ -10,7 +10,7 @@ import discriminator
 import loader
 import log
 import os
-import runtime
+#import runtime
 
 
 # TODO experimente mit 2 1 16 16
@@ -116,12 +116,12 @@ def adversarial_training():
 
     # START ADVERSARIAL TRAINING
 
-    print(runtime.estimate_finish_time(
-        cfg.app_cfg.iterations, 
-        cfg.app_cfg.d_steps, 
-        cfg.app_cfg.g_steps,
-        cfg.app_cfg.seq_length, 
-        cfg.app_cfg.montecarlo_trials))
+    # print(runtime.estimate_finish_time(
+    #     cfg.app_cfg.iterations, 
+    #     cfg.app_cfg.d_steps, 
+    #     cfg.app_cfg.g_steps,
+    #     cfg.app_cfg.seq_length, 
+    #     cfg.app_cfg.montecarlo_trials))
     
     log.start_experiment()
 
