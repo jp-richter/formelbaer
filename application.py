@@ -11,11 +11,6 @@ import loader
 import log
 import os
 import multiprocessing
-#import runtime
-
-
-# TODO experimente mit 2 1 16 16
-# TODO mit vielversprechenden settings auch ein experiment mit _ _ 32 _ (dauert ca 60 h)
 
 
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit):
@@ -59,8 +54,8 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
             else:
                 # calculate reward for last step without montecarlo approximation
                 samples = loader.load_single_batch(batch)
-                reward = discriminator.evaluate_single_batch(nn_discriminator, samples)
-                q_values = torch.cat([q_values, reward], dim=1)
+                rewardibus = discriminator.evaluate_single_batch(nn_discriminator, samples)
+                q_values = torch.cat([q_values, rewardibus], dim=1)
 
             # average the reward over 
             q_values = torch.mean(q_values, dim=1)
@@ -116,13 +111,6 @@ def adversarial_training():
     o_crit = torch.nn.KLDivLoss()
 
     # START ADVERSARIAL TRAINING
-
-    # print(runtime.estimate_finish_time(
-    #     cfg.app_cfg.iterations, 
-    #     cfg.app_cfg.d_steps, 
-    #     cfg.app_cfg.g_steps,
-    #     cfg.app_cfg.seq_length, 
-    #     cfg.app_cfg.montecarlo_trials))
     
     log.start_experiment()
 
