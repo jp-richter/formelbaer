@@ -73,14 +73,13 @@ def processing(pid):
     start_index = current_start_index + pid * offset
     next_index = current_start_index + (pid+1) * offset
 
-    for i in range(next_index - start_index):
-        index = start_index + i 
+    for i in range(start_index - next_index):
         name = str(index)
 
-        if not index < num_seqs:
+        if not i < num_seqs:
             break
 
-        file = pdflatex(current_expressions[index], current_directory, current_directory + '/' + name + '.tex')
+        file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
         file = croppdf(current_directory, file, name)
         file = pdf2png(current_directory, file, name)
 
@@ -98,10 +97,15 @@ def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
     free_cpus = multiprocessing.cpu_count()
     cpus_used = min(len(current_expressions), free_cpus)
 
-    for pid in range(cpus_used):
-        p = multiprocessing.Process(target=processing, args=(pid,))
-        p.start()
-        p.join()
+    processes = []
+
+    for cpu in range(cpus_used):
+        process = multiprocessing.Process(target=processing, args=(cpu,))
+        processes.append(process)
+        process.start()
+
+    for process in processes:
+        process.join()
 
 
 def pdflatex(expr, directory, file):
