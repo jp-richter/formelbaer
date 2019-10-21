@@ -93,16 +93,16 @@ DEFAULT_PATHS_CFG = Paths(
 
 DEFAULT_PATHS_CFG_CLUSTER = Paths(
 
-	app = '/ramdisk/formelbaer-data',
-	synthetic_data = '/ramdisk/formelbaer-data/synthetic_data',
+	app = str(pathlib.Path.home()) + '/formelbaer-data',
+	synthetic_data = str(pathlib.Path.home()) + '/formelbaer-data/synthetic_data',
 	# arxiv_data = '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs',
-	arxiv_data = '/ramdisk/formelbaer-data/arxiv_data',
-	oracle_data = '/ramdisk/formelbaer-data/oracle_data',
+	arxiv_data = str(pathlib.Path.home()) + '/formelbaer-data/arxiv_data',
+	oracle_data = str(pathlib.Path.home()) + '/formelbaer-data/oracle_data',
 	
-	log = '/ramdisk/formelbaer-data/results.log',
-	oracle = '/ramdisk/formelbaer-data/oracle_net.pt',
+	log = str(pathlib.Path.home()) + '/formelbaer-data/results.log',
+	oracle = str(pathlib.Path.home()) + '/formelbaer-data/oracle_net.pt',
 
-	dump = '/ramdisk/formelbaer-data/dump.log'
+	dump = str(pathlib.Path.home()) + '/formelbaer-data/dump.log'
 
 	)
 
