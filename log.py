@@ -7,6 +7,9 @@ import os
 if os.path.exists(cfg.paths_cfg.log):
     os.remove(cfg.paths_cfg.log)
 
+if not os.path.exists(cfg.paths_cfg.app):
+    os.makedirs(cfg.paths_cfg.app)
+
 logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, filename=cfg.paths_cfg.log)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
