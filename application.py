@@ -164,7 +164,7 @@ def application():
     montecarlo_trials = 10, # 15
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
-    oracle = False,
+    oracle = True,
     oracle_samplesize = 100,
 
     label_synth = 1,
@@ -186,7 +186,7 @@ def application():
     montecarlo_trials = 10, # 15
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
-    oracle = False,
+    oracle = True,
     oracle_samplesize = 100,
 
     label_synth = 1,
@@ -208,7 +208,7 @@ def application():
     montecarlo_trials = 10, # 15
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
-    oracle = False,
+    oracle = True,
     oracle_samplesize = 100,
 
     label_synth = 1,
