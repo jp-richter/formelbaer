@@ -73,10 +73,15 @@ def processing(pid):
     start_index = current_start_index + pid * offset
     next_index = current_start_index + (pid+1) * offset
 
+    print('pid ' + str(pid))
+
     for i in range(start_index, next_index):
         name = str(i)
 
+        print(i)
+
         if not i < num_seqs:
+            print('breaks at ' + str(i))
             break
 
         file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
