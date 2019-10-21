@@ -49,7 +49,7 @@ template = '''%&preamble
 '''
 
 
-current_start_index = None
+current_file_count = None
 current_directory = None
 current_expressions = None
 
@@ -63,25 +63,20 @@ def clean_up(directory):
 
 
 def processing(pid):
-    global current_directory, current_start_index, current_expressions
+    global current_directory, current_file_count, current_expressions
 
     num_seqs = len(current_expressions)
     free_cpus = multiprocessing.cpu_count()
     cpus_used = min(num_seqs, free_cpus)
 
     offset = math.ceil(num_seqs / cpus_used)
-    start_index = current_start_index + pid * offset
-    next_index = current_start_index + (pid+1) * offset
+    start_index = pid * offset
+    end_index = (pid+1) * offset
 
-    print('pid ' + str(pid))
-
-    for i in range(start_index, next_index):
-        name = str(i)
-
-        print(i)
+    for i in range(start_index, end_index):
+        name = str(current_file_count + i)
 
         if not i < num_seqs:
-            print('breaks at ' + str(i))
             break
 
         file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
@@ -90,14 +85,14 @@ def processing(pid):
 
 
 def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
-    global current_directory, current_start_index, current_expressions
+    global current_directory, current_file_count, current_expressions
 
     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
     trees = tree.batch2tree(sequences)
     current_expressions = [tree.latex() for tree in trees]
 
-    current_start_index = len(os.listdir(directory))
+    current_file_count = len(os.listdir(directory))
     current_directory = directory
     free_cpus = multiprocessing.cpu_count()
     cpus_used = min(len(current_expressions), free_cpus)

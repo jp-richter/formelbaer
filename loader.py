@@ -67,10 +67,9 @@ def get_pos_neg_loader(synthetic_samples):
 def load_single_batch(synthetic_samples):
 
     refresh()
-    print(synthetic_samples.shape[0])
+    
     save_pngs(synthetic_samples, cfg.paths_cfg.synthetic_data)
     data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
-    print(len(data))
     loader = DataLoader(data, cfg.app_cfg.batchsize)
 
     return next(iter(loader))[0] # (samples, labels)
