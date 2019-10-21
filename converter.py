@@ -76,12 +76,21 @@ def cleanup(directory):
 def processing(pid):
     global current_directory, current_start_index, current_expressions
 
-    latex = expressions[current_expressions]
-    name = str(current_start_index + pid)
+    num_seqs = len(current_expressions)
+    free_cpus = multiprocessing.cpu_count()
+    cpus_used = min(len(num_seqs), free_cpus)
 
-    file = pdflatex(latex, current_directory, current_directory + '/' + name + '.tex')
-    file = croppdf(current_directory, file, name)
-    file = pdf2png(current_directory, file, name)
+    offset = num_seqs // cpus_used
+    start_index = current_start_index + pid * offset
+    next_index = current_start_index + (pid+1) * offset
+
+    for i in range(next_index - start_index):
+        index = start_index + i 
+        name = str(index)
+
+        file = pdflatex(current_expressions[index], current_directory, current_directory + '/' + name + '.tex')
+        file = croppdf(current_directory, file, name)
+        file = pdf2png(current_directory, file, name)
 
 
 def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
@@ -95,10 +104,9 @@ def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
     current_start_index = len(os.listdir(directory))
     current_directory = directory
     free_cpus = multiprocessing.cpu_count()
+    cpus_used = min(len(current_expressions), free_cpus)
 
-    assert len(sequences) == free_cpus
-
-    for pid in range(free_cpus):
+    for pid in range(cpus_used):
         # pid = multiprocessing.sharedctypes.RawValue(ctypes.c_int, processor)
         p = multiprocessing.Process(target=processing, args=(pid,))
         p.start()
