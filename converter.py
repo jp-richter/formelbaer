@@ -54,23 +54,12 @@ current_directory = None
 current_expressions = None
 
 
-def cleanup(directory):
+def clean_up(directory):
 
     with os.scandir(directory) as iterator:
         for entry in iterator:
             if entry.is_file() and not entry.name.endswith('.png'):
                 os.remove(entry)
-
-
-# def processing(enumeration):
-#     global current_directory, current_start_index
-
-#     index, expression = enumeration
-#     index += current_start_index
-    
-#     file = pdflatex(expression, current_directory, current_directory + '/' + str(index) + '.tex')
-#     file = croppdf(current_directory, file, str(index))
-#     file = pdf2png(current_directory, file, str(index))
 
 
 def processing(pid):
@@ -80,13 +69,16 @@ def processing(pid):
     free_cpus = multiprocessing.cpu_count()
     cpus_used = min(num_seqs, free_cpus)
 
-    offset = num_seqs // cpus_used
+    offset = math.ceil(num_seqs / cpus_used)
     start_index = current_start_index + pid * offset
     next_index = current_start_index + (pid+1) * offset
 
     for i in range(next_index - start_index):
         index = start_index + i 
         name = str(index)
+
+        if not index < num_seqs:
+            break
 
         file = pdflatex(current_expressions[index], current_directory, current_directory + '/' + name + '.tex')
         file = croppdf(current_directory, file, name)
@@ -107,16 +99,9 @@ def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
     cpus_used = min(len(current_expressions), free_cpus)
 
     for pid in range(cpus_used):
-        # pid = multiprocessing.sharedctypes.RawValue(ctypes.c_int, processor)
         p = multiprocessing.Process(target=processing, args=(pid,))
         p.start()
         p.join()
-
-    # with multiprocessing.Pool(free_cpus) as pool:
-    #     pool.map(processing, enumerate(expressions))
-
-    #     pool.close() # don't remove
-    #     pool.join() # don't remove
 
 
 def pdflatex(expr, directory, file):
