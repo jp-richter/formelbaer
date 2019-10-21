@@ -54,11 +54,11 @@ current_directory = None
 current_expressions = None
 
 
-import psutil
-import ray
+# import psutil
+# import ray
 
-num_cpus = psutil.cpu_count(logical=False)
-ray.init(num_cpus=num_cpus)
+# num_cpus = psutil.cpu_count(logical=False)
+# ray.init(num_cpus=num_cpus)
 
 @ray.remote
 def process_with_ray(pid):
@@ -87,8 +87,19 @@ def process_with_ray(pid):
 
 def convert_with_ray(sequences, directory):
 
-    num_seqs = len(sequences)
-    cpus_used = min(num_seqs, cpus_free)
+    shutil.copyfile(preamble, directory + '/preamble.fmt')
+
+    trees = tree.batch2tree(sequences)
+    current_expressions = [tree.latex() for tree in trees]
+
+    current_file_count = len(os.listdir(directory))
+    current_directory = directory
+
+    free_cpus = multiprocessing.cpu_count()
+    cpus_used = min(len(current_expressions), free_cpus)
+
+    sequence_ids = ray.put(current_expressions)
+    processes = []
 
 
 
