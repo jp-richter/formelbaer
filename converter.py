@@ -39,11 +39,10 @@ template = '''%&preamble
 # MULTIPROCESSING WITH RAY
 #
 
-import psutil
 import ray
 
 
-num_cpus = psutil.cpu_count(logical=False)
+num_cpus = multiprocessing.cpu_count()
 ray.init(num_cpus=num_cpus)
 
 
