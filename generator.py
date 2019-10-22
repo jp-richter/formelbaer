@@ -85,7 +85,7 @@ def update(nn_policy, optimizer):
         total = reward + cfg.g_cfg.gamma * total
         returns.insert(0, total)
 
-    # for each step standardize rewards in batch
+    # for each step normalize rewards in batch
     eps = finfo(float32).eps.item()
     for i in range(len(returns)):
         returns[i] = (returns[i] - returns[i].mean()) / (returns[i].std() + eps)

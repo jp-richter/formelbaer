@@ -146,7 +146,7 @@ def application():
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-    iterations = 2,
+    iterations = 100,
     d_steps = 2, # (*2) due to computational cost reasons
     g_steps = 1,
     seq_length = 10, # 15
@@ -154,7 +154,7 @@ def application():
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
     oracle = True,
-    oracle_samplesize = 100,
+    oracle_samplesize = 9700,
 
     label_synth = 1,
     label_arxiv = 0
