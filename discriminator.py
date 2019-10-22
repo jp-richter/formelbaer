@@ -1,10 +1,10 @@
 import config as cfg
 
 
-def evaluate_single_batch(nn_discriminator, samples):
+def evaluate_single_batch(nn_discriminator, image_batch):
 
-    # samples: (batchsize, height, width)
-    rewards = nn_discriminator(samples)
+    # image_batch: (batchsize, height, width)
+    rewards = nn_discriminator(image_batch)
 
     return rewards[:,0][:,None] # [:,0] P(x ~ arxiv / oracle)
 
