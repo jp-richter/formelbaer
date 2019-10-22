@@ -12,7 +12,7 @@ import pathlib
 import config as cfg
 
 # preamble preloaded in preambel.fmt
-# pdf compression set to 0
+# pdf compression set to 3
 code_directory = pathlib.Path(__file__).resolve().parent
 preamble = pathlib.PurePath(code_directory,'preamble.fmt')
 
@@ -53,6 +53,10 @@ current_file_count = None
 current_directory = None
 current_expressions = None
 
+
+#
+# MULTIPROCESSING WITH RAY
+#
 
 # import psutil
 # import ray
@@ -101,6 +105,9 @@ current_expressions = None
 #     sequence_ids = ray.put(current_expressions)
 #     processes = []
 
+#
+# MULTIPROCESSING WITH RAY END
+#
 
 
 def clean_up(directory):

@@ -149,8 +149,8 @@ def application():
     iterations = 2,
     d_steps = 2, # (*2) due to computational cost reasons
     g_steps = 1,
-    seq_length = 30, # 15
-    montecarlo_trials = 10, # 15
+    seq_length = 15, # 15
+    montecarlo_trials = 15, # 15
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
     oracle = True,
@@ -171,7 +171,7 @@ def application():
     iterations = 2,
     d_steps = 2, # (*2) due to computational cost reasons
     g_steps = 1,
-    seq_length = 20, # 15
+    seq_length = 15, # 15
     montecarlo_trials = 10, # 15
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
