@@ -11,8 +11,8 @@ import ctypes
 import pathlib
 import config as cfg
 
-# preamble preloaded in preambel.fmt
-# pdf compression set to 3
+
+# preamble preloaded in preamble.fmt, saved in preamble.tex, pdf compression 3
 code_directory = pathlib.Path(__file__).resolve().parent
 preamble = pathlib.PurePath(code_directory,'preamble.fmt')
 
@@ -24,19 +24,6 @@ try:
 except Exception as e:
     print(e)
 
-# equation environment doesn't work
-# template = '''
-# %&preambel
-
-# \\begin{{document}}
-# \\begin{{minipage}}[c][1cm]{{50cm}}
-# \\begin{{equation}}
-# {expression}
-# \\end{{equation}}
-# \\end{{minipage}}
-# \\end{{document}}
-# '''
-
 template = '''%&preamble
 
 \\begin{{document}}
@@ -47,7 +34,6 @@ template = '''%&preamble
 \\end{{minipage}}
 \\end{{document}}
 '''
-
 
 current_file_count = None
 current_directory = None
@@ -64,46 +50,48 @@ current_expressions = None
 # num_cpus = psutil.cpu_count(logical=False)
 # ray.init(num_cpus=num_cpus)
 
+
 # @ray.remote
-# def process_with_ray(pid):
-#     global current_directory, current_file_count, current_expressions
+# def process_with_ray(pid, offset, sequences, directory, file_count):
 
-#     num_seqs = len(current_expressions)
-#     free_cpus = multiprocessing.cpu_count()
-#     cpus_used = min(num_seqs, free_cpus)
-
-#     offset = math.ceil(num_seqs / cpus_used)
 #     start_index = pid * offset
 #     end_index = (pid+1) * offset
+#     end_index = min(end_index, len(sequences))
 
 #     for i in range(start_index, end_index):
-#         name = str(current_file_count + i)
-
-#         if not i < num_seqs:
-#             break
-
-#         file = pdflatex(current_expressions[i], current_directory, current_directory + '/' + name + '.tex')
-#         file = croppdf(current_directory, file, name)
-#         file = pdf2png(current_directory, file, name)
+#         name = str(file_count + i)
+#         file = pdflatex(sequences[i], directory, directory + '/' + name + '.tex')
+#         file = croppdf(directory, file, name)
+#         file = pdf2png(directory, file, name)
 
 #     return True
 
 
 # def convert_with_ray(sequences, directory):
+#     global num_cpus
 
 #     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
 #     trees = tree.batch2tree(sequences)
-#     current_expressions = [tree.latex() for tree in trees]
+#     expressions = [tree.latex() for tree in trees]
 
-#     current_file_count = len(os.listdir(directory))
-#     current_directory = directory
+#     cpus_used = min(len(expressions), num_cpus)
+#     offset = math.ceil(num_seqs / cpus_used)
+#     file_count = len(os.listdir(directory))
 
-#     free_cpus = multiprocessing.cpu_count()
-#     cpus_used = min(len(current_expressions), free_cpus)
+#     # copy to shared memory once instead of copying to each cpu
+#     sequences_id = ray.put(expressions)
+#     offset_id = ray.put(offset)
+#     directory_id = ray.put(directory)
+#     file_count_id = ray.put(file_count)
 
-#     sequence_ids = ray.put(current_expressions)
-#     processes = []
+#     # no need for return value but call get for synchronisation
+#     ray.get([process_with_ray.remote(
+#         pid, 
+#         offset_id, 
+#         sequences_id, 
+#         directory_id, 
+#         file_count_id) for pid in range(cpus_used)])
 
 #
 # MULTIPROCESSING WITH RAY END
