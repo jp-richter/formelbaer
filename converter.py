@@ -19,7 +19,7 @@ if ray_available:
 
 # preamble preloaded in preamble.fmt, saved in preamble.tex, pdf compression 3
 code_directory = pathlib.Path(__file__).resolve().parent
-preamble = pathlib.PurePath(code_directory,'preamble.fmt')
+preamble = pathlib.PurePath(code_directory, 'preamble.fmt')
 
 # precompile tex file in case pdflatex versions differ
 precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump"'
@@ -72,7 +72,7 @@ if ray_available:
         shutil.copyfile(preamble, directory + '/preamble.fmt')
 
         trees = tree.batch2tree(sequences)
-        expressions = [tree.latex() for tree in trees]
+        expressions = [t.latex() for t in trees]
 
         num_seqs = len(expressions)
         cpus_used = min(num_seqs, num_cpus)
@@ -128,13 +128,13 @@ def process_with_multiprocessing(pid):
         file = pdf2png(current_directory, file, name)
 
 
-def convert_with_multiprocessing(sequences, directory = cfg.paths_cfg.synthetic_data):
+def convert_with_multiprocessing(sequences, directory=cfg.paths_cfg.synthetic_data):
     global current_directory, current_file_count, current_expressions
 
     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
     trees = tree.batch2tree(sequences)
-    current_expressions = [tree.latex() for tree in trees]
+    current_expressions = [t.latex() for t in trees]
 
     current_file_count = len(os.listdir(directory))
     current_directory = directory
@@ -156,7 +156,7 @@ def convert_with_multiprocessing(sequences, directory = cfg.paths_cfg.synthetic_
 #
 
 
-def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
+def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data):
 
     if ray_available: convert_with_ray(sequences, directory)
     else: convert_with_multiprocessing(sequences, directory)
@@ -179,7 +179,7 @@ def pdflatex(expr, directory, file):
         '-interaction=batchmode',
         '-interaction=nonstopmode',
         file]
-    #  stdout=subprocess.DEVNULL, 
+
     try:
         subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)
     except Exception as e:
@@ -197,7 +197,7 @@ def croppdf(directory, file, expr_id):
         '-dNOPAUSE '
         '-sDEVICE=pdfwrite '
         '-sOutputFile={}/crop_{}.pdf '
-        '-c [/CropBox [550 0 850 100] ' # (x,y) (x',y')
+        '-c [/CropBox [550 0 850 100] '  # (x,y) (x',y')
         '-c /PAGES pdfmark '
         '-f {} '
         '> {}')
