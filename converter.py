@@ -98,7 +98,7 @@ def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data):
             for pid in range(cpus_used):
                 proc = multiprocessing.Process(target=process, args=(pid,offset,sequences,directory, file_count))
                 processes.append(proc)
-                process.start()
+                proc.start()
 
             for proc in processes:
                 proc.join()
