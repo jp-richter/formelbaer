@@ -35,80 +35,76 @@ template = '''%&preamble
 \\end{{document}}
 '''
 
-current_file_count = None
-current_directory = None
-current_expressions = None
-
-
 #
 # MULTIPROCESSING WITH RAY
 #
 
-# import psutil
-# import ray
+import psutil
+import ray
 
 
-# num_cpus = psutil.cpu_count(logical=False)
-# ray.init(num_cpus=num_cpus)
+num_cpus = psutil.cpu_count(logical=False)
+ray.init(num_cpus=num_cpus)
 
 
-# @ray.remote
-# def process_with_ray(pid, offset, sequences, directory, file_count):
+@ray.remote
+def process_with_ray(pid, offset, sequences, directory, file_count):
 
-#     start_index = pid * offset
-#     end_index = (pid+1) * offset
-#     end_index = min(end_index, len(sequences))
+    start_index = pid * offset
+    end_index = (pid+1) * offset
+    end_index = min(end_index, len(sequences))
 
-#     for i in range(start_index, end_index):
-#         name = str(file_count + i)
-#         file = pdflatex(sequences[i], directory, directory + '/' + name + '.tex')
-#         file = croppdf(directory, file, name)
-#         file = pdf2png(directory, file, name)
+    for i in range(start_index, end_index):
+        name = str(file_count + i)
+        file = pdflatex(sequences[i], directory, directory + '/' + name + '.tex')
+        file = croppdf(directory, file, name)
+        file = pdf2png(directory, file, name)
 
-#     return True
+    return True
 
 
-# def convert_with_ray(sequences, directory):
-#     global num_cpus
+def convert_with_ray(sequences, directory):
+    global num_cpus
 
-#     shutil.copyfile(preamble, directory + '/preamble.fmt')
+    shutil.copyfile(preamble, directory + '/preamble.fmt')
 
-#     trees = tree.batch2tree(sequences)
-#     expressions = [tree.latex() for tree in trees]
+    trees = tree.batch2tree(sequences)
+    expressions = [tree.latex() for tree in trees]
 
-#     cpus_used = min(len(expressions), num_cpus)
-#     offset = math.ceil(num_seqs / cpus_used)
-#     file_count = len(os.listdir(directory))
+    cpus_used = min(len(expressions), num_cpus)
+    offset = math.ceil(num_seqs / cpus_used)
+    file_count = len(os.listdir(directory))
 
-#     # copy to shared memory once instead of copying to each cpu
-#     sequences_id = ray.put(expressions)
-#     offset_id = ray.put(offset)
-#     directory_id = ray.put(directory)
-#     file_count_id = ray.put(file_count)
+    # copy to shared memory once instead of copying to each cpu
+    sequences_id = ray.put(expressions)
+    offset_id = ray.put(offset)
+    directory_id = ray.put(directory)
+    file_count_id = ray.put(file_count)
 
-#     # no need for return value but call get for synchronisation
-#     ray.get([process_with_ray.remote(
-#         pid, 
-#         offset_id, 
-#         sequences_id, 
-#         directory_id, 
-#         file_count_id) for pid in range(cpus_used)])
+    # no need for return value but call get for synchronisation
+    ray.get([process_with_ray.remote(
+        pid, 
+        offset_id, 
+        sequences_id, 
+        directory_id, 
+        file_count_id) for pid in range(cpus_used)])
 
 
 #
 # MULTIPROCESSING WITH RAY END
 #
 
-
-def clean_up(directory):
-
-    with os.scandir(directory) as iterator:
-        for entry in iterator:
-            if entry.is_file() and not entry.name.endswith('.png'):
-                os.remove(entry)
+#
+# MULTIPROCESSING WITH MULTIPROCESSING LIBRARY
+#
 
 
-def processing(pid):
+current_file_count = None
+current_directory = None
+current_expressions = None
+
+
+def process_with_multiprocessing(pid):
     global current_directory, current_file_count, current_expressions
 
     num_seqs = len(current_expressions)
@@ -130,7 +126,7 @@ def processing(pid):
         file = pdf2png(current_directory, file, name)
 
 
-def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
+def convert_with_multiprocessing(sequences, directory = cfg.paths_cfg.synthetic_data):
     global current_directory, current_file_count, current_expressions
 
     shutil.copyfile(preamble, directory + '/preamble.fmt')
@@ -146,12 +142,30 @@ def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
     processes = []
 
     for cpu in range(cpus_used):
-        process = multiprocessing.Process(target=processing, args=(cpu,))
+        process = multiprocessing.Process(target=process_with_multiprocessing, args=(cpu,))
         processes.append(process)
         process.start()
 
     for process in processes:
         process.join()
+
+
+#
+# MULTIPROCESSING WITH MULTIPROCESSING END
+#
+
+
+def convert_to_png(sequences, directory = cfg.paths_cfg.synthetic_data):
+
+    convert_with_ray(sequences, directory)
+
+
+def clean_up(directory):
+
+    with os.scandir(directory) as iterator:
+        for entry in iterator:
+            if entry.is_file() and not entry.name.endswith('.png'):
+                os.remove(entry)
 
 
 def pdflatex(expr, directory, file):
