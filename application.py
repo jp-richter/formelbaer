@@ -149,29 +149,7 @@ def application():
     iterations = 2,
     d_steps = 2, # (*2) due to computational cost reasons
     g_steps = 1,
-    seq_length = 15, # 15
-    montecarlo_trials = 15, # 15
-    batchsize = multiprocessing.cpu_count(), # computational cost reasons
-
-    oracle = True,
-    oracle_samplesize = 100,
-
-    label_synth = 1,
-    label_arxiv = 0
-
-    )
-
-    cfg.app_cfg = experiment
-    adversarial_training()
-
-    experiment = cfg.AppConfig(
-
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
-
-    iterations = 2,
-    d_steps = 2, # (*2) due to computational cost reasons
-    g_steps = 1,
-    seq_length = 15, # 15
+    seq_length = 10, # 15
     montecarlo_trials = 10, # 15
     batchsize = multiprocessing.cpu_count(), # computational cost reasons
 
