@@ -147,16 +147,11 @@ def load_arxiv_data(log):
                 provided)
 
     if provided < needed:
-        log.log.info(message)
+        log.log.error(message)
         raise ValueError(message)
 
 
-def initialize(log):
+def load_data(log):
 
-    make_directories()
-
-    if cfg.app_cfg.oracle:
-        load_oracle_data()
-
-    else:
-        load_arxiv_data(log)
+    if cfg.app_cfg.oracle: load_oracle_data()
+    else: load_arxiv_data(log)

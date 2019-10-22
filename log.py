@@ -1,18 +1,16 @@
 import config as cfg
 import logging
 import shutil
-import os
 
 
-if os.path.exists(cfg.paths_cfg.log):
-    os.remove(cfg.paths_cfg.log)
-
-if not os.path.exists(cfg.paths_cfg.app):
-    os.makedirs(cfg.paths_cfg.app)
-
-logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO, filename=cfg.paths_cfg.log)
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
+
+handler = logging.FileHandler(cfg.paths_cfg.log, mode='w')
+handler.setLevel(logging.INFO)
+handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+log.addHandler(handler)
 
 generator_loss_sequence = []
 discriminator_loss_sequence = []
@@ -20,7 +18,7 @@ oracle_loss_sequence = []
 
 
 def start_loading_data():
-    global log 
+    global log
 
     log.info('Start loading data..')
     print('Start loading data..')

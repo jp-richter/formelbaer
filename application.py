@@ -10,13 +10,7 @@ import os
 import multiprocessing
 
 
-def generator_training(nn_policy: generator.Policy,
-                       nn_rollout: generator.Policy,
-                       nn_discriminator: discriminator.Discriminator,
-                       nn_oracle: generator.Oracle,
-                       g_opt: object,  # torch.optim.Optimizer
-                       o_crit: object  # torch.nn._Loss
-                       ) -> None:
+def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit) -> None:
 
     """The training loop of the generating policy net.
 
@@ -61,11 +55,7 @@ def generator_training(nn_policy: generator.Policy,
         generator.update(nn_policy, g_opt)
 
 
-def discriminator_training(nn_discriminator: discriminator.Discriminator,
-                           nn_generator: generator.Policy,
-                           d_opt: object,  # torch.optim.Optimizer
-                           d_crit: object  # torch.nn._Loss
-                           ) -> None:
+def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> None:
 
     """The training loop of the discriminator net.
 
@@ -93,8 +83,9 @@ def adversarial_training() -> None:
 
     # INITIALIZATION
 
+    loader.make_directories()
     log.start_loading_data()
-    loader.initialize(log)  # must be called first / loads data & makes directories
+    loader.load_data(log)
     log.finish_loading_data()
 
     nn_discriminator = discriminator.Discriminator()
