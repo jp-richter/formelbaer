@@ -3,13 +3,11 @@ from torch.utils.data import DataLoader
 
 import config as cfg
 import converter
-import nn_policy
 import math
 import os
 import shutil
 import generator
 import datetime
-import tree
 import tokens
 
 
@@ -104,7 +102,7 @@ def make_directories():
 def load_oracle_data():
     global oracle_data
 
-    nn_oracle = nn_policy.Oracle()
+    nn_oracle = generator.Oracle()
 
     # generate oracle net with random weights
     if not os.path.exists(cfg.paths_cfg.oracle):
@@ -162,4 +160,3 @@ def initialize(log):
 
     else:
         load_arxiv_data(log)
-        
