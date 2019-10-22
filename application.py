@@ -116,9 +116,9 @@ def adversarial_training() -> None:
     # FINISH EXPERIMENT AND WRITE LOGS
 
     directory = loader.get_experiment_directory()
-    nn_policy.save(directory + '/policy_net.pt')
-    nn_discriminator.save(directory + '/discriminator_net.pt')
-    nn_oracle.save(directory + '/oracle_net.pt')
+    nn_policy.save(directory + '/policy-net.pt')
+    nn_discriminator.save(directory + '/discriminator-net.pt')
+    nn_oracle.save(directory + '/oracle-net.pt')
 
     log.finish_experiment(directory)
 

@@ -1,8 +1,8 @@
-import os
 import pathlib
 import multiprocessing
 import torch
 
+from pathlib import Path
 from dataclasses import dataclass
 
 
@@ -12,7 +12,7 @@ class Paths:
 	paths make changes to the DEFAULT_PATHS_CFG instance or overwrite the cfg_paths variable
 	with your own instance."""
 
-	app: str 
+	app: str
 	synthetic_data: str
 	arxiv_data: str
 	oracle_data: str
@@ -53,10 +53,10 @@ class GeneratorConfig:
 
 	hidden_dim: int 
 	layers: int
-	dropout: int 
-	learnrate: int 
+	dropout: float
+	learnrate: float
 	baseline: int
-	gamma: int 
+	gamma: float
 
 
 @dataclass
@@ -65,52 +65,31 @@ class DiscriminatorConfig:
 	neural net. To change training parameters make changes to the DEFAUT_DISCRIMINATOR_CFG instance or overwrite 
 	the cfg_d variable with your own instance."""
 
-	dropout: int 
-	learnrate: int
+	dropout: float
+	learnrate: float
 
 
 # '/rdata/schill/arxiv_processed/all/pngs'
-
 # '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs'
-
 # '/ramdisk/arxiv'
 
+_home = str(Path.home())
 
 DEFAULT_PATHS_CFG = Paths(
 
-	app = str(pathlib.Path.home()) + '/formelbaer-data',
-	synthetic_data = str(pathlib.Path.home()) + '/formelbaer-data/synthetic_samples',
-	arxiv_data = str(pathlib.Path.home()) + '/formelbaer-data/arxiv_samples',
-	oracle_data = str(pathlib.Path.home()) + '/formelbaer-data/oracle_samples',
+	app = _home + '/formelbaer-data',
+	synthetic_data = _home + '/formelbaer-data' + '/synthetic-data',
+	arxiv_data = _home + '/formelbaer-data' + '/arxiv-samples',
+	oracle_data = _home + '/formelbaer-data' + '/oracle-samples',
 	
-	log = str(pathlib.Path.home()) + '/formelbaer-data/results.log',
-	oracle = str(pathlib.Path.home()) + '/formelbaer-data/oracle_net.pt',
+	log = _home + '/formelbaer-data' + '/results.log',
+	oracle = _home + '/formelbaer-data' + '/oracle-net.pt',
 
-	dump = str(pathlib.Path.home()) + '/formelbaer-data/dump.log'
+	dump = _home + '/formelbaer-data' + '/dump.txt'
 
 	)
 
-
-DEFAULT_PATHS_CFG_CLUSTER = Paths(
-
-	app = str(pathlib.Path.home()) + '/formelbaer-data',
-	synthetic_data = str(pathlib.Path.home()) + '/formelbaer-data/synthetic_data',
-	# arxiv_data = '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs',
-	arxiv_data = str(pathlib.Path.home()) + '/formelbaer-data/arxiv_data',
-	oracle_data = str(pathlib.Path.home()) + '/formelbaer-data/oracle_data',
-	
-	log = str(pathlib.Path.home()) + '/formelbaer-data/results.log',
-	oracle = str(pathlib.Path.home()) + '/formelbaer-data/oracle_net.pt',
-
-	dump = str(pathlib.Path.home()) + '/formelbaer-data/dump.log'
-
-	)
-
-
-if multiprocessing.cpu_count() > 4:
-	paths_cfg = DEFAULT_PATHS_CFG_CLUSTER
-else:
-	paths_cfg = DEFAULT_PATHS_CFG
+paths_cfg = DEFAULT_PATHS_CFG
 
 
 DEFAULT_APP_CFG = AppConfig(

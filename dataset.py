@@ -38,6 +38,8 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         image = self.protocol[form](path)
         image = self.transform(image)
 
+        image.show()  # TODO remove
+
         return image, label
 
     def __crawl__(self, folder, label, recursive):
