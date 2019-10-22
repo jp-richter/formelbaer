@@ -44,55 +44,55 @@ current_expressions = None
 # MULTIPROCESSING WITH RAY
 #
 
-import psutil
-import ray
+# import psutil
+# import ray
 
 
-num_cpus = psutil.cpu_count(logical=False)
-ray.init(num_cpus=num_cpus)
+# num_cpus = psutil.cpu_count(logical=False)
+# ray.init(num_cpus=num_cpus)
 
 
-@ray.remote
-def process_with_ray(pid, offset, sequences, directory, file_count):
+# @ray.remote
+# def process_with_ray(pid, offset, sequences, directory, file_count):
 
-    start_index = pid * offset
-    end_index = (pid+1) * offset
-    end_index = min(end_index, len(sequences))
+#     start_index = pid * offset
+#     end_index = (pid+1) * offset
+#     end_index = min(end_index, len(sequences))
 
-    for i in range(start_index, end_index):
-        name = str(file_count + i)
-        file = pdflatex(sequences[i], directory, directory + '/' + name + '.tex')
-        file = croppdf(directory, file, name)
-        file = pdf2png(directory, file, name)
+#     for i in range(start_index, end_index):
+#         name = str(file_count + i)
+#         file = pdflatex(sequences[i], directory, directory + '/' + name + '.tex')
+#         file = croppdf(directory, file, name)
+#         file = pdf2png(directory, file, name)
 
-    return True
+#     return True
 
 
-def convert_with_ray(sequences, directory):
-    global num_cpus
+# def convert_with_ray(sequences, directory):
+#     global num_cpus
 
-    shutil.copyfile(preamble, directory + '/preamble.fmt')
+#     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
-    trees = tree.batch2tree(sequences)
-    expressions = [tree.latex() for tree in trees]
+#     trees = tree.batch2tree(sequences)
+#     expressions = [tree.latex() for tree in trees]
 
-    cpus_used = min(len(expressions), num_cpus)
-    offset = math.ceil(num_seqs / cpus_used)
-    file_count = len(os.listdir(directory))
+#     cpus_used = min(len(expressions), num_cpus)
+#     offset = math.ceil(num_seqs / cpus_used)
+#     file_count = len(os.listdir(directory))
 
-    # copy to shared memory once instead of copying to each cpu
-    sequences_id = ray.put(expressions)
-    offset_id = ray.put(offset)
-    directory_id = ray.put(directory)
-    file_count_id = ray.put(file_count)
+#     # copy to shared memory once instead of copying to each cpu
+#     sequences_id = ray.put(expressions)
+#     offset_id = ray.put(offset)
+#     directory_id = ray.put(directory)
+#     file_count_id = ray.put(file_count)
 
-    # no need for return value but call get for synchronisation
-    ray.get([process_with_ray.remote(
-        pid, 
-        offset_id, 
-        sequences_id, 
-        directory_id, 
-        file_count_id) for pid in range(cpus_used)])
+#     # no need for return value but call get for synchronisation
+#     ray.get([process_with_ray.remote(
+#         pid, 
+#         offset_id, 
+#         sequences_id, 
+#         directory_id, 
+#         file_count_id) for pid in range(cpus_used)])
 
 
 #
