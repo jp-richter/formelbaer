@@ -7,15 +7,27 @@ from dataclasses import dataclass
 
 @dataclass
 class Paths:
-    """Configuration data class which contains all path variables of the script. To change paths make changes to the
-    DEFAULT_PATHS_CFG instance or overwrite the cfg_paths variable with your own instance."""
+    """
+    Configuration data class which contains all path variables of the script. To change paths make changes to the
+    DEFAULT_PATHS_CFG instance or overwrite the cfg_paths variable with your own instance.
+    """
 
+    # the root directory of the script
     app: str
+
+    # this directory stores synthetic data temporarily for conversions and evaluation by the discriminating net
     synthetic_data: str
+
+    # positive data samples of the real distribution should be saved here
     arxiv_data: str
+
+    # fake positive oracle data samples will be saved here
     oracle_data: str
 
+    # the log file contains timestamps of loading times and iterations, loss and reward sequences for parsing
     log: str
+
+    # if an oracle has been generated it will be saved here for future comparisons
     oracle: str
 
     dump: str
@@ -23,30 +35,51 @@ class Paths:
 
 @dataclass
 class AppConfig:
-    """Configuration data class which contains various training parameters. To change training parameters make changes
-    to the DEFAUT_APP_CFG instance or overwrite the cfg_app variable with your own instance."""
+    """
+    Configuration data class which contains various training parameters. To change training parameters make changes
+    to the DEFAUT_APP_CFG instance or overwrite the cfg_app variable with your own instance.
+    """
 
     device: None
 
+    # the amount of adversarial training steps, g steps for the generator and d steps for the discriminator
     iterations: int
+
+    # discriminator training steps per iteration, for each iteration the discriminator trains on (d steps * batch size)
+    # negative and (d steps * batch size) positive samples
     d_steps: int
+
+    # generator training steps per iteration, for each iteration the generator trains on (g steps * batch size)
+    # sequences and for (g steps * batch size * sequence length) generating steps
     g_steps: int
+
+    # the fixed length of the generated sequences
     seq_length: int
+
+    # the amount of rollouts to estimate rewards for unfinished sequences
     montecarlo_trials: int
+
+    # should be equal to or a multiple of the cpu count for performance reasons
     batchsize: int
 
+    # if true, the training target will be an fake real distribution represented by an oracle policy instead of arxiv
     oracle: bool
+
+    # the amount of samples generated in the beginning of the training, should be > (iterations * d steps * batch size)
     oracle_samplesize: int
 
+    # the labels should always set to synth=1 and arxiv=0, do not overwrite
     label_synth: int
     label_arxiv: int
 
 
 @dataclass
 class GeneratorConfig:
-    """Configuration data class which contains various training and structural parameters specific to the generating
+    """
+    Configuration data class which contains various training and structural parameters specific to the generating
     neural net. To change parameters make changes to the DEFAUT_GENERATOR_CFG instance or overwrite the cfg_g variable
-    with your own instance."""
+    with your own instance.
+    """
 
     hidden_dim: int
     layers: int
@@ -58,9 +91,11 @@ class GeneratorConfig:
 
 @dataclass
 class DiscriminatorConfig:
-    """Configuration data class which contains various training parameters specific to the discriminating neural net.
+    """
+    Configuration data class which contains various training parameters specific to the discriminating neural net.
     To change training parameters make changes to the DEFAUT_DISCRIMINATOR_CFG instance or overwrite the cfg_d variable
-    with your own instance."""
+    with your own instance.
+    """
 
     dropout: float
     learnrate: float

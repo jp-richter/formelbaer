@@ -12,7 +12,8 @@ import multiprocessing
 
 
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit) -> None:
-    """The training loop of the generating policy net.
+    """
+    The training loop of the generating policy net.
 
     :param nn_policy: The policy net that is the training target.
     :param nn_rollout: The rollout net that is used to complete unfinished sequences for estimation of rewards.
@@ -57,7 +58,8 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
 
 
 def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> None:
-    """The training loop of the discriminator net.
+    """
+    The training loop of the discriminator net.
 
     :param nn_generator: The policy net which generates the synthetic data the CNN gets trained to classify.
     :param nn_discriminator: The CNN that outputs an estimation of the probability that a given data point was
@@ -77,7 +79,8 @@ def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> Non
 
 
 def adversarial_training() -> None:
-    """The main loop of the script. To change parameters of the adversarial training parameters
+    """
+    The main loop of the script. To change parameters of the adversarial training parameters
     should not be changed here. Overwrite the configuration variables in config.py instead and
     start the adversarial training again.
     """
@@ -135,7 +138,8 @@ def adversarial_training() -> None:
 
 
 def application() -> None:
-    """Experimentational configurations can be defined here to overwrite the default configurations in config.py.
+    """
+    Experimentational configurations can be defined here to overwrite the default configurations in config.py.
     Call adversarial_training() after each configuration definition. To start all defined experiments just run this
     script.
     """
