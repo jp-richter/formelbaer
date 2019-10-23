@@ -10,6 +10,7 @@ import generator
 import datetime
 import tokens
 import torch
+import ray
 
 
 arxiv_data = None
@@ -90,9 +91,9 @@ def get_loader_mixed_with_positives(synthetic_samples) -> DataLoader:
     data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
 
     if cfg.app_cfg.oracle:
-        data.merge(oracle_data.inorder(cfg.app_cfg.batchsize))
+        data.append(oracle_data.inorder(cfg.app_cfg.batchsize))
     else:
-        data.merge(arxiv_data.inorder(cfg.app_cfg.batchsize))
+        data.append(arxiv_data.inorder(cfg.app_cfg.batchsize))
 
     return DataLoader(data, batch_size=cfg.app_cfg.batchsize, drop_last=True, shuffle=True)
 
@@ -223,12 +224,19 @@ def load_arxiv_data(log) -> None:
 def load_data(log) -> None:
     """
     This function loads the dataset of real samples to train the discriminator with. It should be called at the
-    beginning of the script. It assumes ray has already been initialized or errors will be thrown by the ray module.
+    beginning of the script. It assumes ray has already been initialized or errors might be thrown by the ray module.
     If oracle is set to True in the current configuration fake real samples of the oracle will be loaded instead of
     arxiv data.
 
     :param log: A logger instance of the python logging module to log potential errors.
     """
+
+    ray_error = 'Please call converter.initialize_ray() before loading the data and converter.shutdown_ray() at the ' \
+                'end of the script to avoid errors thrown by the ray module.'
+
+    if not ray.is_initialized():
+        log.log.error(ray_error)
+        raise ValueError(ray_error)
 
     if cfg.app_cfg.oracle:
         load_oracle_data()
