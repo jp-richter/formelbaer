@@ -69,10 +69,11 @@ def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> Non
     nn_discriminator.train()
     nn_generator.eval()
 
-    for _ in range(cfg.app_cfg.d_steps):
-        synthetic = generator.sample(nn_generator, 1)
-        torch_loader = loader.get_pos_neg_loader(synthetic)
-        discriminator.update(nn_discriminator, d_opt, d_crit, torch_loader)
+    synthetic_data = generator.sample(nn_generator, cfg.app_cfg.d_steps)
+    torch_loader = loader.get_loader_mixed_with_positives(synthetic_data)
+
+    for images, labels in torch_loader:
+        discriminator.update(nn_discriminator, d_opt, d_crit, images, labels)
 
 
 def adversarial_training() -> None:
@@ -116,7 +117,7 @@ def adversarial_training() -> None:
 
     # FINISH EXPERIMENT AND WRITE LOGS
 
-    directory = loader.get_experiment_directory()
+    directory = loader.get_directory_with_timestamp()
     nn_policy.save(directory + '/policy-net.pt')
     nn_discriminator.save(directory + '/discriminator-net.pt')
     nn_oracle.save(directory + '/oracle-net.pt')

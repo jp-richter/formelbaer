@@ -63,7 +63,7 @@ class Discriminator(nn.Module):
         self.load_state_dict(torch.load(file))
 
 
-def evaluate(nn_discriminator, image_batch):
+def evaluate(nn_discriminator, image_batch) -> torch.Tensor:
 
     # image_batch: (batch_size, height, width)
     rewards = nn_discriminator(image_batch)
@@ -71,20 +71,18 @@ def evaluate(nn_discriminator, image_batch):
     return rewards[:,0][:,None] # [:,0] P(x ~ arxiv / oracle)
 
 
-def update(nn_discriminator, d_opt, d_crit, loader):
+def update(nn_discriminator, d_opt, d_crit, images, labels) -> None:
 
-    for images, labels in loader:
+    images.to(cfg.app_cfg.device)
+    labels.to(cfg.app_cfg.device)
 
-        images.to(cfg.app_cfg.device)
-        labels.to(cfg.app_cfg.device)
+    outputs = nn_discriminator(images)
+    loss = d_crit(outputs[:,1], labels.float())
 
-        outputs = nn_discriminator(images)
-        loss = d_crit(outputs[:,1], labels.float())
+    # output[:,0] P(x ~ arxiv / oracle)
+    # output[:,1] P(x ~ generator)
 
-        # output[:,0] P(x ~ arxiv / oracle)
-        # output[:,1] P(x ~ generator)
+    nn_discriminator.running_loss += loss.item()
 
-        nn_discriminator.running_loss += loss.item()
-
-        loss.backward()
-        d_opt.step()
+    loss.backward()
+    d_opt.step()

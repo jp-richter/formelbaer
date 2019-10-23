@@ -128,7 +128,7 @@ def rollout(nn_policy, batch, hidden):
 
 def sample(nn_policy, num_batches):
 
-    batches = torch.empty([0,cfg.app_cfg.seq_length,nn_policy.input_dim])
+    batches = []
 
     with torch.no_grad():
 
@@ -136,7 +136,7 @@ def sample(nn_policy, num_batches):
             batch, hidden = nn_policy.initial()
             batch, hidden = step(nn_policy, batch, hidden, None, None)
             batch = rollout(nn_policy, batch, hidden)
-            batches = torch.cat([batches, batch], dim=0)
+            batches.append(batch)
 
     return batches
 

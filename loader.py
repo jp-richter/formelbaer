@@ -9,24 +9,25 @@ import shutil
 import generator
 import datetime
 import tokens
+import torch
 
 
 arxiv_data = None
 oracle_data = None
 
 
-def refresh():
+def clear_synthetic_data_directory() -> None:
 
     shutil.rmtree(cfg.paths_cfg.synthetic_data)
     os.makedirs(cfg.paths_cfg.synthetic_data)
 
 
-def save_pngs(samples, directory):
+def save_pngs(samples, directory) -> None:
 
     converter.convert_to_png(samples, directory)
 
 
-def save_sequences(samples, directory):
+def save_sequences(samples, directory) -> None:
 
     with open(directory + '/sequences.txt','w') as f:
 
@@ -47,9 +48,9 @@ def save_sequences(samples, directory):
         f.write(all_sequences)
 
 
-def get_pos_neg_loader(synthetic_samples):
+def get_loader_mixed_with_positives(synthetic_samples) -> DataLoader:
 
-    refresh()
+    clear_synthetic_data_directory()
 
     save_pngs(synthetic_samples, cfg.paths_cfg.synthetic_data)
     data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
@@ -62,9 +63,9 @@ def get_pos_neg_loader(synthetic_samples):
     return DataLoader(data, batch_size=cfg.app_cfg.batchsize, drop_last=True, shuffle=True)
 
 
-def load_single_batch(synthetic_samples):
+def load_single_batch(synthetic_samples) -> (torch.Tensor, torch.Tensor):
 
-    refresh()
+    clear_synthetic_data_directory()
 
     save_pngs(synthetic_samples, cfg.paths_cfg.synthetic_data)
     data = Dataset(cfg.paths_cfg.synthetic_data, label=cfg.app_cfg.label_synth)
@@ -73,7 +74,7 @@ def load_single_batch(synthetic_samples):
     return next(iter(loader))[0] # (samples, labels)
 
 
-def get_experiment_directory():
+def get_directory_with_timestamp() -> str:
 
     directory = cfg.paths_cfg.app + '/' + str(datetime.datetime.now())[-15:]
     os.makedirs(directory)
@@ -81,7 +82,7 @@ def get_experiment_directory():
     return directory
 
 
-def make_directories():
+def make_directories() -> None:
 
     if not os.path.exists(cfg.paths_cfg.app):
         os.makedirs(cfg.paths_cfg.app)
@@ -99,7 +100,7 @@ def make_directories():
         open(cfg.paths_cfg.dump, 'w+')
 
 
-def load_oracle_data():
+def load_oracle_data() -> None:
     global oracle_data
 
     nn_oracle = generator.Oracle()
@@ -124,7 +125,7 @@ def load_oracle_data():
     oracle_data = Dataset(cfg.paths_cfg.oracle_data, label=cfg.app_cfg.label_arxiv)
 
 
-def load_arxiv_data(log):
+def load_arxiv_data(log) -> None:
     global arxiv_data
 
     arxiv_data = Dataset(cfg.paths_cfg.arxiv_data, label=cfg.app_cfg.label_arxiv, recursive=True)
@@ -152,7 +153,7 @@ def load_arxiv_data(log):
         raise ValueError(message)
 
 
-def load_data(log):
+def load_data(log) -> None:
 
     if cfg.app_cfg.oracle: load_oracle_data()
     else: load_arxiv_data(log)

@@ -78,10 +78,11 @@ def conversion(pid, offset, sequences, directory, file_count):
 
 
 def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data) -> None:
-    """This function takes a batch of seqences in form of onehot encodings and converts them to the .png format.
+    """This function takes a batch of seqences or a list of batches in form of onehot encodings and converts them to
+    the .png format. Lists of batches are encouraged to justify the multiprocessing overhead.
 
     :param sequences: An array of size (batch size, sequence length, onehot length) is expected. This function
-        assumes that the given onehot encodings in the array are valid.
+        assumes that the given onehot encodings in the array are valid. A list of batches is also allowed.
     :param directory: The directory path where the png files will get saved. The function assumes the directory exists.
     """
 
@@ -92,7 +93,14 @@ def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data) -> None:
 
     shutil.copyfile(preamble, directory + '/preamble.fmt')
 
-    trees = tree.batch2tree(sequences)
+    if isinstance(sequences, list):
+        trees = []
+        for batch in sequences:
+            trees += tree.batch_to_tree(batch)
+
+    else:
+        trees = tree.batch_to_tree(sequences)
+
     sequences = [t.latex() for t in trees]
 
     num_seqs = len(sequences)
