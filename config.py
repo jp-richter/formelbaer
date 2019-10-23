@@ -68,9 +68,8 @@ class DiscriminatorConfig:
 
 # '/rdata/schill/arxiv_processed/all/pngs'
 # '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs'
-# '/ramdisk/arxiv'
 
-_home = str(Path.home())
+_home = '/ramdisk' if multiprocessing.cpu_count() > 4 else str(Path.home())
 
 DEFAULT_PATHS_CFG = Paths(
 
