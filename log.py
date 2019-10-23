@@ -3,22 +3,31 @@ import logging
 import shutil
 
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-
-handler = logging.FileHandler(cfg.paths_cfg.log, mode='w')
-handler.setLevel(logging.INFO)
-handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-
-log.addHandler(handler)
+log = None
 
 generator_loss_sequence = []
 discriminator_loss_sequence = []
 oracle_loss_sequence = []
 
 
+def init():
+    global log
+
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.INFO)
+
+    handler = logging.FileHandler(cfg.paths_cfg.log, mode='w')
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    log.addHandler(handler)
+
+
 def start_loading_data():
     global log
+
+    if log is None:
+        init()
 
     log.info('Start loading data..')
     print('Start loading data..')
@@ -33,6 +42,9 @@ def finish_loading_data():
 
 def start_experiment():
     global log
+
+    if log is None:
+        init()
 
     print('Starting experiment..')
 

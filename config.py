@@ -1,4 +1,3 @@
-import pathlib
 import multiprocessing
 import torch
 
@@ -8,65 +7,63 @@ from dataclasses import dataclass
 
 @dataclass
 class Paths:
-	"""Configuration data class which contains all path variables of the script. To change
-	paths make changes to the DEFAULT_PATHS_CFG instance or overwrite the cfg_paths variable
-	with your own instance."""
+    """Configuration data class which contains all path variables of the script. To change paths make changes to the
+    DEFAULT_PATHS_CFG instance or overwrite the cfg_paths variable with your own instance."""
 
-	app: str
-	synthetic_data: str
-	arxiv_data: str
-	oracle_data: str
+    app: str
+    synthetic_data: str
+    arxiv_data: str
+    oracle_data: str
 
-	log: str
-	oracle: str
+    log: str
+    oracle: str
 
-	dump: str
+    dump: str
 
 
 @dataclass
 class AppConfig:
-	"""Configuration data class which contains various training parameters. To change training
-	parameters make changes to the DEFAUT_APP_CFG instance or overwrite the cfg_app variable
-	with your own instance."""
-	
-	device: None
+    """Configuration data class which contains various training parameters. To change training parameters make changes
+    to the DEFAUT_APP_CFG instance or overwrite the cfg_app variable with your own instance."""
 
-	iterations: int 
-	d_steps: int 
-	g_steps: int 
-	seq_length: int 
-	montecarlo_trials: int 
-	batchsize: int
+    device: None
 
-	oracle: bool 
-	oracle_samplesize: int 
+    iterations: int
+    d_steps: int
+    g_steps: int
+    seq_length: int
+    montecarlo_trials: int
+    batchsize: int
 
-	label_synth: int 
-	label_arxiv: int 
+    oracle: bool
+    oracle_samplesize: int
+
+    label_synth: int
+    label_arxiv: int
 
 
-@dataclass 
+@dataclass
 class GeneratorConfig:
-	"""Configuration data class which contains various training and structural parameters specific to
-	the generating neural net. To change parameters make changes to the DEFAUT_GENERATOR_CFG instance or 
-	overwrite the cfg_g variable with your own instance."""
+    """Configuration data class which contains various training and structural parameters specific to the generating
+    neural net. To change parameters make changes to the DEFAUT_GENERATOR_CFG instance or overwrite the cfg_g variable
+    with your own instance."""
 
-	hidden_dim: int 
-	layers: int
-	dropout: float
-	learnrate: float
-	baseline: int
-	gamma: float
+    hidden_dim: int
+    layers: int
+    dropout: float
+    learnrate: float
+    baseline: int
+    gamma: float
 
 
 @dataclass
 class DiscriminatorConfig:
-	"""Configuration data class which contains various training parameters specific to the discriminating 
-	neural net. To change training parameters make changes to the DEFAUT_DISCRIMINATOR_CFG instance or overwrite 
-	the cfg_d variable with your own instance."""
+    """Configuration data class which contains various training parameters specific to the discriminating neural net.
+    To change training parameters make changes to the DEFAUT_DISCRIMINATOR_CFG instance or overwrite the cfg_d variable
+    with your own instance."""
 
-	dropout: float
-	learnrate: float
+    dropout: float
+    learnrate: float
 
 
 # '/rdata/schill/arxiv_processed/all/pngs'
@@ -77,65 +74,62 @@ _home = str(Path.home())
 
 DEFAULT_PATHS_CFG = Paths(
 
-	app = _home + '/formelbaer-data',
-	synthetic_data = _home + '/formelbaer-data' + '/synthetic-data',
-	arxiv_data = _home + '/formelbaer-data' + '/arxiv-samples',
-	oracle_data = _home + '/formelbaer-data' + '/oracle-samples',
-	
-	log = _home + '/formelbaer-data' + '/results.log',
-	oracle = _home + '/formelbaer-data' + '/oracle-net.pt',
+    app=_home + '/formelbaer-data',
+    synthetic_data=_home + '/formelbaer-data' + '/synthetic-data',
+    arxiv_data=_home + '/formelbaer-data' + '/arxiv-samples',
+    oracle_data=_home + '/formelbaer-data' + '/oracle-samples',
 
-	dump = _home + '/formelbaer-data' + '/dump.txt'
+    log=_home + '/formelbaer-data' + '/results.log',
+    oracle=_home + '/formelbaer-data' + '/oracle-net.pt',
 
-	)
+    dump=_home + '/formelbaer-data' + '/dump.txt'
+
+)
 
 paths_cfg = DEFAULT_PATHS_CFG
 
-
 DEFAULT_APP_CFG = AppConfig(
 
-	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
+    device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-	iterations = 150,
-	d_steps = 2, # (*2) due to computational cost reasons
-	g_steps = 1,
-	seq_length = 16, # 16
-	montecarlo_trials = 16, # 16
-	batchsize = multiprocessing.cpu_count(), # computational cost reasons
+    iterations=150,
+    d_steps=2,  # (*2) due to computational cost reasons
+    g_steps=1,
+    seq_length=16,  # 16
+    montecarlo_trials=16,  # 16
+    batchsize=multiprocessing.cpu_count(),  # computational cost reasons
 
-	oracle = False,
-	oracle_samplesize = 100,
+    oracle=False,
+    oracle_samplesize=100,
 
-	label_synth = 1,
-	label_arxiv = 0
+    label_synth=1,
+    label_arxiv=0
 
-	)
+)
 
 # overwrite this to change parameters
-app_cfg = DEFAULT_APP_CFG 
-
+app_cfg = DEFAULT_APP_CFG
 
 DEFAULT_GENERATOR_CFG = GeneratorConfig(
 
-	hidden_dim = 32,
-	layers = 2,
-	dropout = 0.2,
-	learnrate = 0.01,
-	baseline = 1,
-	gamma = 0.99
+    hidden_dim=32,
+    layers=2,
+    dropout=0.2,
+    learnrate=0.01,
+    baseline=1,
+    gamma=0.99
 
-	)
+)
 
 # overwrite this to change parameters
-g_cfg = DEFAULT_GENERATOR_CFG 
-
+g_cfg = DEFAULT_GENERATOR_CFG
 
 DEFAULT_DISCRIMINATOR_CFG = DiscriminatorConfig(
 
-	dropout = 0.2,
-	learnrate = 0.01
+    dropout=0.2,
+    learnrate=0.01
 
-	)
+)
 
 # overwrite this to change parameters
-d_cfg = DEFAULT_DISCRIMINATOR_CFG 
+d_cfg = DEFAULT_DISCRIMINATOR_CFG

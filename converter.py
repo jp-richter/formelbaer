@@ -1,30 +1,25 @@
 import subprocess
 import os
 import shutil
-import multiprocessing
+import psutil
 import math
 import pathlib
 import config as cfg
 import importlib
 import tree
+import ray
 
 
-# multiprocessing library ray should give better performance, windows is not supported
+# multiprocessing module ray should give better performance through shared memory, windows is not supported
 ray_spec = importlib.util.find_spec("ray")
 ray_available = ray_spec is not None
-num_cpus = multiprocessing.cpu_count()
-
-if ray_available:
-    import ray
-    ray.init(num_cpus=num_cpus)
+num_cpus = psutil.cpu_count(logical=False)
+ray_init = ray.init(num_cpus=num_cpus)
 
 # preamble preloaded in preamble.fmt, saved in preamble.tex, pdf compression set to 3
 code_directory = pathlib.Path(__file__).resolve().parent
 preamble = pathlib.PurePath(code_directory, 'preamble.fmt')
-
-# using preambles precompiled with different pdflatex versions raises an error
-precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + cfg.paths_cfg.dump
-subprocess.run(precompile_cmd, cwd=code_directory, shell=True)
+preamble_compiled = False
 
 # latex expression template
 template = '''%&preamble
@@ -38,17 +33,15 @@ template = '''%&preamble
 \\end{{document}}'''
 
 
-def conditional_ray_remote(func):
+def precompile_preamble():
+    """This function precompiles the preamble of the template and saves the .fmt file at the synthetic data folder."""
 
-    """A conditional decorator which returns ray.remote(func) if the multiprocessing module ray is available."""
-
-    if not ray_available: return func
-    else: return ray.remote(func)
+    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + cfg.paths_cfg.dump
+    subprocess.run(precompile_cmd, cwd=code_directory, shell=True)
 
 
-@conditional_ray_remote
+@ray.remote
 def process(pid, offset, sequences, directory, file_count):
-
     """This function calls all functions required for the full latex to png conversion for a subset of the sequences.
     It is meant to be called for a single process. The respective subset depends on the given offset.
 
@@ -66,7 +59,7 @@ def process(pid, offset, sequences, directory, file_count):
 
     for i in range(start_index, end_index):
         name = str(file_count + i)
-        file = pdflatex(sequences[i], directory, directory + '/' +  name + '.tex')
+        file = pdflatex(sequences[i], directory, directory + '/' + name + '.tex')
         # file = croppdf(directory, file, name)
         file = pdf2png(directory, file, name)
 
@@ -74,7 +67,6 @@ def process(pid, offset, sequences, directory, file_count):
 
 
 def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data) -> None:
-
     """This function takes a batch of seqences in form of onehot encodings and converts them to the .png format.
 
     :param sequences: An array of size (batch size, sequence length, onehot length) is expected. This function
@@ -83,6 +75,9 @@ def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data) -> None:
     """
 
     global num_cpus, preamble
+
+    if not preamble_compiled:
+        precompile_preamble()
 
     shutil.copyfile(preamble, directory + 'preamble.fmt')
 
@@ -94,41 +89,31 @@ def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data) -> None:
     offset = math.ceil(num_seqs / cpus_used)
     file_count = len(os.listdir(directory))
 
-    if ray_available:
-        def use_ray():
-            # copy to shared memory once instead of copying to each cpu
-            sequences_id = ray.put(sequences)
-            offset_id = ray.put(offset)
-            directory_id = ray.put(directory)
-            file_count_id = ray.put(file_count)
+    # copy to shared memory once instead of copying to each cpu
+    sequences_id = ray.put(sequences)
+    offset_id = ray.put(offset)
+    directory_id = ray.put(directory)
+    file_count_id = ray.put(file_count)
 
-            # no need for return value but call get for synchronisation
-            ray.get([process.remote(
-                pid,
-                offset_id,
-                sequences_id,
-                directory_id,
-                file_count_id) for pid in range(cpus_used)])
+    # no need for return value but call get for synchronisation
+    ray.get([process.remote(pid, offset_id, sequences_id, directory_id, file_count_id) for pid in range(cpus_used)])
 
-        use_ray()
-
-    else:
-        def use_multiprocessing():
-            processes = []
-
-            for pid in range(cpus_used):
-                proc = multiprocessing.Process(target=process, args=(pid,offset,sequences,directory, file_count))
-                processes.append(proc)
-                proc.start()
-
-            for proc in processes:
-                proc.join()
-
-        use_multiprocessing()
+    # else:
+    #     def use_multiprocessing():
+    #         processes = []
+    #
+    #         for pid in range(cpus_used):
+    #             proc = multiprocessing.Process(target=process, args=(pid, offset, sequences, directory, file_count))
+    #             processes.append(proc)
+    #             proc.start()
+    #
+    #         for proc in processes:
+    #             proc.join()
+    #
+    #     use_multiprocessing()
 
 
 def clean_up(directory):
-
     """This function will delete anything but .png files in a given directory. It is usefull to remove auxiliary files
     that get generated by pdflatex.
 
@@ -142,14 +127,13 @@ def clean_up(directory):
 
 
 def pdflatex(expr, directory, file):
-
-    with open(file,'w') as f:
+    with open(file, 'w') as f:
         f.write(template.format(expression=expr))
 
     cmd = ['pdflatex',
-        '-interaction=batchmode',
-        '-interaction=nonstopmode',
-        file]
+           '-interaction=batchmode',
+           '-interaction=nonstopmode',
+           file]
 
     subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)  # errors are critical
 
@@ -157,20 +141,19 @@ def pdflatex(expr, directory, file):
 
 
 def croppdf(directory, file, name):
-
     # TODO what if the concurrent access of the dump file and the logs in general requires sync??
 
     cmd = ('gs '
-        '-dUseCropBox '
-        '-dSAFER '
-        '-dBATCH '
-        '-dNOPAUSE '
-        '-sDEVICE=pdfwrite '
-        '-sOutputFile={}/crop_{}.pdf '
-        '-c [/CropBox [550 0 850 100] '  # (x,y) (x',y')
-        '-c /PAGES pdfmark '
-        '-f {} '
-        '> {}')
+           '-dUseCropBox '
+           '-dSAFER '
+           '-dBATCH '
+           '-dNOPAUSE '
+           '-sDEVICE=pdfwrite '
+           '-sOutputFile={}/crop_{}.pdf '
+           '-c [/CropBox [550 0 850 100] '  # (x,y) (x',y')
+           '-c /PAGES pdfmark '
+           '-f {} '
+           '> {}')
 
     cmd = cmd.format(directory, name, file, cfg.paths_cfg.dump)
 
@@ -180,19 +163,18 @@ def croppdf(directory, file, name):
 
 
 def pdf2png(directory, file, name):
-
     print(file)
 
     cmd = ['gs',
-        '-dUseCropBox',
-        '-dSAFER',
-        '-dBATCH',
-        '-dNOPAUSE',
-        '-sDEVICE=png16m',
-        '-r80',
-        '-sOutputFile=' + name + '.png',
+           '-dUseCropBox',
+           '-dSAFER',
+           '-dBATCH',
+           '-dNOPAUSE',
+           '-sDEVICE=png16m',
+           '-r80',
+           '-sOutputFile=' + name + '.png',
            file]
-    
+
     subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)  # errors are critical
 
     return directory + '/' + name + '.png'

@@ -11,7 +11,6 @@ import multiprocessing
 
 
 def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit) -> None:
-
     """The training loop of the generating policy net.
 
     :param nn_policy: The policy net that is the training target.
@@ -56,7 +55,6 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
 
 
 def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> None:
-
     """The training loop of the discriminator net.
 
     :param nn_generator: The policy net which generates the synthetic data the CNN gets trained to classify.
@@ -69,14 +67,12 @@ def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> Non
     nn_generator.eval()
 
     for _ in range(cfg.app_cfg.d_steps):
-
         synthetic = generator.sample(nn_generator, 1)
         torch_loader = loader.get_pos_neg_loader(synthetic)
         discriminator.update(nn_discriminator, d_opt, d_crit, torch_loader)
 
 
 def adversarial_training() -> None:
-
     """The main loop of the script. To change parameters of the adversarial training parameters
     should not be changed here. Overwrite the configuration variables in config.py instead and
     start the adversarial training again."""
@@ -111,7 +107,7 @@ def adversarial_training() -> None:
         discriminator_training(nn_discriminator, nn_rollout, d_opt, d_crit)
         generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit)
 
-        log.write(i+1, nn_policy, nn_discriminator, nn_oracle, printout=True)
+        log.write(i + 1, nn_policy, nn_discriminator, nn_oracle, printout=True)
 
     # FINISH EXPERIMENT AND WRITE LOGS
 
@@ -131,27 +127,26 @@ def adversarial_training() -> None:
 
 
 def application() -> None:
-
     """Experimentational configurations can be defined here to overwrite the default configurations in config.py.
     Call adversarial_training() after each configuration definition. To start all defined experiments just run this
     script."""
 
     experiment = cfg.AppConfig(
 
-        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
+        device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-        iterations = 100,
-        d_steps = 2, # (*2) due to computational cost reasons
-        g_steps = 1,
-        seq_length = 10, # 15
-        montecarlo_trials = 10, # 15
-        batchsize = multiprocessing.cpu_count(), # computational cost reasons
+        iterations=2,
+        d_steps=2,  # (*2) due to computational cost reasons
+        g_steps=1,
+        seq_length=2,  # 15
+        montecarlo_trials=2,  # 15
+        batchsize=multiprocessing.cpu_count(),  # computational cost reasons
 
-        oracle = True,
-        oracle_samplesize = 9700,
+        oracle=True,
+        oracle_samplesize=100,
 
-        label_synth = 1,
-        label_arxiv = 0
+        label_synth=1,
+        label_arxiv=0
 
     )
 
