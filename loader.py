@@ -114,11 +114,12 @@ def load_oracle_data():
     samplesize = len([name for name in os.listdir(cfg.paths_cfg.oracle_data) 
         if os.path.isfile(os.path.join(cfg.paths_cfg.oracle_data, name))])
 
-    missing = cfg.app_cfg.oracle_samplesize - samplesize
+    missing = max(cfg.app_cfg.oracle_samplesize - samplesize, 0)
     batch_num = math.ceil(missing / cfg.app_cfg.batchsize)
 
-    samples = generator.sample(nn_oracle, batch_num)
-    save_pngs(samples, cfg.paths_cfg.oracle_data)
+    if batch_num > 0:
+        samples = generator.sample(nn_oracle, batch_num)
+        save_pngs(samples, cfg.paths_cfg.oracle_data)
 
     oracle_data = Dataset(cfg.paths_cfg.oracle_data, label=cfg.app_cfg.label_arxiv)
 

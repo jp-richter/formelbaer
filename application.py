@@ -7,6 +7,7 @@ import discriminator
 import loader
 import log
 import os
+import converter
 import multiprocessing
 
 
@@ -81,6 +82,7 @@ def adversarial_training() -> None:
 
     loader.make_directories()
     log.start_loading_data()
+    converter.initialize_ray() # don't remove
     loader.load_data(log)
     log.finish_loading_data()
 
@@ -124,6 +126,8 @@ def adversarial_training() -> None:
     os.makedirs(directory + '/sequences')
     loader.save_pngs(evaluation, directory + '/pngs')
     loader.save_sequences(evaluation, directory + '/sequences')
+
+    converter.shutdown_ray() # don't remove
 
 
 def application() -> None:

@@ -76,8 +76,8 @@ DEFAULT_PATHS_CFG = Paths(
 
     app=_home + '/formelbaer-data',
     synthetic_data=_home + '/formelbaer-data' + '/synthetic-data',
-    arxiv_data=_home + '/formelbaer-data' + '/arxiv-samples',
-    oracle_data=_home + '/formelbaer-data' + '/oracle-samples',
+    arxiv_data=_home + '/formelbaer-data' + '/arxiv-data',
+    oracle_data=_home + '/formelbaer-data' + '/oracle-data',
 
     log=_home + '/formelbaer-data' + '/results.log',
     oracle=_home + '/formelbaer-data' + '/oracle-net.pt',
