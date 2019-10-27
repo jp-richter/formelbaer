@@ -158,12 +158,12 @@ DEFAULT_GENERAL = AppConfig(
     kldiv_epochs=2,
 
     d_epochs=3,  # 3
-    iterations=2,  # 150
+    iterations=150,  # 150
 
     d_steps=1,
     g_steps=1,
-    sequence_length=30,  # 16
-    montecarlo_trials=15,  # 16
+    sequence_length=20,  # 16
+    montecarlo_trials=10,  # 16
     batch_size=multiprocessing.cpu_count(),  # computational cost reasons
 
     oracle=False,
