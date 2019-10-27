@@ -154,11 +154,11 @@ DEFAULT_GENERAL = AppConfig(
 
     recycling=True,
 
-    mle_epochs=2,  # 100
-    kldiv_epochs=2,  # 3?
+    mle_epochs=2,
+    kldiv_epochs=2,
 
     d_epochs=3,  # 3
-    iterations=2,  # 50
+    iterations=2,  # 150
 
     d_steps=2,
     g_steps=1,
