@@ -111,8 +111,10 @@ def prepare_batch(batch) -> torch.Tensor:
     save_pngs(batch, config.paths.synthetic_data)
     dataset = Dataset(config.paths.synthetic_data, config.general.label_synth)
     loader = DataLoader(dataset, config.general.batch_size)
+    images = next(iter(loader))[0]  # (images, labels)
+    images = images.to(config.general.device)
 
-    return next(iter(loader))[0]  # (images, labels)
+    return images
 
 
 def prepare_oracle_loader(num_samples, nn_generator, nn_oracle) -> DataLoader:
