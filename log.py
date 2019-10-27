@@ -50,7 +50,7 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     average_acc = nn_discriminator.running_acc / (num_batches * cfg.general.batch_size)  # loss already averaged
 
     print('Epoch {} Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
-    log.info('Discriminator {} Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
+    log.info('Epoch {} Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
 
     nn_discriminator.running_loss = 0.0
     nn_discriminator.running_acc = 0.0

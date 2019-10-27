@@ -166,7 +166,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_epoch
             nn_discriminator.running_loss += loss.item()
             nn_discriminator.running_acc += torch.sum((outputs[:, 0] > 0.5) == (labels == 1)).item()
 
-        log.discriminator_loss(nn_discriminator, d_epoch, epoch)
+        log.discriminator_loss(nn_discriminator, epoch, d_epoch)
 
 
 def training() -> None:
