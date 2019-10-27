@@ -62,7 +62,7 @@ def generator_reward(nn_policy, epoch):
     average_reward = nn_policy.running_reward / cfg.general.g_steps
 
     print('Epoch {} Generator Average Reward {}'.format(epoch, average_reward))
-    log.info('Epoch {} Generator {} Average Reward {}'.format(epoch, average_reward))
+    log.info('Epoch {} Generator Average Reward {}'.format(epoch, average_reward))
 
     nn_policy.running_reward = 0.0
 
