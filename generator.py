@@ -86,7 +86,7 @@ def step(nn_policy, batch, hidden, save_prob=False):
         nn_policy.probs.append(log_probs)
 
     # concat onehot tokens with the batch of sequences
-    encodings = torch.Tensor([tokens.onehot(action_id) for action_id in actions], device=config.general.device)
+    encodings = torch.tensor([tokens.onehot(action_id) for action_id in actions], device=config.general.device)
     encodings = encodings[:, None, :]
     batch = torch.cat((batch, encodings), dim=1)
 

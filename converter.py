@@ -29,23 +29,6 @@ template = '''%&preamble
 \\end{{document}}'''
 
 
-def initialize_ray():
-    """
-    Initializes the ray module and reserves shared memory. To see how much memory it reservers, enable logging.
-    Should be called exactly once at the beginning of the application.
-    """
-
-    ray.init(num_cpus=num_cpus, log_to_driver=True)
-
-
-def shutdown_ray():
-    """
-    Should be called at the end of the application.
-    """
-
-    ray.shutdown()
-
-
 def precompile_preamble():
     """
     This function precompiles the preamble of the template and saves the .fmt file at the synthetic data folder.
