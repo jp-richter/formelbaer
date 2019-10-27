@@ -151,8 +151,8 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_epoch
 
     for d_epoch in range(d_epochs):
         for images, labels in data_loader:
-            images.to(config.general.device)
-            labels.to(config.general.device)
+            images = images.to(config.general.device)
+            labels = labels.to(config.general.device)
 
             nn_discriminator.optimizer.zero_grad()
             outputs = nn_discriminator(images)
