@@ -87,7 +87,7 @@ def step(nn_policy, batch, hidden, save_prob=False):
 
     # concat onehot tokens with the batch of sequences
     encodings = torch.tensor([tokens.onehot(action_id) for action_id in actions], device=config.general.device)
-    encodings = encodings[:, None, :]
+    encodings = encodings[:, None, :].float()
     batch = torch.cat((batch, encodings), dim=1)
 
     # if batch still has the empty start token remove it
