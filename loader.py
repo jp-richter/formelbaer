@@ -173,8 +173,11 @@ def initialize() -> None:
     if not os.path.exists(config.paths.dump):
         open(config.paths.dump, 'w+')
 
+    if not os.path.exists(config.paths.ray):
+        os.makedirs(config.paths.ray)
+
     if not ray.is_initialized():
-        ray.init()
+        ray.init(plasma_directory=config.paths.ray)
 
     if not config.general.oracle:
         arxiv_dataset = Dataset(config.paths.arxiv_data, label=config.general.label_real, recursive=True)

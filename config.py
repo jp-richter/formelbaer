@@ -32,6 +32,9 @@ class Paths:
 
     dump: str
 
+    # used by ray for shared memory plasma store
+    ray: str
+
 
 @dataclass
 class AppConfig:
@@ -134,7 +137,9 @@ DEFAULT_PATHS = Paths(
     log=_home + '/formelbaer-data' + '/results.log',
     oracle=_home + '/formelbaer-data' + '/oracle-net.pt',
 
-    dump=_home + '/formelbaer-data' + '/dump.txt'
+    dump=_home + '/formelbaer-data' + '/dump.txt',
+
+    ray=_home + '/ray-plasma-store'
 
 )
 
