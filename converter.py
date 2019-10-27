@@ -51,7 +51,7 @@ def precompile_preamble():
     This function precompiles the preamble of the template and saves the .fmt file at the synthetic data folder.
     """
 
-    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + cfg.paths_cfg.dump
+    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + cfg.paths.dump
     subprocess.run(precompile_cmd, cwd=code_directory, shell=True)
 
 
@@ -81,7 +81,7 @@ def conversion(pid, offset, sequences, directory, file_count):
     return True
 
 
-def convert_to_png(sequences, directory=cfg.paths_cfg.synthetic_data) -> None:
+def convert_to_png(sequences, directory=cfg.paths.synthetic_data) -> None:
     """
     This function takes a batch of seqences or a list of batches in form of onehot encodings and converts them to
     the .png format. Lists of batches are encouraged to justify the multiprocessing overhead.

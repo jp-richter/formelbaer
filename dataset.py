@@ -17,7 +17,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
     This dataset only scans for .png and .pt i.e. tensors serialized with pickle files.
     """
 
-    def __init__(self, folder, label=None, recursive=False) -> None:
+    def __init__(self, folder=None, label=None, recursive=False) -> None:
         """
         The constructor of the Dataset class.
 
@@ -31,10 +31,9 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         super(Dataset, self).__init__(folder)
 
         self.transform = transforms.Compose([
-            lambda img: img.convert(mode='L'),  # fachprojekt uses LA
+            lambda img: img.convert(mode='L'),
             transforms.CenterCrop((32, 333)),
-            transforms.ToTensor()])
-        # lambda img: img[0]]) # fachprojekt takes alpha channel (??)
+            transforms.ToTensor()])  # TODO normalisieren?
 
         self.protocol = {
             '.png': lambda path: PIL.Image.open(path),
@@ -44,7 +43,8 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         self.samples = []
         self.index = 0
 
-        self.__crawl__(folder, label, recursive)
+        if folder is not None and label is not None:
+            self.__crawl__(folder, label, recursive)
 
     def __len__(self):
         """

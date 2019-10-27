@@ -1,17 +1,74 @@
-import config as cfg
+import config
 
-import math
 import torch
 import generator
 import discriminator
 import loader
 import log
-import os
-import converter
-import multiprocessing
+import math
 
 
-def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit) -> None:
+# TODO rausfinden wie ich gewichte voreinstelle, dass atomare symbole zu anfang unwahrscheinlicher werden
+# TODO manuell sinnvolles orakel erstellen
+
+
+def train_with_mle(nn_policy, nn_oracle, epochs, num_samples):
+    nn_policy.train()
+    nn_oracle.eval()
+
+    criterion = torch.nn.NLLLoss()
+
+    num_batches = math.ceil(num_samples / config.general.batch_size)
+    oracle_batches = generator.sample(nn_oracle, num_batches)
+
+    for epoch in range(epochs):
+        for batch in range(oracle_batches):
+
+            for length in range(config.general.sequence_length):
+
+                input, hidden = nn_policy.inital()
+
+                if length > 0:
+                    input = batch[:, :length, :]
+
+                target = batch[:, length, :]
+                output, _ = nn_policy(input, hidden)
+                output = torch.log(output)
+
+                loss = criterion(output, target)
+                loss.backward()
+                nn_policy.optimizer.step()
+                nn_policy.running_loss += loss.item()
+
+
+def train_with_kldiv(nn_policy, nn_oracle, epochs, num_samples):
+    nn_policy.train()
+    nn_oracle.eval()
+
+    criterion = torch.nn.KLDivLoss(reduction='batchmean')  # mean averages over input features too
+
+    num_batches = math.ceil(num_samples / config.general.batch_size)
+
+    for epoch in range(epochs):
+        for batch in range(num_batches):
+
+            batch_policy, hidden_policy = nn_policy.initial()
+            batch_oracle, hidden_oracle = nn_oracle.initial()
+
+            for length in range(config.general.sequence_length):
+                batch_policy, hidden_policy = generator.step(nn_policy, batch_policy, hidden_policy)
+                batch_oracle, hidden_oracle = generator.step(nn_oracle, batch_oracle, hidden_oracle)
+
+                log_probs = torch.log(batch_policy[:, -1, :])
+                target = batch_oracle[:, -1, :]
+
+                loss = criterion(log_probs, target)
+                loss.backward()
+                nn_policy.optimizer.step()
+                nn_policy.running_loss += loss.item()
+
+
+def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, nn_oracle) -> None:
     """
     The training loop of the generating policy net.
 
@@ -21,177 +78,139 @@ def generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt
         data distribution, which serve as reward for the policy gradient training of the policy net.
     :param nn_oracle: A policy net which gets initialized with high variance parameters and serves as fake real
         distribution to analyze the performance of the model even when no comparisons to other models can be made.
-    :param g_opt: The optimizer of the policy net.
-    :param o_crit: The performance criterion for the oracle net.
     """
 
+    nn_rollout.set_parameters_to(nn_policy)
     nn_policy.train()
     nn_rollout.eval()
+    nn_discriminator.eval()
 
-    for _ in range(cfg.app_cfg.g_steps):
-        batch, hidden = nn_policy.initial()
+    sequence_length = config.general.sequence_length
+    montecarlo_trials = config.general.montecarlo_trials
+    batch_size = config.general.batch_size
 
-        for length in range(cfg.app_cfg.seq_length):
+    def collect_reward(batch) -> torch.Tensor:
 
-            # generate a single next token given the sequences generated so far
-            batch, hidden = generator.step(nn_policy, batch, hidden, nn_oracle, o_crit, save_prob=True)
-            q_values = torch.empty([cfg.app_cfg.batchsize, 0])
-            curr_length = batch.shape[1]
+        images = loader.prepare_batch(batch)
+        output = nn_discriminator(images)
+        rewards = torch.empty(output.size())
 
-            if curr_length < cfg.app_cfg.seq_length:
+        for i in range(output.shape[0]):
+            rewards[i][0] = 1 - output[i][0]
 
-                # estimate rewards for unfinished sequences with montecarlo trials
-                for _ in range(cfg.app_cfg.montecarlo_trials):
+        return rewards
 
-                    # use the rollout policy to finish the sequences and collect the rewards
-                    samples = generator.rollout(nn_rollout, batch, hidden)
-                    samples = loader.load_single_batch(samples)
-                    reward = discriminator.evaluate(nn_discriminator, samples)
-                    q_values = torch.cat([q_values, reward], dim=1)
+    batch, hidden = nn_policy.initial()
 
-            else:
+    for length in range(sequence_length):
 
-                # calculate reward for the finished sequence without montecarlo approximation
-                samples = loader.load_single_batch(batch)
-                reward = discriminator.evaluate(nn_discriminator, samples)
+        # generate a single next token given the sequences generated so far
+        batch, hidden = generator.step(nn_policy, batch, hidden, save_prob=True)
+        q_values = torch.empty([batch_size, 0])
+        finished_sequence = batch.shape[1] < sequence_length
+
+        if not finished_sequence:
+            for _ in range(montecarlo_trials):
+                samples = generator.rollout(nn_rollout, batch, hidden)
+                reward = collect_reward(samples)
                 q_values = torch.cat([q_values, reward], dim=1)
+        else:
+            reward = collect_reward(batch)
+            q_values = torch.cat([q_values, reward], dim=1)
 
-            # average the reward over all trials
-            q_values = torch.mean(q_values, dim=1)
-            nn_policy.reward_with(q_values)
+        # average the reward over all trials
+        q_values = torch.mean(q_values, dim=1)
+        nn_policy.rewards.append(q_values)
 
-        generator.update(nn_policy, g_opt)
+    generator.policy_gradient_update(nn_policy)
 
 
-def discriminator_training(nn_discriminator, nn_generator, d_opt, d_crit) -> None:
+def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, epochs) -> None:
     """
     The training loop of the discriminator net.
 
     :param nn_generator: The policy net which generates the synthetic data the CNN gets trained to classify.
     :param nn_discriminator: The CNN that outputs an estimation of the probability that a given data point was generated
         by the policy network.
-    :param d_opt: The optimizer of the CNN.
-    :param d_crit: The performance criterion for the CNN.
+    :param nn_oracle: If the script uses oracle training fake real samples will be generated by the oracle net.
+    :param epochs: The amount of epochs the discriminator trains per d step. In case of oracle training a samplesize
+        can be specified and one epoch will contain the samplesize of positive and an equal amount of negative samples.
+        In case the discriminator gets trained on arxiv data an upper limit of real samples can be specified and one
+        epoch will contain the limit of real and an equal amount of generated samples.
+    :param num_samples: The maximum amount of samples used per epoch. An upper limit is useful since training on the
+        full arxiv dataset is not feasible. In their SeqGAN experiments Yu et al. use a samplesize of 10.000 oracle
+        samples, https://github.com/LantaoYu/SeqGAN/blob/master/generator.py.
     """
 
     nn_discriminator.train()
     nn_generator.eval()
 
-    synthetic_data = generator.sample(nn_generator, cfg.app_cfg.d_steps)  # d steps * batch size samples
-    torch_loader = loader.get_loader_mixed_with_positives(synthetic_data)
+    num_samples = config.general.size_real_dataset * 2  # equal amount of generated data
+    data_loader = loader.prepare_arxiv_loader(num_samples, nn_generator, nn_oracle)
 
-    for images, labels in torch_loader:
-        discriminator.update(nn_discriminator, d_opt, d_crit, images, labels)
+    for epoch in range(epochs):
+        for images, labels in data_loader:
+            images.to(config.general.device)
+            labels.to(config.general.device)
+
+            nn_discriminator.optimizer.zero_grad()
+            outputs = nn_discriminator(images)
+
+            # output[:,0] P(x ~ real)
+            # output[:,1] P(x ~ synthetic)
+
+            loss = nn_discriminator.criterion(outputs, labels.unsqueeze(dim=1).float())
+            loss.backward()
+            nn_discriminator.optimizer.step()
+            nn_discriminator.running_loss += loss.item()
+            nn_discriminator.running_acc += torch.sum((outputs[:, 0] > 0.5) == (labels == 1)).item()
+
+        log.discriminator_loss(nn_discriminator, epoch)
 
 
-def adversarial_training() -> None:
+def training() -> None:
     """
     The main loop of the script. To change parameters of the adversarial training parameters should not be changed here.
     Overwrite the configuration variables in config.py instead and start the adversarial training again.
     """
 
-    # INITIALIZATION
+    loader.initialize()
 
-    loader.make_directories()
-    log.start_loading_data()
-    converter.initialize_ray() # don't remove
-    loader.load_data(log)
-    log.finish_loading_data()
+    nn_discriminator = discriminator.Discriminator().to(config.general.device)
+    nn_policy = generator.Policy().to(config.general.device)
+    nn_rollout = generator.Policy().to(config.general.device)
+    nn_oracle = generator.Oracle().to(config.general.device)
 
-    nn_discriminator = discriminator.Discriminator()
-    nn_policy = generator.Policy()
-    nn_rollout = generator.Policy()
-    nn_oracle = generator.Oracle()
+    nn_discriminator.criterion = torch.nn.BCELoss()
+    nn_oracle.criterion = torch.nn.NLLLoss()
+    nn_discriminator.optimizer = torch.optim.Adam(nn_discriminator.parameters(), lr=config.discriminator.learnrate)
+    nn_policy.optimizer = torch.optim.Adam(nn_policy.parameters(), lr=config.generator.learnrate)
 
-    if cfg.app_cfg.oracle:
-        nn_oracle.load(cfg.paths_cfg.oracle)
+    # start adversarial training
+    d_steps = config.general.d_steps
+    g_steps = config.general.g_steps
+    a_epochs = config.general.iterations
+    d_epochs = config.general.d_epochs
 
-    d_opt = torch.optim.Adam(nn_discriminator.parameters(), lr=cfg.d_cfg.learnrate)
-    d_crit = torch.nn.BCELoss()
-    g_opt = torch.optim.Adam(nn_policy.parameters(), lr=cfg.g_cfg.learnrate)
-    o_crit = torch.nn.KLDivLoss()
+    torch.autograd.set_detect_anomaly(True)
 
-    # START ADVERSARIAL TRAINING
+    for epoch in range(a_epochs):
 
-    log.start_experiment()
+        # train discriminator
+        for step in range(d_steps):
+            adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_epochs)
 
-    for i in range(cfg.app_cfg.iterations):
-        nn_rollout.set_parameters_to(nn_policy)
+        # train generator
+        for _ in range(g_steps):
+            adversarial_generator(nn_policy, nn_rollout, nn_discriminator, nn_oracle)
 
-        discriminator_training(nn_discriminator, nn_rollout, d_opt, d_crit)
-        generator_training(nn_policy, nn_rollout, nn_discriminator, nn_oracle, g_opt, o_crit)
+        log.generator_reward(nn_policy, epoch)
 
-        log.write(i + 1, nn_policy, nn_discriminator, nn_oracle, printout=True)
-
-    # FINISH EXPERIMENT AND WRITE LOGS
-
-    directory = loader.get_directory_with_timestamp()
-    nn_policy.save(directory + '/policy-net.pt')
-    nn_discriminator.save(directory + '/discriminator-net.pt')
-    nn_oracle.save(directory + '/oracle-net.pt')
-
-    log.finish_experiment(directory)
-
-    evaluation = generator.sample(nn_policy, math.ceil(100 / cfg.app_cfg.batchsize))
-
-    os.makedirs(directory + '/pngs')
-    os.makedirs(directory + '/sequences')
-    loader.save_pngs(evaluation, directory + '/pngs')
-    loader.save_sequences(evaluation, directory + '/sequences')
-
-    converter.shutdown_ray() # don't remove
+    loader.finish(nn_policy, nn_discriminator, nn_oracle)
 
 
 def application() -> None:
-    """
-    Experimentational configurations can be defined here to overwrite the default configurations in config.py. Call
-    adversarial_training() after each configuration definition. To start all defined experiments just run this script.
-    Example:
-
-    experiment = cfg.AppConfig(
-
-        device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
-
-        iterations=2,
-        d_steps=2,  # (*2) due to computational cost reasons
-        g_steps=1,
-        seq_length=2,  # 15
-        montecarlo_trials=2,  # 15
-        batchsize=multiprocessing.cpu_count(),  # computational cost reasons
-
-        oracle=True,
-        oracle_samplesize=100,
-
-        label_synth=1,
-        label_arxiv=0
-
-    )
-
-    cfg.app_cfg = experiment
-    adversarial_training()
-    """
-
-    experiment = cfg.AppConfig(
-
-        device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
-
-        iterations=2,
-        d_steps=2,  # (*2) due to computational cost reasons
-        g_steps=1,
-        seq_length=2,  # 15
-        montecarlo_trials=2,  # 15
-        batchsize=multiprocessing.cpu_count(),  # computational cost reasons
-
-        oracle=True,
-        oracle_samplesize=100,
-
-        label_synth=1,
-        label_arxiv=0
-
-    )
-
-    cfg.app_cfg = experiment
-    adversarial_training()
+    training()
 
 
 if __name__ == '__main__':

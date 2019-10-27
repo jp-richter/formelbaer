@@ -1,13 +1,14 @@
 import config as cfg
 import logging
 import shutil
+import math
 
 
 log = None
 
 generator_loss_sequence = []
 discriminator_loss_sequence = []
-oracle_loss_sequence = []
+oracle_score_sequence = []
 
 
 def init():
@@ -16,7 +17,7 @@ def init():
     log = logging.getLogger(__name__)
     log.setLevel(logging.INFO)
 
-    handler = logging.FileHandler(cfg.paths_cfg.log, mode='w')
+    handler = logging.FileHandler(cfg.paths.log, mode='w')
     handler.setLevel(logging.INFO)
     handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 
@@ -38,6 +39,32 @@ def finish_loading_data():
 
     log.info('Data successfully loaded.')
     print('Data successfully loaded.')
+
+
+def discriminator_loss(nn_discriminator, epoch):
+    global log
+
+    num_samples = cfg.general.size_real_dataset * 2  # real + synthetic
+    num_batches = math.ceil(num_samples / cfg.general.batch_size)
+    average_loss = nn_discriminator.running_loss / num_batches
+    average_acc = nn_discriminator.running_acc / (num_batches * cfg.general.batch_size)  # loss already averaged
+
+    print('Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, average_loss, average_acc))
+    log.info('Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, average_loss, average_acc))
+
+    nn_discriminator.running_loss = 0.0
+    nn_discriminator.running_acc = 0.0
+
+
+def generator_reward(nn_policy, epoch):
+    global log
+
+    average_reward = nn_policy.running_reward / cfg.general.g_steps
+
+    print('Generator Epoch {} Average Reward {}'.format(epoch+1, average_reward))
+    log.info('Generator Epoch {} Average Reward {}'.format(epoch+1, average_reward))
+
+    nn_policy.running_reward = 0.0
 
 
 def start_experiment():
@@ -71,36 +98,38 @@ def start_experiment():
         Discriminator Learnrate {}
 
         Oracle Use {}
-        Oracle Sample Size {}
+        Real Data Sample Size {}
+        Recycling {}
 
         '''.format(
-            cfg.app_cfg.iterations, 
-            cfg.app_cfg.d_steps, 
-            cfg.app_cfg.g_steps, 
-            cfg.app_cfg.seq_length, 
-            cfg.app_cfg.montecarlo_trials, 
-            cfg.app_cfg.batchsize, 
+            cfg.general.iterations,
+            cfg.general.d_steps,
+            cfg.general.g_steps,
+            cfg.general.sequence_length,
+            cfg.general.montecarlo_trials,
+            cfg.general.batch_size,
 
-            cfg.g_cfg.hidden_dim, 
-            cfg.g_cfg.layers,  
-            cfg.g_cfg.dropout, 
-            cfg.g_cfg.learnrate, 
-            cfg.g_cfg.baseline, 
-            cfg.g_cfg.gamma, 
+            cfg.generator.hidden_dim,
+            cfg.generator.layers,
+            cfg.generator.dropout,
+            cfg.generator.learnrate,
+            cfg.generator.baseline,
+            cfg.generator.gamma,
 
-            cfg.d_cfg.dropout, 
-            cfg.d_cfg.learnrate, 
+            cfg.discriminator.dropout,
+            cfg.discriminator.learnrate,
 
-            cfg.app_cfg.oracle, 
-            cfg.app_cfg.oracle_samplesize))
+            cfg.general.oracle,
+            cfg.general.size_real_dataset,
+            cfg.general.recycling))
 
 
-def write(iteration, nn_generator, nn_discriminator, nn_oracle, printout=False):
+def adversarial(iteration, nn_generator, nn_discriminator, nn_oracle, printout=False):
     global log
 
-    g_reward = nn_generator.running_reward / (iteration * cfg.app_cfg.g_steps)
-    o_loss = nn_oracle.running_loss / (iteration * cfg.app_cfg.g_steps)
-    d_loss = nn_discriminator.running_loss / (iteration * cfg.app_cfg.d_steps)
+    g_reward = nn_generator.running_reward / (iteration * cfg.general.g_steps)
+    o_loss = nn_oracle.running_score / (iteration * cfg.general.g_steps)
+    d_loss = nn_discriminator.running_loss / (iteration * cfg.general.d_steps)
 
     entry = '''###
         Iteration {iteration}
@@ -116,15 +145,15 @@ def write(iteration, nn_generator, nn_discriminator, nn_oracle, printout=False):
 
     generator_loss_sequence.append(nn_generator.running_reward)
     discriminator_loss_sequence.append(nn_discriminator.running_loss)
-    oracle_loss_sequence.append(nn_oracle.running_loss)
+    oracle_score_sequence.append(nn_oracle.running_score)
 
     nn_generator.running_reward = 0.0
     nn_discriminator.running_loss = 0.0
-    nn_oracle.running_loss = 0.0
+    nn_oracle.running_score = 0.0
 
 
 def finish_experiment(directory):
-    global log, generator_loss_sequence, discriminator_loss_sequence, oracle_loss_sequence
+    global log, generator_loss_sequence, discriminator_loss_sequence, oracle_score_sequence
 
     print('Finishing experiment..')
 
@@ -134,9 +163,9 @@ def finish_experiment(directory):
 
     generator_loss_sequence_str = ', '.join(map(str, generator_loss_sequence))
     discriminator_loss_sequence_str = ', '.join(map(str, discriminator_loss_sequence))
-    oracle_loss_sequence_str = ', '.join(map(str, oracle_loss_sequence))
+    oracle_score_sequence_str = ', '.join(map(str, oracle_score_sequence))
     log.info('Generator Loss as Sequence: ' + generator_loss_sequence_str)
     log.info('Discriminator Loss as Sequence ' + discriminator_loss_sequence_str)
-    log.info('Oracle Loss as Sequence ' + oracle_loss_sequence_str)
+    log.info('Oracle Loss as Sequence ' + oracle_score_sequence_str)
 
-    shutil.copyfile(cfg.paths_cfg.log, directory + '/results.log')
+    shutil.copyfile(cfg.paths.log, directory + '/results.log')

@@ -1,4 +1,3 @@
-import config as cfg
 import torch
 from torch import nn
 
@@ -21,14 +20,19 @@ class Discriminator(nn.Module):
 
         self.fc3 = nn.Linear(5 * 32, 64)
         self.fc4 = nn.Linear(64, 32)
-        self.fc5 = nn.Linear(32,2)
+        self.fc5 = nn.Linear(32, 1)
 
         self.selu = nn.SELU()
-        self.softmax = nn.Softmax(dim=0)
+        self.sigmoid = nn.Sigmoid()
+        # self.softmax = nn.Softmax(dim=1)  # (batch_size, probability)
 
         self.running_loss = 0.0
+        self.running_acc = 0.0
 
-    def forward(self,x):
+        self.criterion = None
+        self.optimizer = None
+
+    def forward(self, x):
 
         out = self.conv1(x)
         out = self.selu(out)
@@ -50,7 +54,7 @@ class Discriminator(nn.Module):
         out = self.selu(out)
 
         out = self.fc5(out)
-        out = self.softmax(out)
+        out = self.sigmoid(out)
 
         return out
 
@@ -61,28 +65,3 @@ class Discriminator(nn.Module):
     def load(self, file):
 
         self.load_state_dict(torch.load(file))
-
-
-def evaluate(nn_discriminator, image_batch) -> torch.Tensor:
-
-    # image_batch: (batch_size, height, width)
-    rewards = nn_discriminator(image_batch)
-
-    return rewards[:,0][:,None] # [:,0] P(x ~ arxiv / oracle)
-
-
-def update(nn_discriminator, d_opt, d_crit, images, labels) -> None:
-
-    images.to(cfg.app_cfg.device)
-    labels.to(cfg.app_cfg.device)
-
-    outputs = nn_discriminator(images)
-    loss = d_crit(outputs[:,1], labels.float())
-
-    # output[:,0] P(x ~ arxiv / oracle)
-    # output[:,1] P(x ~ generator)
-
-    nn_discriminator.running_loss += loss.item()
-
-    loss.backward()
-    d_opt.step()
