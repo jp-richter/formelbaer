@@ -41,7 +41,7 @@ def finish_loading_data():
     print('Data successfully loaded.')
 
 
-def discriminator_loss(nn_discriminator, epoch):
+def discriminator_loss(nn_discriminator, epoch, d_epoch):
     global log
 
     num_samples = cfg.general.size_real_dataset * 2  # real + synthetic
@@ -49,8 +49,8 @@ def discriminator_loss(nn_discriminator, epoch):
     average_loss = nn_discriminator.running_loss / num_batches
     average_acc = nn_discriminator.running_acc / (num_batches * cfg.general.batch_size)  # loss already averaged
 
-    print('Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, average_loss, average_acc))
-    log.info('Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, average_loss, average_acc))
+    print('Epoch {} Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
+    log.info('Discriminator {} Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
 
     nn_discriminator.running_loss = 0.0
     nn_discriminator.running_acc = 0.0
@@ -61,8 +61,8 @@ def generator_reward(nn_policy, epoch):
 
     average_reward = nn_policy.running_reward / cfg.general.g_steps
 
-    print('Generator Epoch {} Average Reward {}'.format(epoch+1, average_reward))
-    log.info('Generator Epoch {} Average Reward {}'.format(epoch+1, average_reward))
+    print('Epoch {} Generator Average Reward {}'.format(epoch, average_reward))
+    log.info('Epoch {} Generator {} Average Reward {}'.format(epoch, average_reward))
 
     nn_policy.running_reward = 0.0
 
