@@ -126,7 +126,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, nn_oracle, it
     log.generator_reward(nn_policy, iteration)
 
 
-def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_epochs, epoch) -> None:
+def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps, d_epochs, epoch) -> None:
     """
     The training loop of the discriminator net.
 
@@ -146,7 +146,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_epoch
     nn_discriminator.train()
     nn_generator.eval()
 
-    num_samples = config.general.size_real_dataset * 2  # equal amount of generated data
+    num_samples = config.general.size_real_dataset * 2 * d_steps  # equal amount of generated data
     data_loader = loader.prepare_arxiv_loader(num_samples, nn_generator, nn_oracle)
 
     for d_epoch in range(d_epochs):
@@ -195,9 +195,8 @@ def training() -> None:
 
     for epoch in range(a_epochs):
 
-        # train discriminator
-        for step in range(d_steps):
-            adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_epochs, epoch)
+        # generating a single dataset size * d steps is computationally cheaper than generating datasets for d steps
+        adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)
 
         # train generator
         for _ in range(g_steps):
