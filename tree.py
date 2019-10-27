@@ -1,13 +1,14 @@
 from itertools import chain
 import tokens
 
+
 class Tree:
 
     def __init__(self, token):
 
         assert token
 
-        self.token = token 
+        self.token = token
         self.children = []
 
     def __iter__(self):
@@ -26,7 +27,7 @@ class Tree:
 
         return sum(map(self.size, self.children), 1)
 
-    def append(self,node):
+    def append(self, node):
 
         if self.saturated():
             return False
@@ -82,16 +83,13 @@ class Tree:
             return self.token.latex.format(self.children[0].latex())
 
         if self.token.arity == 2:
-            return self.token.latex.format(self.children[0].latex(), 
-                self.children[1].latex())
+            return self.token.latex.format(self.children[0].latex(), self.children[1].latex())
 
         if self.token.arity == 3:
-            return self.token.latex.format(self.children[0].latex(), 
-                self.children[1].latex(), self.children[2].latex())
+            return self.token.latex.format(self.children[0].latex(), self.children[1].latex(), self.children[2].latex())
 
 
 def sequence_to_tree(sequence):
-    
     root = Tree(tokens.get(sequence[0]))
 
     for code in sequence[1:]:
@@ -100,14 +98,13 @@ def sequence_to_tree(sequence):
 
         if saturated:
             break
-      
+
     return root
 
 
 def tree_to_sequence(tree):
-
     sequence = []
-    
+
     for node in iter(tree):
         id = tokens.id(node.token.onehot)
         sequence.append(id)
@@ -116,7 +113,6 @@ def tree_to_sequence(tree):
 
 
 def batch_to_tree(batch):
-
     trees = []
     for sample in batch:
         sequence = []

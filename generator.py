@@ -4,7 +4,7 @@ from torch import nn
 import tokens
 import torch
 import os
-import config as cfg
+import config as config
 
 
 class Policy(nn.Module):
@@ -14,9 +14,9 @@ class Policy(nn.Module):
 
         self.input_dim = tokens.count()
         self.output_dim = tokens.count()
-        self.hidden_dim = cfg.generator.hidden_dim
-        self.dropout = cfg.generator.dropout
-        self.layers = cfg.generator.layers
+        self.hidden_dim = config.generator.hidden_dim
+        self.dropout = config.generator.dropout
+        self.layers = config.generator.layers
 
         self.gru = nn.GRU(self.input_dim, self.hidden_dim, self.layers, batch_first=True, dropout=self.dropout)
         self.lin = nn.Linear(self.hidden_dim, self.output_dim)
@@ -39,11 +39,8 @@ class Policy(nn.Module):
         return out, h
 
     def initial(self):
-        batch = torch.zeros(cfg.general.batch_size, 1, self.input_dim)
-        hidden = torch.zeros(self.layers, cfg.general.batch_size, self.hidden_dim)
-
-        batch.to(cfg.general.device)
-        hidden.to(cfg.general.device)
+        batch = torch.zeros(config.general.batch_size, 1, self.input_dim, device=config.general.device)
+        hidden = torch.zeros(self.layers, config.general.batch_size, self.hidden_dim, device=config.general.device)
 
         return batch, hidden
 
@@ -66,12 +63,12 @@ class Oracle(Policy):
         self.running_score = 0.0
         self.criterion = None
 
-        if not os.path.exists(cfg.paths.oracle):
+        if not os.path.exists(config.paths.oracle):
             [torch.nn.init.normal_(param, 0, 1) for param in self.parameters()]
-            self.save(cfg.paths.oracle)
+            self.save(config.paths.oracle)
 
         else:
-            self.load(cfg.paths.oracle)
+            self.load(config.paths.oracle)
 
 
 def step(nn_policy, batch, hidden, save_prob=False):
@@ -89,7 +86,7 @@ def step(nn_policy, batch, hidden, save_prob=False):
         nn_policy.probs.append(log_probs)
 
     # concat onehot tokens with the batch of sequences
-    encodings = torch.Tensor([tokens.onehot(action_id) for action_id in actions])
+    encodings = torch.Tensor([tokens.onehot(action_id) for action_id in actions], device=config.general.device)
     encodings = encodings[:, None, :]
     batch = torch.cat((batch, encodings), dim=1)
 
@@ -102,7 +99,7 @@ def step(nn_policy, batch, hidden, save_prob=False):
 
 def rollout(nn_policy, batch, hidden):
     with torch.no_grad():
-        while batch.shape[1] < cfg.general.sequence_length:
+        while batch.shape[1] < config.general.sequence_length:
             batch, hidden = step(nn_policy, batch, hidden)
 
     return batch
@@ -130,7 +127,7 @@ def policy_gradient_update(nn_policy):
 
     # compute state action values for each step
     for reward in nn_policy.rewards[::-1]:
-        total = reward + cfg.generator.gamma * total
+        total = reward + config.generator.gamma * total
         returns.insert(0, total)
 
     assert len(nn_policy.probs) == len(returns)

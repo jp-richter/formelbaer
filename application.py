@@ -93,7 +93,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, nn_oracle) ->
 
         images = loader.prepare_batch(batch)
         output = nn_discriminator(images)
-        rewards = torch.empty(output.size())
+        rewards = torch.empty(output.size(), device=config.general.device)
 
         for i in range(output.shape[0]):
             rewards[i][0] = 1 - output[i][0]
@@ -106,7 +106,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, nn_oracle) ->
 
         # generate a single next token given the sequences generated so far
         batch, hidden = generator.step(nn_policy, batch, hidden, save_prob=True)
-        q_values = torch.empty([batch_size, 0])
+        q_values = torch.empty([batch_size, 0], device=config.general.device)
         finished_sequence = batch.shape[1] < sequence_length
 
         if not finished_sequence:
