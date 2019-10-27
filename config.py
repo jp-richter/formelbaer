@@ -144,7 +144,7 @@ DEFAULT_GENERAL = AppConfig(
 
     device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-    size_real_dataset=100,  # 10.000
+    size_real_dataset=10000,  # 10.000
     num_eval_samples=100,  # 100
 
     recycling=True,
@@ -157,8 +157,8 @@ DEFAULT_GENERAL = AppConfig(
 
     d_steps=2,
     g_steps=1,
-    sequence_length=10,  # 16
-    montecarlo_trials=2,  # 16
+    sequence_length=20,  # 16
+    montecarlo_trials=10,  # 16
     batch_size=multiprocessing.cpu_count(),  # computational cost reasons
 
     oracle=False,
