@@ -1,4 +1,3 @@
-from numpy import finfo, float32
 from torch import nn
 
 import tokens
@@ -72,6 +71,17 @@ class Oracle(Policy):
 
 
 def step(nn_policy, batch, hidden, save_prob=False):
+    """
+    This function performs a single step on the given policy net give a batch of unfinished subsequences.
+
+    :param nn_policy: The policy net which guides the decision making process.
+    :param batch: The batch of input sequences size (batch size, sequence length, onehot length).
+    :param hidden: The hidden state of the policy net.
+    :param save_prob: If true, the probabilities for the chosen action will be saved for the policy net. Should be true
+        if it is a step in the policy net training and false if it is a rollout or sample step.
+    :return: Returns batch, hidden with the new encoding tensors for the chosen actions.
+    """
+
     # avoid feeding whole sequences redundantly
     state = batch[:, -1, :][:, None, :]
     policies, hidden = nn_policy(state, hidden)
@@ -98,6 +108,15 @@ def step(nn_policy, batch, hidden, save_prob=False):
 
 
 def rollout(nn_policy, batch, hidden):
+    """
+    This function finished a sequence for a given subsequence without saving probabilities or gradients.
+
+    :param nn_policy: The policy guiding the decision making process.
+    :param batch: The batch of subsequences to finish.
+    :param hidden: The current hidden state of the net.
+    :return: Returns a batch of finished sequencens, tensor of size (batchsize, sequence length, onehot length).
+    """
+
     with torch.no_grad():
         while batch.shape[1] < config.general.sequence_length:
             batch, hidden = step(nn_policy, batch, hidden)
@@ -106,6 +125,14 @@ def rollout(nn_policy, batch, hidden):
 
 
 def sample(nn_policy, num_batches):
+    """
+    This function samples finished sequences for a given policy.
+
+    :param nn_policy: The policy guiding the decision making process.
+    :param num_batches: The amount of batches to generate.
+    :return: Returns a python list of tensors of size (batch size, sequence length, onehot length).
+    """
+
     batches = []
 
     with torch.no_grad():
@@ -119,6 +146,14 @@ def sample(nn_policy, num_batches):
 
 
 def policy_gradient_update(nn_policy):
+    """
+    This function adjusts the parameters of the give policy net with the policy gradient method. The respective returns
+    and probabilities should be saved in the policy.rewards and policy.probs attributes and will be deleted after the
+    update.
+
+    :param nn_policy: The net which parameters should be updated.
+    """
+
     total = 0
     loss = []
     returns = []
