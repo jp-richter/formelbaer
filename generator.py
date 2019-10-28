@@ -7,6 +7,11 @@ import config as config
 
 
 class Policy(nn.Module):
+    """
+    The policy net consists of two recurrent layers using GRUs, a fully connected layer and a softmax function so that
+    the output can be seen as distribution over the possible token choices. The output will be a tensor of size
+    (batch size, 1, one hot length) with each index of the one hot dimension representing a token choice.
+    """
 
     def __init__(self):
         super(Policy, self).__init__()
@@ -54,6 +59,14 @@ class Policy(nn.Module):
 
 
 class Oracle(Policy):
+    """
+    This class represents an oracle. An oracle is a fake real distribution of data which can be very useful to make
+    statements about performance of a policy. If a policy gets trained to model an oracle the oracle distribution is
+    well known in contrast to real data. In theory an unlimited amount of real samples can be generated and measuring
+    the exact difference of distributions is possible. Obviously the oracle does not produce any semantically
+    meaningful data. The weights get initialized following a normal distribution to garantuee variance in the parameters
+    to avoid creating similar policy and oracle models.
+    """
 
     def __init__(self):
         super(Oracle, self).__init__()
