@@ -53,10 +53,6 @@ class AppConfig:
     # the amount of samples used to evaluate the oracle score
     num_eval_samples: int
 
-    # if True, every epoch new oracle samples will be generated. might be computionally expensive. if False the same
-    # dataset will be used for every epoch
-    recycling: bool
-
     # the amount of training steps with mle
     mle_epochs: int
 
@@ -152,12 +148,10 @@ DEFAULT_GENERAL = AppConfig(
     size_real_dataset=5000,  # 10.000
     num_eval_samples=100,  # 100
 
-    recycling=True,
-
     mle_epochs=2,
     kldiv_epochs=2,
 
-    d_epochs=3,  # 3
+    d_epochs=1,  # 3
     iterations=150,  # 150
 
     d_steps=1,

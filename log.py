@@ -165,7 +165,7 @@ def finish_experiment(directory):
     discriminator_loss_sequence_str = ', '.join(map(str, discriminator_loss_sequence))
     oracle_score_sequence_str = ', '.join(map(str, oracle_score_sequence))
     log.info('Generator Loss as Sequence: ' + generator_loss_sequence_str)
-    log.info('Discriminator Loss as Sequence ' + discriminator_loss_sequence_str)
-    log.info('Oracle Loss as Sequence ' + oracle_score_sequence_str)
+    log.info('Discriminator Loss as Sequence: ' + discriminator_loss_sequence_str)
+    log.info('Oracle Loss as Sequence: ' + oracle_score_sequence_str)
 
     shutil.copyfile(cfg.paths.log, directory + '/results.log')
