@@ -132,6 +132,7 @@ def rollout(nn_policy, batch, hidden):
 
     with torch.no_grad():
         while batch.shape[1] < config.general.sequence_length:
+
             batch, hidden = step(nn_policy, batch, hidden)
 
     return batch

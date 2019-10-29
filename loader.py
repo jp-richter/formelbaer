@@ -90,6 +90,7 @@ def make_directory_with_timestamp() -> str:
     """
 
     directory = config.paths.app + '/' + str(datetime.datetime.now())[-15:]
+    directory.replace(':','-')
     os.makedirs(directory)
 
     return directory
