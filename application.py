@@ -112,7 +112,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, iteration) ->
     nn_discriminator.eval()
 
     sequence_length = config.general.sequence_length
-    montecarlo_trials = config.general.montecarlo_trialsa
+    montecarlo_trials = config.general.montecarlo_trials
     batch_size = config.general.batch_size
 
     def collect_reward(batch) -> torch.Tensor:
