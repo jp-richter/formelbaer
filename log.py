@@ -52,6 +52,8 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     print('Epoch {} Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
     log.info('Epoch {} Discriminator Epoch {} Average Loss {} Train Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
 
+    discriminator_loss_sequence.append(average_loss)
+
     nn_discriminator.running_loss = 0.0
     nn_discriminator.running_acc = 0.0
 
@@ -63,6 +65,8 @@ def generator_reward(nn_policy, epoch):
 
     print('Epoch {} Generator Average Reward {}'.format(epoch, average_reward))
     log.info('Epoch {} Generator Average Reward {}'.format(epoch, average_reward))
+
+    generator_loss_sequence.append(average_reward)
 
     nn_policy.running_reward = 0.0
     nn_policy.save(cfg.paths.policies + '/' + str(epoch) + '.pt')
@@ -165,9 +169,10 @@ def finish_experiment(directory):
     generator_loss_sequence_str = ', '.join(map(str, generator_loss_sequence))
     discriminator_loss_sequence_str = ', '.join(map(str, discriminator_loss_sequence))
     oracle_score_sequence_str = ', '.join(map(str, oracle_score_sequence))
+
     log.info('Generator Loss as Sequence: ' + generator_loss_sequence_str)
     log.info('Discriminator Loss as Sequence: ' + discriminator_loss_sequence_str)
     log.info('Oracle Loss as Sequence: ' + oracle_score_sequence_str)
 
     shutil.copyfile(cfg.paths.log, directory + '/results.log')
-    shutil.copytree(cfg.paths.policies, directory)
+    shutil.copytree(cfg.paths.policies, directory + '/policies')
