@@ -149,14 +149,14 @@ DEFAULT_GENERAL = AppConfig(
 
     device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-    size_real_dataset=100,  # 5000
+    size_real_dataset=5000,  # 5000
     num_eval_samples=100,  # 100
 
     mle_epochs=2,
     kldiv_epochs=2,
 
     d_epochs=1,  # 3
-    iterations=1,  # 150
+    iterations=150,  # 150
 
     d_steps=1,
     g_steps=1,
