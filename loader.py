@@ -249,6 +249,12 @@ def initialize() -> None:
     if not os.path.exists(config.paths.ray):
         os.makedirs(config.paths.ray)
 
+    if not os.path.exists(config.paths.policies):
+        os.makedirs(config.paths.policies)
+
+    else:
+        clear_directory(config.paths.policies)
+
     if not ray.is_initialized():
         if torch.cuda.is_available():
             ray.init(plasma_directory=config.paths.ray, memory=20000000000, object_store_memory=20000000000)

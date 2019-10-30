@@ -65,6 +65,7 @@ def generator_reward(nn_policy, epoch):
     log.info('Epoch {} Generator Average Reward {}'.format(epoch, average_reward))
 
     nn_policy.running_reward = 0.0
+    nn_policy.save(cfg.paths.policies + '/' + str(epoch) + '.pt')
 
 
 def start_experiment():
@@ -169,3 +170,4 @@ def finish_experiment(directory):
     log.info('Oracle Loss as Sequence: ' + oracle_score_sequence_str)
 
     shutil.copyfile(cfg.paths.log, directory + '/results.log')
+    shutil.copytree(cfg.paths.policies, directory)

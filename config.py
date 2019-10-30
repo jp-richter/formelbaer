@@ -30,6 +30,8 @@ class Paths:
     # if an oracle has been generated it will be saved here for future comparisons
     oracle: str
 
+    policies: str
+
     dump: str
 
     # used by ray for shared memory plasma store
@@ -134,6 +136,8 @@ DEFAULT_PATHS = Paths(
     oracle=_home + '/formelbaer-data' + '/oracle-net.pt',
 
     dump=_home + '/formelbaer-data' + '/dump.txt',
+
+    policies=_home + '/policies',
 
     ray=_home + '/ray-plasma-store'
 
