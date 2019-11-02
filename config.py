@@ -157,11 +157,11 @@ DEFAULT_GENERAL = AppConfig(
     mle_epochs=2,
     kldiv_epochs=2,
 
-    d_epochs=3,  # 3
+    d_epochs=1,  # 3
     iterations=150,  # 150
 
     d_steps=1,
-    g_steps=1,
+    g_steps=5,
     sequence_length=20,  # 16
     montecarlo_trials=10,  # 16
     batch_size=multiprocessing.cpu_count(),  # computational cost reasons
