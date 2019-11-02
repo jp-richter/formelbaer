@@ -30,6 +30,8 @@ class Paths:
     # if an oracle has been generated it will be saved here for future comparisons
     oracle: str
 
+    policies: str
+
     dump: str
 
     # used by ray for shared memory plasma store
@@ -52,10 +54,6 @@ class AppConfig:
 
     # the amount of samples used to evaluate the oracle score
     num_eval_samples: int
-
-    # if True, every epoch new oracle samples will be generated. might be computionally expensive. if False the same
-    # dataset will be used for every epoch
-    recycling: bool
 
     # the amount of training steps with mle
     mle_epochs: int
@@ -139,6 +137,8 @@ DEFAULT_PATHS = Paths(
 
     dump=_home + '/formelbaer-data' + '/dump.txt',
 
+    policies=_home + '/policies',
+
     ray=_home + '/ray-plasma-store'
 
 )
@@ -149,10 +149,8 @@ DEFAULT_GENERAL = AppConfig(
 
     device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-    size_real_dataset=5000,  # 10.000
+    size_real_dataset=5000,  # 5000
     num_eval_samples=100,  # 100
-
-    recycling=True,
 
     mle_epochs=2,
     kldiv_epochs=2,
