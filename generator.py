@@ -146,8 +146,7 @@ def sample(nn_policy, num_batches):
     :param num_batches: The amount of batches to generate.
     :return: Returns a python list of tensors of size (batch size, sequence length, onehot length).
     """
-
-    batch = torch.empty((0, config.general.sequence_length, len(tokens.possibilities())))
+    batch = torch.empty((0, config.general.sequence_length, len(tokens.possibilities())), device=config.general.device)
 
     with torch.no_grad():
         for _ in range(num_batches):
