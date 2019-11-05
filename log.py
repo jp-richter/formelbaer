@@ -63,8 +63,8 @@ def generator_loss(nn_policy, epoch):
 
     average_loss = nn_policy.running_loss / cfg.general.g_steps
 
-    print('Epoch {}         G Loss {}'.format(epoch, average_loss))
-    log.info('Epoch {}         G Loss {}'.format(epoch, average_loss))
+    print('Epoch {} G         Loss {}'.format(epoch, average_loss))
+    log.info('Epoch {} G         Loss {}'.format(epoch, average_loss))
 
     generator_loss_sequence.append(average_loss)
 

@@ -111,7 +111,8 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> Non
             output = nn_discriminator(images)
 
             for i in range(output.shape[0]):
-                rewards[i] = 1 - output[i]  # if we overwrite values it counts as inplace for autograd
+                index = b * output.shape[0] + i
+                rewards[index] = 1 - output[i]  # if we overwrite values it counts as inplace for autograd
 
         return rewards
 
