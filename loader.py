@@ -81,8 +81,8 @@ def make_directory_with_timestamp() -> str:
     :return: The path to the directory created.
     """
 
-    directory = config.paths.app + '/' + str(datetime.datetime.now())[-15:]
-    directory = directory.replace(':','-')
+    directory = config.paths.app + '/' + str(datetime.datetime.now())
+    directory = directory.replace(':','-').replace(' ', '-')[:-7]
     os.makedirs(directory)
 
     return directory
@@ -220,6 +220,9 @@ def initialize() -> None:
     global oracle_dataset, arxiv_dataset
 
     log.init()
+
+    log.start_experiment()
+
     print('Start initializing..')
     log.log.info('Start initializing..')
 

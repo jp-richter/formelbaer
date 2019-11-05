@@ -232,7 +232,6 @@ def training() -> None:
 
 
 def application() -> None:
-    torch.autograd.set_detect_anomaly(True)
     training()
     loader.shutdown()
 

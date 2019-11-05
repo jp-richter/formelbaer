@@ -81,16 +81,18 @@ def start_experiment():
     print('Starting experiment..')
 
     log.info('''STARTING EXPERIMENT
+    
+        Added Multipages
 
-        Models Version: 1
-        Systems Version: 1
-
-        Total Iterations {}
+        Total Epochs {}
         Discriminator Steps {}
+        Discriminator Epochs {}
         Generator Steps {}
+        
         Fixed Sequence Length {}
         Monte Carlo Trials {}
         Batch Size {}
+        Batch Size Multiplier {}
 
         Generator Hidden Dim {}
         Generator Layers {}
@@ -104,14 +106,17 @@ def start_experiment():
 
         Oracle Use {}
         Real Data Sample Size {}
+        
 
         '''.format(
-            cfg.general.iterations,
+            cfg.general.total_epochs,
             cfg.general.d_steps,
+            cfg.general.d_epochs,
             cfg.general.g_steps,
             cfg.general.sequence_length,
             cfg.general.montecarlo_trials,
             cfg.general.batch_size,
+            cfg.general.g_batchsize_multiplier,
 
             cfg.generator.hidden_dim,
             cfg.generator.layers,
@@ -124,7 +129,7 @@ def start_experiment():
             cfg.discriminator.learnrate,
 
             cfg.general.oracle,
-            cfg.general.size_real_dataset))
+            cfg.general.num_real_samples))
 
 
 def finish_experiment(directory):
