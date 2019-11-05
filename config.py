@@ -160,7 +160,7 @@ DEFAULT_GENERAL = AppConfig(
 
     d_epochs=1,
     d_steps=1,
-    g_steps=10,
+    g_steps=20,
 
     batch_size = multiprocessing.cpu_count() * 4,  # computational cost reasons
 
