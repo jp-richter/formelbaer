@@ -89,7 +89,7 @@ class Tree:
             return self.token.latex.format(self.children[0].latex(), self.children[1].latex(), self.children[2].latex())
 
 
-def sequence_to_tree(sequence):
+def to_tree(sequence: list):
     root = Tree(tokens.get(sequence[0]))
 
     for code in sequence[1:]:
@@ -102,7 +102,7 @@ def sequence_to_tree(sequence):
     return root
 
 
-def tree_to_sequence(tree):
+def to_sequence(tree: Tree):
     sequence = []
 
     for node in iter(tree):
@@ -112,14 +112,15 @@ def tree_to_sequence(tree):
     return sequence
 
 
-def batch_to_tree(batch):
+def to_trees(sequences: list):
     trees = []
-    for sample in batch:
+
+    for s in sequences:
         sequence = []
 
-        for onehot in sample:
+        for onehot in s:
             sequence.append(tokens.id(onehot))
 
-        trees.append(sequence_to_tree(sequence))
+        trees.append(to_tree(sequence))
 
     return trees

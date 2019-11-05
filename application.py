@@ -7,9 +7,8 @@ import loader
 import log
 import math
 
-
-# TODO rausfinden wie ich gewichte voreinstelle, dass atomare symbole zu anfang unwahrscheinlicher werden
-# TODO manuell sinnvolles orakel erstellen
+# TODO mit bias generator initialisieren sodass verteilung echter daten abgebildet wird
+# TODO d runterschrauben
 
 
 def train_with_mle(nn_policy, nn_oracle, epochs, num_samples) -> None:
@@ -93,56 +92,57 @@ def train_with_kldiv(nn_policy, nn_oracle, epochs, num_samples) -> None:
                 nn_policy.running_loss += loss.item()
 
 
-def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, iteration) -> None:
+def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> None:
     """
     The training loop of the generating policy net.
 
-    :param iteration: The current iteration of the adversarial training for the logging module.
+    :param epoch: The current iteration of the adversarial training for the logging module.
     :param nn_policy: The policy net that is the training target.
     :param nn_rollout: The rollout net that is used to complete unfinished sequences for estimation of rewards.
     :param nn_discriminator: The CNN that estimates the probability that the generated sequences represent the real
         data distribution, which serve as reward for the policy gradient training of the policy net.
-    :param nn_oracle: A policy net which gets initialized with high variance parameters and serves as fake real
-        distribution to analyze the performance of the model even when no comparisons to other models can be made.
     """
+
+    def collect_reward(batch):
+        rewards = torch.empty(batch.shape[0], device=config.general.device)
+
+        for b in range(batch.shape[0] // config.general.batch_size):  # batchsizes might differ due to multiplier
+            images = loader.prepare_batch(batch)
+            output = nn_discriminator(images)
+
+            for i in range(output.shape[0]):
+                rewards[i] = 1 - output[i]  # if we overwrite values it counts as inplace for autograd
+
+        return rewards
 
     nn_rollout.set_parameters_to(nn_policy)
     nn_policy.train()
     nn_rollout.eval()
     nn_discriminator.eval()
 
+    batchsize_multiplier = config.general.g_batchsize_multiplier  # more accurate gradients computationally cheap
+    batch_size = config.general.batch_size * batchsize_multiplier
     sequence_length = config.general.sequence_length
     montecarlo_trials = config.general.montecarlo_trials
-    batch_size = config.general.batch_size
 
-    def collect_reward(batch) -> torch.Tensor:
-
-        images = loader.prepare_batch(batch)
-        output = nn_discriminator(images)
-        rewards = torch.empty(output.size(), device=config.general.device)
-
-        for i in range(output.shape[0]):
-            rewards[i][0] = 1 - output[i][0]
-
-        return rewards
-
-    batch, hidden = nn_policy.initial()
+    batch, hidden = nn_policy.initial(batch_size)
 
     for length in range(sequence_length):
 
         # generate a single next token given the sequences generated so far
         batch, hidden = generator.step(nn_policy, batch, hidden, save_prob=True)
         q_values = torch.empty([batch_size, 0], device=config.general.device)
+
         finished_sequence = batch.shape[1] < sequence_length
 
         # compute the Q(token,subsequence) values with monte carlo approximation
         if not finished_sequence:
             for _ in range(montecarlo_trials):
                 samples = generator.rollout(nn_rollout, batch, hidden)
-                reward = collect_reward(samples)
+                reward = collect_reward(samples).unsqueeze(dim=1)
                 q_values = torch.cat([q_values, reward], dim=1)
         else:
-            reward = collect_reward(batch)
+            reward = collect_reward(batch).unsqueeze(dim=1)
             q_values = torch.cat([q_values, reward], dim=1)
 
         # average the reward over all trials
@@ -150,7 +150,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, iteration) ->
         nn_policy.rewards.append(q_values)
 
     generator.policy_gradient_update(nn_policy)
-    log.generator_reward(nn_policy, iteration)
+    log.generator_loss(nn_policy, epoch)
 
 
 def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps, d_epochs, epoch) -> None:
@@ -172,7 +172,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
     nn_discriminator.train()
     nn_generator.eval()
 
-    num_samples = config.general.size_real_dataset * 2 * d_steps  # equal amount of generated data
+    num_samples = config.general.num_real_samples * 2 * d_steps  # equal amount of generated data
     data_loader = loader.prepare_loader(num_samples, nn_generator, nn_oracle)
 
     for d_epoch in range(d_epochs):
@@ -186,11 +186,11 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             # output[:,0] P(x ~ real)
             # output[:,1] P(x ~ synthetic)
 
-            loss = nn_discriminator.criterion(outputs, labels.unsqueeze(dim=1).float())
+            loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
             nn_discriminator.optimizer.step()
             nn_discriminator.running_loss += loss.item()
-            nn_discriminator.running_acc += torch.sum((outputs[:, 0] > 0.5) == (labels == 1)).item()
+            nn_discriminator.running_acc += torch.sum((outputs > 0.5) == (labels == 1)).item()
 
         log.discriminator_loss(nn_discriminator, epoch, d_epoch)
 
@@ -216,7 +216,7 @@ def training() -> None:
     # start adversarial training
     d_steps = config.general.d_steps
     g_steps = config.general.g_steps
-    a_epochs = config.general.iterations
+    a_epochs = config.general.total_epochs
     d_epochs = config.general.d_epochs
 
     for epoch in range(a_epochs):
@@ -232,6 +232,7 @@ def training() -> None:
 
 
 def application() -> None:
+    torch.autograd.set_detect_anomaly(True)
     training()
     loader.shutdown()
 

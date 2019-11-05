@@ -59,25 +59,17 @@ def save_sequences(samples, directory) -> None:
         sequences = []
         strings = []
 
-        def process(single_batch):
-            for sequence in single_batch:
-                sequence_ids = []
+        for sequence in samples:
+            sequence_ids = []
 
-                for onehot in sequence:
-                    sequence_ids.append(tokens.id(onehot))
+            for onehot in sequence:
+                sequence_ids.append(tokens.id(onehot))
 
-                sequences.append(sequence_ids)
-                strings.append(', '.join(str(s) for s in sequence_ids))
+            sequences.append(sequence_ids)
+            strings.append(', '.join(str(s) for s in sequence_ids))
 
-            all_sequences = '\n'.join(str(s) for s in sequences)
-            f.write(all_sequences)
-
-        if isinstance(samples, list):
-            for batch in samples:
-                process(batch)
-
-        else:
-            process(samples)
+        all_sequences = '\n'.join(str(s) for s in sequences)
+        f.write(all_sequences)
 
 
 def make_directory_with_timestamp() -> str:
@@ -110,8 +102,8 @@ def make_dataset(directory, nn_generator, label, num_batches) -> Dataset:
     """
 
     clear_directory(directory)
-    batches = generator.sample(nn_generator, num_batches)
-    save_pngs(batches, directory)
+    sequences = generator.sample(nn_generator, num_batches)
+    save_pngs(sequences, directory)
     dataset = Dataset(directory, label)
 
     return dataset
@@ -186,8 +178,8 @@ def prepare_arxiv_loader(num_samples, nn_generator=None) -> DataLoader:
 
     dataset = Dataset()
 
-    if not nn_generator is None:
-        num_batches = math.ceil(num_samples / config.general.batch_size) // 2
+    if nn_generator is not None:
+        num_batches = math.ceil((num_samples / config.general.batch_size) / 2)
         dataset = make_dataset(config.paths.synthetic_data, nn_generator, config.general.label_synth, num_batches)
 
         arxiv_samples = arxiv_dataset.inorder(num_samples // 2)

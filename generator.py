@@ -29,7 +29,7 @@ class Policy(nn.Module):
 
         self.probs = []
         self.rewards = []
-        self.running_reward = 0.0
+        self.running_loss = 0.0
         self.optimizer = None
 
     def forward(self, x, h):
@@ -42,9 +42,9 @@ class Policy(nn.Module):
 
         return out, h
 
-    def initial(self):
-        batch = torch.zeros(config.general.batch_size, 1, self.input_dim, device=config.general.device)
-        hidden = torch.zeros(self.layers, config.general.batch_size, self.hidden_dim, device=config.general.device)
+    def initial(self, batch_size):
+        batch = torch.zeros(batch_size, 1, self.input_dim, device=config.general.device)
+        hidden = torch.zeros(self.layers, batch_size, self.hidden_dim, device=config.general.device)
 
         return batch, hidden
 
@@ -147,16 +147,17 @@ def sample(nn_policy, num_batches):
     :return: Returns a python list of tensors of size (batch size, sequence length, onehot length).
     """
 
-    batches = []
+    batch = torch.empty((0, config.general.sequence_length, len(tokens.possibilities())))
 
     with torch.no_grad():
         for _ in range(num_batches):
-            batch, hidden = nn_policy.initial()
-            batch, hidden = step(nn_policy, batch, hidden)
-            batch = rollout(nn_policy, batch, hidden)
-            batches.append(batch)
+            out, hidden = nn_policy.initial(config.general.batch_size)
+            out, hidden = step(nn_policy, out, hidden)
+            out = rollout(nn_policy, out, hidden)
 
-    return batches
+            batch = torch.cat([batch, out], dim=0)
+
+    return batch
 
 
 def policy_gradient_update(nn_policy):
@@ -196,7 +197,7 @@ def policy_gradient_update(nn_policy):
     loss.backward()
     nn_policy.optimizer.step()
 
-    nn_policy.running_reward += -1 * loss.item()
+    nn_policy.running_loss += loss.item()
 
     del nn_policy.rewards[:]
     del nn_policy.probs[:]

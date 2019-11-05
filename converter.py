@@ -4,29 +4,19 @@ import shutil
 import psutil
 import math
 import pathlib
-import config as cfg
+import config
 import tree
 import ray
+import template
 
 
 # multiprocessing module ray should give better performance, windows is not supported
-num_cpus = psutil.cpu_count(logical=False)
+NUM_CPUS = psutil.cpu_count(logical=False)
 
-# preamble preloaded in preamble.fmt, saved in preamble.tex, pdf compression set to 3
-code_directory = pathlib.Path(__file__).resolve().parent
-preamble = pathlib.PurePath(code_directory, 'preamble.fmt')
-preamble_compiled = False
-
-# latex expression template
-template = '''%&preamble
-
-\\begin{{document}}
-\\begin{{minipage}}[c][1cm]{{50cm}}
-\\centering{{
-    $ {expression} $
-}}
-\\end{{minipage}}
-\\end{{document}}'''
+# preamble preloaded in preamble.fmt, saved in preamble.tex, pdf compression set to 0
+CODE_DIRECTORY = pathlib.Path(__file__).resolve().parent
+PREAMBLE_PATH = pathlib.PurePath(CODE_DIRECTORY, 'preamble.fmt')
+PREAMBLE_PRECOMPILED = False
 
 
 def precompile_preamble():
@@ -34,8 +24,8 @@ def precompile_preamble():
     This function precompiles the preamble of the template and saves the .fmt file at the synthetic data folder.
     """
 
-    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + cfg.paths.dump
-    subprocess.run(precompile_cmd, cwd=code_directory, shell=True)
+    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + config.paths.dump
+    subprocess.run(precompile_cmd, cwd=CODE_DIRECTORY, shell=True)
 
 
 @ray.remote
@@ -56,15 +46,16 @@ def conversion(pid, offset, sequences, directory, file_count):
     end_index = (pid + 1) * offset
     end_index = min(end_index, len(sequences))
 
-    for i in range(start_index, end_index):
-        name = str(file_count + i)
-        file = pdflatex(sequences[i], directory, name)
-        file = pdf2png(directory, file, name)
+    latex = template.get_template(sequences[start_index:end_index])
+    name = str(file_count + start_index)
+
+    file = pdflatex(latex, directory, name)
+    file = pdf2png(directory, file, name)
 
     return True
 
 
-def convert_to_png(sequences, directory=cfg.paths.synthetic_data) -> None:
+def convert_to_png(batch, directory) -> None:
     """
     This function takes a batch of seqences or a list of batches in form of onehot encodings and converts them to
     the .png format. Lists of batches are encouraged to justify the multiprocessing overhead.
@@ -74,36 +65,30 @@ def convert_to_png(sequences, directory=cfg.paths.synthetic_data) -> None:
     :param directory: The directory path where the png files will get saved. The function assumes the directory exists.
     """
 
-    global num_cpus, preamble
+    global NUM_CPUS, PREAMBLE_PATH
 
-    if not preamble_compiled:
+    if not PREAMBLE_PRECOMPILED:
         precompile_preamble()
 
-    shutil.copyfile(preamble, directory + '/preamble.fmt')
+    shutil.copyfile(PREAMBLE_PATH, directory + '/preamble.fmt')
 
-    if isinstance(sequences, list):
-        trees = []
-        for batch in sequences:
-            trees += tree.batch_to_tree(batch)
+    sequences = batch.tolist()
+    trees = tree.to_trees(sequences)
+    latexs = [t.latex() for t in trees]
 
-    else:
-        trees = tree.batch_to_tree(sequences)
-
-    sequences = [t.latex() for t in trees]
-
-    num_seqs = len(sequences)
-    cpus_used = min(num_seqs, num_cpus)
-    offset = math.ceil(num_seqs / cpus_used)
+    num_sequences = len(latexs)
+    cpus_used = min(num_sequences, NUM_CPUS)
+    offset = math.ceil(num_sequences / cpus_used)
     file_count = len(os.listdir(directory))
 
     # copy to shared memory once instead of copying to each cpu
-    sequences_id = ray.put(sequences)
+    latexs_id = ray.put(latexs)
     offset_id = ray.put(offset)
     directory_id = ray.put(directory)
     file_count_id = ray.put(file_count)
 
     # no need for return value but call get for synchronisation
-    ray.get([conversion.remote(pid, offset_id, sequences_id, directory_id, file_count_id) for pid in range(cpus_used)])
+    ray.get([conversion.remote(pid, offset_id, latexs_id, directory_id, file_count_id) for pid in range(cpus_used)])
 
 
 def clean_up(directory) -> None:
@@ -120,7 +105,7 @@ def clean_up(directory) -> None:
                 os.remove(entry)
 
 
-def pdflatex(expr, directory, name) -> str:
+def pdflatex(latex, directory, name) -> str:
     """
     This function generates a .pdf file at the target location. It uses pdflatex to compile the given latex code.
 
@@ -133,14 +118,14 @@ def pdflatex(expr, directory, name) -> str:
     file = directory + '/' + name + '.tex'
 
     with open(file, 'w') as f:
-        f.write(template.format(expression=expr))
+        f.write(latex)
 
     cmd = ['pdflatex',
            '-interaction=batchmode',
            '-interaction=nonstopmode',
            file]
 
-    subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)  # errors are critical
+    subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL)  # errors are critical
 
     return file[:-3] + 'pdf'
 
@@ -163,9 +148,9 @@ def pdf2png(directory, file, name) -> str:
            '-dNOPAUSE',
            '-sDEVICE=png16m',
            '-r80',
-           '-sOutputFile=' + name + '.png',
+           '-sOutputFile=' + name + '%09d.png',
            file]
 
-    subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL, timeout=2)  # errors are critical
+    subprocess.run(cmd, cwd=directory, stdout=subprocess.DEVNULL)  # errors are critical
 
     return directory + '/' + name + '.png'

@@ -1,4 +1,6 @@
 import torch
+import loader
+import config
 from torch import nn
 
 
@@ -55,6 +57,8 @@ class Discriminator(nn.Module):
 
         out = self.fc5(out)
         out = self.sigmoid(out)
+
+        out = out.squeeze()
 
         return out
 
