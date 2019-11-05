@@ -185,7 +185,7 @@ def policy_gradient_update(nn_policy):
 
     # substract baseline
     for length in range(len(returns)):
-        returns[length] = returns[length] - (0.001 * (config.general.sequence_length - length))
+        returns[length] = returns[length] - (0.01 * (config.general.sequence_length - length))
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
