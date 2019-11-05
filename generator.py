@@ -3,6 +3,8 @@ from torch import nn
 import tokens
 import torch
 import os
+import math
+import numpy as np
 import config as config
 
 
@@ -30,6 +32,7 @@ class Policy(nn.Module):
         self.probs = []
         self.rewards = []
         self.running_loss = 0.0
+        self.loss_divisor = 0
         self.optimizer = None
 
     def forward(self, x, h):
@@ -42,9 +45,9 @@ class Policy(nn.Module):
 
         return out, h
 
-    def initial(self, batch_size):
-        batch = torch.zeros(batch_size, 1, self.input_dim, device=config.general.device)
-        hidden = torch.zeros(self.layers, batch_size, self.hidden_dim, device=config.general.device)
+    def initial(self):
+        batch = torch.zeros(config.general.batch_size, 1, self.input_dim, device=config.general.device)
+        hidden = torch.zeros(self.layers, config.general.batch_size, self.hidden_dim, device=config.general.device)
 
         return batch, hidden
 
@@ -146,11 +149,12 @@ def sample(nn_policy, num_batches):
     :param num_batches: The amount of batches to generate.
     :return: Returns a python list of tensors of size (batch size, sequence length, onehot length).
     """
+
     batch = torch.empty((0, config.general.sequence_length, len(tokens.possibilities())), device=config.general.device)
 
     with torch.no_grad():
         for _ in range(num_batches):
-            out, hidden = nn_policy.initial(config.general.batch_size)
+            out, hidden = nn_policy.initial()
             out, hidden = step(nn_policy, out, hidden)
             out = rollout(nn_policy, out, hidden)
 
@@ -179,15 +183,17 @@ def policy_gradient_update(nn_policy):
         total = reward + config.generator.gamma * total
         returns.insert(0, total)
 
-    assert len(nn_policy.probs) == len(returns)
+    # TODO baseline ?
+    for length in range(len(returns)):
+        returns[length] = returns[length] - (0.5 * (config.general.sequence_length - length))
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
-        loss.append(-log_prob * reward)
+        loss.append(log_prob * reward)  # [tensor(batchsize)] for sequence length  TODO - ???
 
     # sum rewards over all steps for each sample
-    loss = torch.stack(loss)
-    loss = torch.sum(loss, dim=1)
+    loss = torch.stack(loss, dim=1)  # (batchsize, sequence length)
+    loss = torch.sum(loss, dim=1)  # (batchsize)
 
     # average rewards over batch
     batch_size = loss.shape[0]
@@ -197,6 +203,7 @@ def policy_gradient_update(nn_policy):
     nn_policy.optimizer.step()
 
     nn_policy.running_loss += loss.item()
+    nn_policy.loss_divisor += 1
 
     del nn_policy.rewards[:]
     del nn_policy.probs[:]

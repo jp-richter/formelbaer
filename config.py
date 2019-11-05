@@ -80,9 +80,6 @@ class AppConfig:
     # should be equal to or a multiple of the cpu count for performance reasons
     batch_size: int
 
-    # it is computationally cheaper than other means of achieving more accurate gradients, f.e. more batches
-    g_batchsize_multiplier: int
-
     # the fixed length of the generated sequences
     sequence_length: int
 
@@ -165,8 +162,7 @@ DEFAULT_GENERAL = AppConfig(
     d_steps=1,
     g_steps=5,
 
-    batch_size = multiprocessing.cpu_count(),  # computational cost reasons
-    g_batchsize_multiplier=4,
+    batch_size = multiprocessing.cpu_count() * 4,  # computational cost reasons
 
     sequence_length=20,  # 20
     montecarlo_trials=10,  # 10

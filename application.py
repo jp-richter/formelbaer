@@ -7,9 +7,6 @@ import loader
 import log
 import math
 
-# TODO mit bias generator initialisieren sodass verteilung echter daten abgebildet wird
-# TODO d runterschrauben
-
 
 def train_with_mle(nn_policy, nn_oracle, epochs, num_samples) -> None:
     """
@@ -92,6 +89,18 @@ def train_with_kldiv(nn_policy, nn_oracle, epochs, num_samples) -> None:
                 nn_policy.running_loss += loss.item()
 
 
+def collect_reward(nn_discriminator, batch):
+
+    images = loader.prepare_batch(batch)
+    output = nn_discriminator(images)
+    reward = torch.empty((batch.shape[0],1), device=config.general.device)
+
+    for r in range(output.shape[0]):
+        reward[r][0] = 1 - output[r]
+
+    return reward
+
+
 def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> None:
     """
     The training loop of the generating policy net.
@@ -103,30 +112,16 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> Non
         data distribution, which serve as reward for the policy gradient training of the policy net.
     """
 
-    def collect_reward(batch):
-        rewards = torch.empty(batch.shape[0], device=config.general.device)
-
-        for b in range(batch.shape[0] // config.general.batch_size):  # batchsizes might differ due to multiplier
-            images = loader.prepare_batch(batch)
-            output = nn_discriminator(images)
-
-            for i in range(output.shape[0]):
-                index = b * output.shape[0] + i
-                rewards[index] = 1 - output[i]  # if we overwrite values it counts as inplace for autograd
-
-        return rewards
-
     nn_rollout.set_parameters_to(nn_policy)
     nn_policy.train()
     nn_rollout.eval()
     nn_discriminator.eval()
 
-    batchsize_multiplier = config.general.g_batchsize_multiplier  # more accurate gradients computationally cheap
-    batch_size = config.general.batch_size * batchsize_multiplier
+    batch_size = config.general.batch_size
     sequence_length = config.general.sequence_length
     montecarlo_trials = config.general.montecarlo_trials
 
-    batch, hidden = nn_policy.initial(batch_size)
+    batch, hidden = nn_policy.initial()
 
     for length in range(sequence_length):
 
@@ -134,16 +129,14 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> Non
         batch, hidden = generator.step(nn_policy, batch, hidden, save_prob=True)
         q_values = torch.empty([batch_size, 0], device=config.general.device)
 
-        finished_sequence = batch.shape[1] < sequence_length
-
         # compute the Q(token,subsequence) values with monte carlo approximation
-        if not finished_sequence:
+        if not batch.shape[1] < sequence_length:
             for _ in range(montecarlo_trials):
                 samples = generator.rollout(nn_rollout, batch, hidden)
-                reward = collect_reward(samples).unsqueeze(dim=1)
+                reward = collect_reward(nn_discriminator, samples)
                 q_values = torch.cat([q_values, reward], dim=1)
         else:
-            reward = collect_reward(batch).unsqueeze(dim=1)
+            reward = collect_reward(nn_discriminator, batch)
             q_values = torch.cat([q_values, reward], dim=1)
 
         # average the reward over all trials
@@ -190,6 +183,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
             nn_discriminator.optimizer.step()
+
             nn_discriminator.running_loss += loss.item()
             nn_discriminator.running_acc += torch.sum((outputs > 0.5) == (labels == 1)).item()
 
@@ -223,7 +217,7 @@ def training() -> None:
     for epoch in range(a_epochs):
 
         # train discriminator
-        adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)
+        adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)  # TODO reintun
 
         # train generator
         for _ in range(g_steps):

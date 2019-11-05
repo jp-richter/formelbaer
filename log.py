@@ -61,7 +61,7 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
 def generator_loss(nn_policy, epoch):
     global log
 
-    average_loss = nn_policy.running_loss / cfg.general.g_steps
+    average_loss = nn_policy.running_loss / nn_policy.loss_divisor
 
     print('Epoch {} G         Loss {}'.format(epoch, average_loss))
     log.info('Epoch {} G         Loss {}'.format(epoch, average_loss))
@@ -69,6 +69,7 @@ def generator_loss(nn_policy, epoch):
     generator_loss_sequence.append(average_loss)
 
     nn_policy.running_loss = 0.0
+    nn_policy.loss_divisor = 0
     nn_policy.save(cfg.paths.policies + '/' + str(epoch) + '.pt')
 
 
@@ -92,7 +93,6 @@ def start_experiment():
         Fixed Sequence Length {}
         Monte Carlo Trials {}
         Batch Size {}
-        Batch Size Multiplier {}
 
         Generator Hidden Dim {}
         Generator Layers {}
@@ -116,7 +116,6 @@ def start_experiment():
             cfg.general.sequence_length,
             cfg.general.montecarlo_trials,
             cfg.general.batch_size,
-            cfg.general.g_batchsize_multiplier,
 
             cfg.generator.hidden_dim,
             cfg.generator.layers,
