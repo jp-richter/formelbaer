@@ -183,9 +183,9 @@ def policy_gradient_update(nn_policy):
         total = reward + config.generator.gamma * total
         returns.insert(0, total)
 
-    # TODO baseline ?
-    # for length in range(len(returns)):
-    #     returns[length] = returns[length] - (0.5 * (config.general.sequence_length - length))
+    # substract baseline
+    for length in range(len(returns)):
+        returns[length] = returns[length] - (0.001 * (config.general.sequence_length - length))
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
