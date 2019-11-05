@@ -159,9 +159,9 @@ DEFAULT_GENERAL = AppConfig(
 
     mle_epochs=2,
     kldiv_epochs=2,
-    total_epochs=1,  # 150
+    total_epochs=150,  # 150
 
-    d_epochs=2,
+    d_epochs=1,
     d_steps=1,
     g_steps=5,
 
