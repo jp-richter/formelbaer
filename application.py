@@ -6,6 +6,7 @@ import discriminator
 import loader
 import log
 import math
+import tree
 
 
 def train_with_mle(nn_policy, nn_oracle, epochs, num_samples) -> None:
@@ -146,6 +147,14 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step) 
     generator.policy_gradient_update(nn_policy)
     log.generator_loss(nn_policy, epoch, step)
 
+    # DEBUG
+    batch = batch[-3:]
+    trees = tree.to_trees(batch.tolist())
+    latexs = [t.latex() for t in trees]
+
+    for l in latexs:
+        print('Example Formular: ' + l)
+        log.log.info('Example Formular: ' + l)
 
 def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps, d_epochs, epoch) -> None:
     """
@@ -169,8 +178,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
     num_samples = config.general.num_real_samples * 2 * d_steps  # equal amount of generated data
     data_loader = loader.prepare_loader(num_samples, nn_generator, nn_oracle)
 
-    # TODO DEBUG
-    print('DEBUG: DISCRIMINATOR PREDICTIONS')
+    debug = []
 
     for d_epoch in range(d_epochs):
         for images, labels in data_loader:
@@ -182,7 +190,8 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
 
             # output[:,0] P(x ~ real)
             # output[:,1] P(x ~ synthetic)
-            print('Prediction ' + str(outputs[-1].item()) + ' Label ' + str(labels[-1].item()))
+
+            debug.append((str(outputs[-1].item()), str(labels[-1].item())))
 
             loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
@@ -192,6 +201,16 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             nn_discriminator.running_acc += torch.sum((outputs > 0.5) == (labels == 1)).item()
 
         log.discriminator_loss(nn_discriminator, epoch, d_epoch)
+
+    print('------------------------------')
+    print('DEBUG: DISCRIMINATOR PREDICTIONS')
+    log.log.info('DEBUG: DISCRIMINATOR PREDICTIONS')
+
+    for output, label in debug:
+        print('Prediction ' + output + ' Label ' + label)
+        log.log.info('Prediction ' + output + ' Label ' + label)
+
+    print('------------------------------')
 
 
 def training() -> None:
