@@ -193,10 +193,6 @@ def policy_gradient_update(nn_policy):
     nn_policy.running_reward += average.item()
     nn_policy.reward_divisor += 1
 
-    # substract baseline
-    for length in range(len(returns)):
-        returns[length] = returns[length] - (config.generator.baseline * (config.general.sequence_length - length))
-
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
         loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length

@@ -180,6 +180,9 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             # output[:,0] P(x ~ real)
             # output[:,1] P(x ~ synthetic)
 
+            for out, lab in zip(outputs, labels):
+                print('Prediction ' + str(out.item()) + ' Label ' + str(lab.item()))
+
             loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
             nn_discriminator.optimizer.step()
