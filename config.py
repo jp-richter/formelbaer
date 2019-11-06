@@ -1,7 +1,7 @@
 import multiprocessing
 import torch
 
-from pathlib import Path
+from pathlib import Path, PurePath
 from dataclasses import dataclass
 
 
@@ -38,6 +38,9 @@ class Paths:
 
     # used by ray for shared memory plasma store
     ray: str
+
+    # a distribution of tokens counted in real data, useful as inital bias term for the generator
+    distribution_bias: str
 
 
 @dataclass
@@ -108,6 +111,7 @@ class GeneratorConfig:
     learnrate: float
     baseline: float
     gamma: float
+    bias: bool
 
 
 @dataclass
@@ -130,18 +134,15 @@ _home = '/ramdisk' if multiprocessing.cpu_count() > 4 else str(Path.home())
 DEFAULT_PATHS = Paths(
 
     app=_home + '/formelbaer-data',
-    synthetic_data=_home + '/formelbaer-data' + '/synthetic-data',
-    arxiv_data=_home + '/formelbaer-data' + '/arxiv-data',
-    oracle_data=_home + '/formelbaer-data' + '/oracle-data',
-
-    log=_home + '/formelbaer-data' + '/results.log',
-    oracle=_home + '/formelbaer-data' + '/oracle-net.pt',
-
-    dump=_home + '/formelbaer-data' + '/dump.txt',
-
-    policies=_home + '/formelbaer-data' + '/policies',
-
-    ray=_home + '/ray-plasma-store'
+    synthetic_data=_home + '/formelbaer-data/synthetic-data',
+    arxiv_data=_home + '/formelbaer-data/arxiv-data',
+    oracle_data=_home + '/formelbaer-data/oracle-data',
+    log=_home + '/formelbaer-data/results.log',
+    oracle=_home + '/formelbaer-data/oracle-net.pt',
+    dump=_home + '/formelbaer-data/dump.txt',
+    policies=_home + '/formelbaer-data/policies',
+    ray=_home + '/formelbaer-data/ray-plasma-store',
+    distribution_bias=str(PurePath(Path(__file__).resolve().parent, 'distribution_bias.txt'))
 
 )
 
@@ -170,7 +171,7 @@ DEFAULT_GENERAL = AppConfig(
     oracle=False,
 
     label_synth=1,  # discriminator outputs P(x ~ synthetic)
-    label_real=0,
+    label_real=0
 
 )
 
@@ -184,7 +185,8 @@ DEFAULT_GENERATOR = GeneratorConfig(
     dropout=0.2,
     learnrate=0.01,
     baseline=0.05,
-    gamma=0.99  # TODO mal gamma=1 probieren?
+    gamma=0.99, # TODO mal gamma=1 probieren?
+    bias=False
 
 )
 

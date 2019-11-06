@@ -156,6 +156,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step) 
         print('Example Formular: ' + l)
         log.log.info('Example Formular: ' + l)
 
+
 def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps, d_epochs, epoch) -> None:
     """
     The training loop of the discriminator net.

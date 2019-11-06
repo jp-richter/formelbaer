@@ -3,8 +3,7 @@ from torch import nn
 import tokens
 import torch
 import os
-import math
-import numpy as np
+import distribution
 import config as config
 
 
@@ -37,6 +36,13 @@ class Policy(nn.Module):
         self.reward_divisor = 0
 
         self.optimizer = None
+
+        if config.generator.bias:
+            bias = distribution.load(config.paths.distribution_bias)
+            assert bias
+            assert len(bias) == self.output_dim
+            self.bias = torch.tensor(bias)
+            self.lin.bias = torch.nn.Parameter(self.bias)
 
     def forward(self, x, h):
         out, h = self.gru(x, h)

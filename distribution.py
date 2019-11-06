@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import config
 
 REGEX = {}  # (token id, regex)
 
@@ -17,10 +18,10 @@ REGEX[2] = r'max'
 REGEX[3] = r'min'
 
 # 4: TokenInfo('argmax', 1, 4, 'argmax {}'),
-REGEX[4] = r'arg(\d)*max'
+REGEX[4] = r'arg(\b)*max'
 
 # 5: TokenInfo('argmin', 1, 5, 'argmin {}'),
-REGEX[5] = r'arg(\d)*min'
+REGEX[5] = r'arg(\b)*min'
 
 # 6: TokenInfo('inverse', 1, 6, '{}^{{-1}}'),
 REGEX[6] = r'^{-1}'
@@ -53,10 +54,10 @@ REGEX[14] = r'\^T'
 REGEX[15] = r"\^'"
 
 # 16: TokenInfo('absolute', 1, 16, '|{}|'),
-REGEX[16] = r'\|(\d)*\|'
+REGEX[16] = r'\|(\b)*\|'
 
 # 17: TokenInfo('norm', 1, 17, '||{}||'),
-REGEX[17] = r'\|\|(\d)*\|\|'
+REGEX[17] = r'\|\|(\b)*\|\|'
 
 # 18: TokenInfo('mathbbe', 1, 18, '\\mathbb{{E}}[{}]'),
 REGEX[18] = r'mathbb\{E\}'
@@ -71,10 +72,10 @@ REGEX[20] = r'max_'
 REGEX[21] = r'min_'
 
 # 22: TokenInfo('argmaxsub', 2, 22, 'argmax_{{{}}} {}'),
-REGEX[22] = r'arg(\d)*max_'
+REGEX[22] = r'arg(\b)*max_'
 
 # 23: TokenInfo('argminsub', 2, 23, 'argmin_{{{}}} {}'),
-REGEX[23] = r'arg(\d)*min_'
+REGEX[23] = r'arg(\b)*min_'
 
 # 24: TokenInfo('mathbbesub', 2, 24, '\\mathbb{{E}}_{{{}}}[{}]'),
 REGEX[24] = r'mathbb\{E\}_'
@@ -83,7 +84,7 @@ REGEX[24] = r'mathbb\{E\}_'
 REGEX[25] = r'mathbb\{E\}_'
 
 # 26: TokenInfo('add', 2, 26, '{} + {}'),
-REGEX[26] = r'+'
+REGEX[26] = r'\+'
 
 # 27: TokenInfo('sub', 2, 27, '{} - {}'),
 REGEX[27] = r'-'
@@ -104,7 +105,7 @@ REGEX[31] = r'mod'
 REGEX[32] = r'\^'
 
 # 33: TokenInfo('derive', 2, None, '\\frac{{\\delta{}}}{{\\delta {}}}'),
-REGEX[33] = r'frac(\d)*delta'
+REGEX[33] = r'frac(\b)*delta'
 
 # 34: TokenInfo('sum', 3, 33, '\\sum\\nolimits_{{{}}}^{{{}}} {}'),
 REGEX[34] = r'sum'
@@ -254,215 +255,248 @@ REGEX[81] = r'psi'
 REGEX[82] = r'omega'
 
 # 83: TokenInfo('A', 0, 96, 'A'),
-REGEX[83] = r'\(A+A+A\)+A\d'
+REGEX[83] = r'\(A+A+A\)+A\b'
 
 # 84: TokenInfo('B', 0, 97, 'B'),
-REGEX[84] = r'\(B+B+B\)+B\d'
+REGEX[84] = r'\(B+B+B\)+B\b'
 
 # 85: TokenInfo('C', 0, 98, 'C'),
-REGEX[85] = r'\(C+C+C\)+C\d'
+REGEX[85] = r'\(C+C+C\)+C\b'
 
 # 86: TokenInfo('D', 0, 99, 'D'),
-REGEX[86] = r'\(D+D+D\)+D\d'
+REGEX[86] = r'\(D+D+D\)+D\b'
 
 # 87: TokenInfo('E', 0, 100, 'E'),
-REGEX[87] = r'\(E+E+E\)+E\d'
+REGEX[87] = r'\(E+E+E\)+E\b'
 
 # 88: TokenInfo('F', 0, 101, 'F'),
-REGEX[88] = r'\(F+F+F\)+F\d'
+REGEX[88] = r'\(F+F+F\)+F\b'
 
 # 89: TokenInfo('G', 0, 102, 'G'),
-REGEX[89] = r'\(G+G+G\)+G\d'
+REGEX[89] = r'\(G+G+G\)+G\b'
 
 # 90: TokenInfo('H', 0, 103, 'H'),
-REGEX[90] = r'\(H+H+H\)+H\d'
+REGEX[90] = r'\(H+H+H\)+H\b'
 
 # 91: TokenInfo('I', 0, 104, 'I'),
-REGEX[91] = r'\(I+I+I\)+I\d'
+REGEX[91] = r'\(I+I+I\)+I\b'
 
 # 92: TokenInfo('J', 0, 105, 'J'),
-REGEX[92] = r'\(J+J+J\)+J\d'
+REGEX[92] = r'\(J+J+J\)+J\b'
 
 # 93: TokenInfo('K', 0, 106, 'K'),
-REGEX[93] = r'\(K+K+K\)+K\d'
+REGEX[93] = r'\(K+K+K\)+K\b'
 
 # 94: TokenInfo('L', 0, 107, 'L'),
-REGEX[94] = r'\(L+L+L\)+L\d'
+REGEX[94] = r'\(L+L+L\)+L\b'
 
 # 95: TokenInfo('M', 0, 108, 'M'),
-REGEX[95] = r'\(M+M+M\)+M\d'
+REGEX[95] = r'\(M+M+M\)+M\b'
 
 # 96: TokenInfo('N', 0, 109, 'N'),
-REGEX[96] = r'\(N+N+N\)+N\d'
+REGEX[96] = r'\(N+N+N\)+N\b'
 
 # 97: TokenInfo('O', 0, 110, 'O'),
-REGEX[97] = r'\(O+O+O\)+O\d'
+REGEX[97] = r'\(O+O+O\)+O\b'
 
 # 98: TokenInfo('P', 0, 111, 'P'),
-REGEX[98] = r'\(P+P+P\)+P\d'
+REGEX[98] = r'\(P+P+P\)+P\b'
 
 # 99: TokenInfo('Q', 0, 112, 'Q'),
-REGEX[99] = r'\(Q+Q+Q\)+Q\d'
+REGEX[99] = r'\(Q+Q+Q\)+Q\b'
 
 # 100: TokenInfo('R', 0, 113, 'R'),
-REGEX[100] = r'\(R+R+R\)+R\d'
+REGEX[100] = r'\(R+R+R\)+R\b'
 
 # 101: TokenInfo('S', 0, 114, 'S'),
-REGEX[101] = r'\(S+S+S\)+S\d'
+REGEX[101] = r'\(S+S+S\)+S\b'
 
 # 102: TokenInfo('T', 0, 115, 'T'),
-REGEX[102] = r'\(T+T+T\)+T\d'
+REGEX[102] = r'\(T+T+T\)+T\b'
 
 # 103: TokenInfo('U', 0, 116, 'U'),
-REGEX[103] = r'\(U+U+U\)+U\d'
+REGEX[103] = r'\(U+U+U\)+U\b'
 
 # 104: TokenInfo('V', 0, 117, 'V'),
-REGEX[104] = r'\(V+V+V\)+V\d'
+REGEX[104] = r'\(V+V+V\)+V\b'
 
 # 105: TokenInfo('W', 0, 118, 'W'),
-REGEX[105] = r'\(W+W+W\)+W\d'
+REGEX[105] = r'\(W+W+W\)+W\b'
 
 # 106: TokenInfo('X', 0, 119, 'X'),
-REGEX[106] = r'\(X+X+X\)+X\d'
+REGEX[106] = r'\(X+X+X\)+X\b'
 
 # 107: TokenInfo('Y', 0, 120, 'Y'),
-REGEX[107] = r'\(Y+Y+Y\)+Y\d'
+REGEX[107] = r'\(Y+Y+Y\)+Y\b'
 
 # 108: TokenInfo('Z', 0, 121, 'Z'),
-REGEX[108] = r'\(Z+Z+Z\)+Z\d'
+REGEX[108] = r'\(Z+Z+Z\)+Z\b'
 
 # 109: TokenInfo('a', 0, 122, 'a'),
-REGEX[109] = r'\(a+a+a\)+a\d'
+REGEX[109] = r'\(a+a+a\)+a\b'
 
 # 110: TokenInfo('b', 0, 123, 'b'),
-REGEX[110] = r'\(b+b+b\)+b\d'
+REGEX[110] = r'\(b+b+b\)+b\b'
 
 # 111: TokenInfo('c', 0, 124, 'c'),
-REGEX[111] = r'\(c+c+c\)+c\d'
+REGEX[111] = r'\(c+c+c\)+c\b'
 
 # 112: TokenInfo('d', 0, 125, 'd'),
-REGEX[112] = r'\(d+d+d\)+d\d'
+REGEX[112] = r'\(d+d+d\)+d\b'
 
 # 113: TokenInfo('e', 0, 126, 'e'),
-REGEX[113] = r'\(e+e+e\)+e\d'
+REGEX[113] = r'\(e+e+e\)+e\b'
 
 # 114: TokenInfo('f', 0, 127, 'f'),
-REGEX[114] = r'\(f+f+f\)+f\d'
+REGEX[114] = r'\(f+f+f\)+f\b'
 
 # 115: TokenInfo('g', 0, 128, 'g'),
-REGEX[115] = r'\(g+g+g\)+g\d'
+REGEX[115] = r'\(g+g+g\)+g\b'
 
 # 116: TokenInfo('h', 0, 129, 'h'),
-REGEX[116] = r'\(h+h+h\)+h\d'
+REGEX[116] = r'\(h+h+h\)+h\b'
 
 # 117: TokenInfo('i', 0, 130, 'i'),
-REGEX[117] = r'\(i+i+i\)+i\d'
+REGEX[117] = r'\(i+i+i\)+i\b'
 
 # 118: TokenInfo('j', 0, 131, 'j'),
-REGEX[118] = r'\(j+j+j\)+j\d'
+REGEX[118] = r'\(j+j+j\)+j\b'
 
 # 119: TokenInfo('k', 0, 132, 'k'),
-REGEX[119] = r'\(k+k+k\)+k\d'
+REGEX[119] = r'\(k+k+k\)+k\b'
 
 # 120: TokenInfo('l', 0, 133, 'l'),
-REGEX[120] = r'\(l+l+l\)+l\d'
+REGEX[120] = r'\(l+l+l\)+l\b'
 
 # 121: TokenInfo('m', 0, 134, 'm'),
-REGEX[121] = r'\(m+m+m\)+m\d'
+REGEX[121] = r'\(m+m+m\)+m\b'
 
 # 122: TokenInfo('n', 0, 135, 'n'),
-REGEX[122] = r'\(n+n+n\)+n\d'
+REGEX[122] = r'\(n+n+n\)+n\b'
 
 # 123: TokenInfo('o', 0, 136, 'o'),
-REGEX[123] = r'\(o+o+o\)+o\d'
+REGEX[123] = r'\(o+o+o\)+o\b'
 
 # 124: TokenInfo('p', 0, 137, 'p'),
-REGEX[124] = r'\(p+p+p\)+p\d'
+REGEX[124] = r'\(p+p+p\)+p\b'
 
 # 125: TokenInfo('q', 0, 138, 'q'),
-REGEX[125] = r'\(q+q+q\)+q\d'
+REGEX[125] = r'\(q+q+q\)+q\b'
 
 # 126: TokenInfo('r', 0, 139, 'r'),
-REGEX[126] = r'\(r+r+r\)+r\d'
+REGEX[126] = r'\(r+r+r\)+r\b'
 
 # 127: TokenInfo('s', 0, 140, 's'),
-REGEX[127] = r'\(s+s+s\)+s\d'
+REGEX[127] = r'\(s+s+s\)+s\b'
 
 # 128: TokenInfo('t', 0, 141, 't'),
-REGEX[128] = r'\(t+t+t\)+t\d'
+REGEX[128] = r'\(t+t+t\)+t\b'
 
 # 129: TokenInfo('u', 0, 142, 'u'),
-REGEX[129] = r'\(u+u+u\)+u\d'
+REGEX[129] = r'\(u+u+u\)+u\b'
 
 # 130: TokenInfo('v', 0, 143, 'v'),
-REGEX[130] = r'\(v+v+v\)+v\d'
+REGEX[130] = r'\(v+v+v\)+v\b'
 
 # 131: TokenInfo('w', 0, 144, 'w'),
-REGEX[131] = r'\(w+w+w\)+w\d'
+REGEX[131] = r'\(w+w+w\)+w\b'
 
 # 132: TokenInfo('x', 0, 145, 'x'),
-REGEX[132] = r'\(x+x+x\)+x\d'
+REGEX[132] = r'\(x+x+x\)+x\b'
 
 # 133: TokenInfo('y', 0, 146, 'y'),
-REGEX[133] = r'\(y+y+y\)+y\d'
+REGEX[133] = r'\(y+y+y\)+y\b'
 
 # 134: TokenInfo('z', 0, 147, 'z'),
-REGEX[134] = r'\(z+z+z\)+z\d'
+REGEX[134] = r'\(z+z+z\)+z\b'
 
 # 135: TokenInfo('1', 0, 148, '1'),
-REGEX[135] = r'\(1+1+1\)+1\d'
+REGEX[135] = r'\(1+1+1\)+1\b'
 
 # 136: TokenInfo('2', 0, 149, '2'),
-REGEX[136] = r'\(2+2+2\)+2\d'
+REGEX[136] = r'\(2+2+2\)+2\b'
 
 # 137: TokenInfo('3', 0, 150, '3'),
-REGEX[137] = r'\(3+3+3\)+3\d'
+REGEX[137] = r'\(3+3+3\)+3\b'
 
 # 138: TokenInfo('4', 0, 151, '4'),
-REGEX[138] = r'\(4+4+4\)+4\d'
+REGEX[138] = r'\(4+4+4\)+4\b'
 
 # 139: TokenInfo('5', 0, 152, '5'),
-REGEX[139] = r'\(5+5+5\)+5\d'
+REGEX[139] = r'\(5+5+5\)+5\b'
 
 # 140: TokenInfo('6', 0, 153, '6'),
-REGEX[140] = r'\(6+6+6\)+6\d'
+REGEX[140] = r'\(6+6+6\)+6\b'
 
 # 141: TokenInfo('7', 0, 154, '7'),
-REGEX[141] = r'\(7+7+7\)+7\d'
+REGEX[141] = r'\(7+7+7\)+7\b'
 
 # 142: TokenInfo('8', 0, 155, '8'),
-REGEX[142] = r'\(8+8+8\)+8\d'
+REGEX[142] = r'\(8+8+8\)+8\b'
 
 # 143: TokenInfo('9', 0, 156, '9'),
-REGEX[143] = r'\(9+9+9\)+9\d'
+REGEX[143] = r'\(9+9+9\)+9\b'
 
 # 144: TokenInfo('0', 0, 157, '0')
-REGEX[144] = r'\(0+0+0\)+0\d'
-
+REGEX[144] = r'\(0+0+0\)+0\b'
 
 OCCURENCES = [0] * len(REGEX.keys())
+PATTERNS = []
 
 
-def find_all():
-    pass
+def find_all(string):
+    for id, pattern in PATTERNS:
+        matches = pattern.findall(string)
+        OCCURENCES[id] += len(matches)
 
 
 def scan(directory):
-    pass
+    for id, regex in REGEX.items():
+        PATTERNS.append((id, re.compile(regex)))
+
+    iterator = os.scandir(directory)
+    for entry in iterator:
+
+        if entry.is_file():
+            if entry.name.endswith('.tex'):
+                with open(directory + '/' + entry.name, 'r') as file:
+                    string = file.read()
+                    find_all(string)
+
+        if entry.is_dir():
+            scan(directory + '/' + entry.name)
+
+    save(config.paths.distribution_bias)
 
 
 def save(path):
-    pass
+    with open(path, "w") as file:
+        for count in OCCURENCES:
+            file.write(str(count) + ',')
 
 
 def load(path):
-    pass
+    if not os.path.exists(path):
+        return None
+
+    with open(path, 'r') as file:
+        data = file.read()
+        ls = data.split(',')
+
+    occurrences = [int(o) for o in ls]
+    total = sum(occurrences)
+    distribution = [o / total for o in occurrences]
+
+    return distribution
 
 
 if __name__ == '__main__':
-    path = sys.argv[1]
-    
-    if not os.path.exists(path):
+    if len(sys.argv) == 1:
         raise ValueError('Please specify a directory to scan for latex documents.')
+
+    path = sys.argv[1]
+
+    if not os.path.exists(path):
+        raise ValueError('Path does not exist.')
 
     scan(sys.argv[1])
