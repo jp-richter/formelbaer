@@ -101,7 +101,7 @@ def collect_reward(nn_discriminator, batch):
     return reward
 
 
-def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> None:
+def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step) -> None:
     """
     The training loop of the generating policy net.
 
@@ -144,7 +144,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch) -> Non
         nn_policy.rewards.append(q_values)
 
     generator.policy_gradient_update(nn_policy)
-    log.generator_loss(nn_policy, epoch)
+    log.generator_loss(nn_policy, epoch, step)
 
 
 def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps, d_epochs, epoch) -> None:
@@ -220,8 +220,8 @@ def training() -> None:
         adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)  # TODO reintun
 
         # train generator
-        for _ in range(g_steps):
-            adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch)
+        for step in range(g_steps):
+            adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step)
 
     loader.finish(nn_policy, nn_discriminator, nn_oracle)
 

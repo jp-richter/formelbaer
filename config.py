@@ -106,7 +106,7 @@ class GeneratorConfig:
     layers: int
     dropout: float
     learnrate: float
-    baseline: int
+    baseline: float
     gamma: float
 
 
@@ -160,7 +160,7 @@ DEFAULT_GENERAL = AppConfig(
 
     d_epochs=1,
     d_steps=1,
-    g_steps=50,
+    g_steps=20,
 
     batch_size = multiprocessing.cpu_count() * 4,  # computational cost reasons
 
@@ -183,7 +183,7 @@ DEFAULT_GENERATOR = GeneratorConfig(
     layers=2,
     dropout=0.2,
     learnrate=0.01,
-    baseline=0,
+    baseline=0.05,
     gamma=0.99  # TODO mal gamma=1 probieren?
 
 )

@@ -7,6 +7,7 @@ import math
 log = None
 
 generator_loss_sequence = []
+generator_reward_sequence = []
 discriminator_loss_sequence = []
 oracle_score_sequence = []
 
@@ -58,18 +59,22 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     nn_discriminator.running_acc = 0.0
 
 
-def generator_loss(nn_policy, epoch):
+def generator_loss(nn_policy, epoch, g_step):
     global log
 
     average_loss = nn_policy.running_loss / nn_policy.loss_divisor
+    average_reward = nn_policy.running_reward / nn_policy.reward_divisor
 
-    print('Epoch {} G         Loss {}'.format(epoch, average_loss))
-    log.info('Epoch {} G         Loss {}'.format(epoch, average_loss))
+    print('Epoch {} G Step {}  Reward {}'.format(epoch, g_step, average_reward))
+    log.info('Epoch {} G Step {}  Reward {}'.format(epoch, g_step, average_reward))
 
     generator_loss_sequence.append(average_loss)
+    generator_reward_sequence.append(average_reward)
 
     nn_policy.running_loss = 0.0
     nn_policy.loss_divisor = 0
+    nn_policy.running_reward = 0.0
+    nn_policy.reward_divisor = 0
     nn_policy.save(cfg.paths.policies + '/' + str(epoch) + '.pt')
 
 
