@@ -169,6 +169,9 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
     num_samples = config.general.num_real_samples * 2 * d_steps  # equal amount of generated data
     data_loader = loader.prepare_loader(num_samples, nn_generator, nn_oracle)
 
+    # TODO DEBUG
+    print('DEBUG: DISCRIMINATOR PREDICTIONS')
+
     for d_epoch in range(d_epochs):
         for images, labels in data_loader:
             images = images.to(config.general.device)
@@ -179,9 +182,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
 
             # output[:,0] P(x ~ real)
             # output[:,1] P(x ~ synthetic)
-
-            for out, lab in zip(outputs, labels):
-                print('Prediction ' + str(out.item()) + ' Label ' + str(lab.item()))
+            print('Prediction ' + str(outputs[-1].item()) + ' Label ' + str(labels[-1].item()))
 
             loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
