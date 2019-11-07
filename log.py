@@ -45,8 +45,8 @@ def finish_loading_data():
 def discriminator_loss(nn_discriminator, epoch, d_epoch):
     global log
 
-    average_loss = nn_discriminator.running_loss / nn_discriminator.loss_divisor
-    average_acc = nn_discriminator.running_acc / nn_discriminator.acc_divisor
+    average_loss = nn_discriminator.running_loss / max(nn_discriminator.loss_divisor,1)
+    average_acc = nn_discriminator.running_acc / max(nn_discriminator.acc_divisor,1)
 
     print('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
     log.info('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
@@ -62,8 +62,8 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
 def generator_loss(nn_policy, epoch, g_step):
     global log
 
-    average_loss = nn_policy.running_loss / nn_policy.loss_divisor
-    average_reward = nn_policy.running_reward / nn_policy.reward_divisor
+    average_loss = nn_policy.running_loss / max(nn_policy.loss_divisor,1)
+    average_reward = nn_policy.running_reward / max(nn_policy.reward_divisor,1)
 
     print('Epoch {} G Step {}  Reward {}'.format(epoch, g_step, average_reward))
     log.info('Epoch {} G Step {}  Reward {}'.format(epoch, g_step, average_reward))
