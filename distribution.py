@@ -496,8 +496,18 @@ def load(path):
         ls = data.split(',')
 
     occurrences = [int(o) for o in ls]
-    total = sum(occurrences)
-    distribution = [o / total for o in occurrences]
+    # total = sum(occurrences)
+    # distribution = [o / total for o in occurrences]
+
+    for i in range(len(occurrences)):
+        occurrences[i] += 1
+
+    def softmax(w, t = 1.0):
+        e = np.exp(np.array(w) / t)
+        dist = e / np.sum(e)
+        return dist
+
+    distribution = softmax(occurrences)
 
     return distribution
 
