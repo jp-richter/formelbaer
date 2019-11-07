@@ -456,7 +456,7 @@ def scan(directory):
     for entry in iterator:
 
         if entry.is_file():
-            if entry.name.endswith('.tex'):
+            if entry.name.endswith('.txt'):
                 with open(directory + '/' + entry.name, 'r') as file:
                     string = file.read()
                     find_all(string)
