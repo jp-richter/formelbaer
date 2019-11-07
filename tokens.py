@@ -223,8 +223,8 @@ def onehot(id):
     return template
 
 
-assert len(_tokens) == 145
-assert not [i for i in _tokens.keys() if i < 0 or i > 145]
+assert len(_tokens) == 148
+assert not [i for i in _tokens.keys() if i < 0 or i > 148]
 assert not [(i,(k,t)) for (i,(k,t)) in enumerate(_tokens.items()) if not i == k]
 
 
