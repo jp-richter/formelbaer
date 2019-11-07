@@ -173,6 +173,10 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
         epoch will contain the limit of real and an equal amount of generated samples.
     """
 
+    nn_discriminator = discriminator.Discriminator().to(config.general.device)
+    nn_discriminator.criterion = torch.nn.BCELoss()
+    nn_discriminator.optimizer = torch.optim.Adam(nn_discriminator.parameters(), lr=config.discriminator.learnrate)
+
     nn_discriminator.train()
     nn_generator.eval()
 

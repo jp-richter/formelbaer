@@ -165,7 +165,7 @@ DEFAULT_GENERAL = AppConfig(
 
     d_epochs=1,
     d_steps=1,
-    g_steps=20,
+    g_steps=30,
 
     batch_size = multiprocessing.cpu_count() * 4,  # computational cost reasons
 
@@ -187,7 +187,7 @@ DEFAULT_GENERATOR = GeneratorConfig(
     hidden_dim=32,
     layers=2,
     dropout=0.2,
-    learnrate=0.01,
+    learnrate=0.005,
     baseline=0.05,
     gamma=0.99, # TODO mal gamma=1 probieren?
     bias=False
