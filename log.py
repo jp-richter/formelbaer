@@ -88,7 +88,11 @@ def start_experiment():
 
     log.info('''STARTING EXPERIMENT
     
-        Added Multipages
+        0.1 Added Multipages
+        
+        0.2 Resetting D Weights After Each Step
+            Added Bias Initialization
+        
 
         Total Epochs {}
         Discriminator Steps {}

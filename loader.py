@@ -81,7 +81,7 @@ def make_directory_with_timestamp() -> str:
     :return: The path to the directory created.
     """
 
-    directory = config.paths.app + '/' + str(datetime.datetime.now())
+    directory = config.paths.rdata + '/' + str(datetime.datetime.now())
     directory = directory.replace(':','-').replace(' ', '-')[:-7]
     os.makedirs(directory)
 

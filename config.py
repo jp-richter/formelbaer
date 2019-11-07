@@ -42,6 +42,9 @@ class Paths:
     # a distribution of tokens counted in real data, useful as inital bias term for the generator
     distribution_bias: str
 
+    # experimental results
+    rdata: str
+
 
 @dataclass
 class AppConfig:
@@ -142,7 +145,8 @@ DEFAULT_PATHS = Paths(
     dump=_home + '/formelbaer-data/dump.txt',
     policies=_home + '/formelbaer-data/policies',
     ray=_home + '/formelbaer-data/ray-plasma-store',
-    distribution_bias=str(PurePath(Path(__file__).resolve().parent, 'distribution_bias.txt'))
+    distribution_bias=str(PurePath(Path(__file__).resolve().parent, 'distribution_bias.txt')),
+    rdata = '/rdata/richter2/experiments'
 
 )
 
