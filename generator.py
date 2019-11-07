@@ -188,7 +188,7 @@ def policy_gradient_update(nn_policy):
     nn_policy.optimizer.zero_grad()
 
     # save running reward for logging not distorted by log probs and gamma
-    average = torch.stack(returns, dim=1)
+    average = torch.stack(nn_policy.rewards, dim=1)
     average = torch.mean(average, dim=1)  # average of steps
     average = torch.mean(average, dim=0)  # average of batch
     nn_policy.running_reward += average.item()

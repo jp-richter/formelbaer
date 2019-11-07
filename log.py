@@ -45,10 +45,8 @@ def finish_loading_data():
 def discriminator_loss(nn_discriminator, epoch, d_epoch):
     global log
 
-    num_samples = cfg.general.num_real_samples * 2  # real + synthetic
-    num_batches = math.ceil(num_samples / cfg.general.batch_size)
-    average_loss = nn_discriminator.running_loss / num_batches  # loss averages over batchsizes
-    average_acc = nn_discriminator.running_acc / num_samples
+    average_loss = nn_discriminator.running_loss / nn_discriminator.loss_divisor
+    average_acc = nn_discriminator.running_acc / nn_discriminator.acc_divisor
 
     print('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
     log.info('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
@@ -56,7 +54,9 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     discriminator_loss_sequence.append(average_loss)
 
     nn_discriminator.running_loss = 0.0
+    nn_discriminator.loss_divisor = 0
     nn_discriminator.running_acc = 0.0
+    nn_discriminator.acc_divisor = 0
 
 
 def generator_loss(nn_policy, epoch, g_step):
