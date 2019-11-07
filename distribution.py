@@ -445,10 +445,10 @@ TOKEN_SPECIFICATION[144] = r'0'
 TOKEN_SPECIFICATION[145] = r'infty'
 
 # 146: TokenInfo('propto', 0, 0, '\\propto'),
-TOKEN_SPECIFICATION[145] = r'propto'
+TOKEN_SPECIFICATION[146] = r'propto'
 
 # 147: TokenInfo('negate', 0, 0, '-{}')
-TOKEN_SPECIFICATION[145] = r'-\w'
+TOKEN_SPECIFICATION[147] = r'-\w'
 
 TOKEN_REGEX = r'|'.join('(?P<%s>%s)' % ('g' + str(id), reg) for (id, reg) in TOKEN_SPECIFICATION.items())
 OCCURENCES = [0] * len(TOKEN_SPECIFICATION.keys())
