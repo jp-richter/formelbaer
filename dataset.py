@@ -68,7 +68,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         path, label, form = self.samples[index]
         image = self.protocol[form](path)
         image = self.transform(image)
-        image = image[1]  # alpha channel
+        image = image[1].unsqueeze(dim=0)  # alpha channel
 
         return image, label
 
