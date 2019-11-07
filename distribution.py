@@ -255,190 +255,190 @@ TOKEN_SPECIFICATION[81] = r'psi'
 TOKEN_SPECIFICATION[82] = r'omega'
 
 # 83: TokenInfo('A', 0, 96, 'A'),
-TOKEN_SPECIFICATION[83] = r'\(A+A+A\)+A\b'
+TOKEN_SPECIFICATION[83] = r'A'
 
 # 84: TokenInfo('B', 0, 97, 'B'),
-TOKEN_SPECIFICATION[84] = r'\(B+B+B\)+B\b'
+TOKEN_SPECIFICATION[84] = r'B'
 
 # 85: TokenInfo('C', 0, 98, 'C'),
-TOKEN_SPECIFICATION[85] = r'\(C+C+C\)+C\b'
+TOKEN_SPECIFICATION[85] = r'C'
 
 # 86: TokenInfo('D', 0, 99, 'D'),
-TOKEN_SPECIFICATION[86] = r'\(D+D+D\)+D\b'
+TOKEN_SPECIFICATION[86] = r'D'
 
 # 87: TokenInfo('E', 0, 100, 'E'),
-TOKEN_SPECIFICATION[87] = r'\(E+E+E\)+E\b'
+TOKEN_SPECIFICATION[87] = r'E'
 
 # 88: TokenInfo('F', 0, 101, 'F'),
-TOKEN_SPECIFICATION[88] = r'\(F+F+F\)+F\b'
+TOKEN_SPECIFICATION[88] = r'F'
 
 # 89: TokenInfo('G', 0, 102, 'G'),
-TOKEN_SPECIFICATION[89] = r'\(G+G+G\)+G\b'
+TOKEN_SPECIFICATION[89] = r'G'
 
 # 90: TokenInfo('H', 0, 103, 'H'),
-TOKEN_SPECIFICATION[90] = r'\(H+H+H\)+H\b'
+TOKEN_SPECIFICATION[90] = r'H'
 
 # 91: TokenInfo('I', 0, 104, 'I'),
-TOKEN_SPECIFICATION[91] = r'\(I+I+I\)+I\b'
+TOKEN_SPECIFICATION[91] = r'I'
 
 # 92: TokenInfo('J', 0, 105, 'J'),
-TOKEN_SPECIFICATION[92] = r'\(J+J+J\)+J\b'
+TOKEN_SPECIFICATION[92] = r'J'
 
 # 93: TokenInfo('K', 0, 106, 'K'),
-TOKEN_SPECIFICATION[93] = r'\(K+K+K\)+K\b'
+TOKEN_SPECIFICATION[93] = r'K'
 
 # 94: TokenInfo('L', 0, 107, 'L'),
-TOKEN_SPECIFICATION[94] = r'\(L+L+L\)+L\b'
+TOKEN_SPECIFICATION[94] = r'L'
 
 # 95: TokenInfo('M', 0, 108, 'M'),
-TOKEN_SPECIFICATION[95] = r'\(M+M+M\)+M\b'
+TOKEN_SPECIFICATION[95] = r'M'
 
 # 96: TokenInfo('N', 0, 109, 'N'),
-TOKEN_SPECIFICATION[96] = r'\(N+N+N\)+N\b'
+TOKEN_SPECIFICATION[96] = r'N'
 
 # 97: TokenInfo('O', 0, 110, 'O'),
-TOKEN_SPECIFICATION[97] = r'\(O+O+O\)+O\b'
+TOKEN_SPECIFICATION[97] = r'O'
 
 # 98: TokenInfo('P', 0, 111, 'P'),
-TOKEN_SPECIFICATION[98] = r'\(P+P+P\)+P\b'
+TOKEN_SPECIFICATION[98] = r'P'
 
 # 99: TokenInfo('Q', 0, 112, 'Q'),
-TOKEN_SPECIFICATION[99] = r'\(Q+Q+Q\)+Q\b'
+TOKEN_SPECIFICATION[99] = r'Q'
 
 # 100: TokenInfo('R', 0, 113, 'R'),
-TOKEN_SPECIFICATION[100] = r'\(R+R+R\)+R\b'
+TOKEN_SPECIFICATION[100] = r'R'
 
 # 101: TokenInfo('S', 0, 114, 'S'),
-TOKEN_SPECIFICATION[101] = r'\(S+S+S\)+S\b'
+TOKEN_SPECIFICATION[101] = r'S'
 
 # 102: TokenInfo('T', 0, 115, 'T'),
-TOKEN_SPECIFICATION[102] = r'\(T+T+T\)+T\b'
+TOKEN_SPECIFICATION[102] = r'T'
 
 # 103: TokenInfo('U', 0, 116, 'U'),
-TOKEN_SPECIFICATION[103] = r'\(U+U+U\)+U\b'
+TOKEN_SPECIFICATION[103] = r'U'
 
 # 104: TokenInfo('V', 0, 117, 'V'),
-TOKEN_SPECIFICATION[104] = r'\(V+V+V\)+V\b'
+TOKEN_SPECIFICATION[104] = r'V'
 
 # 105: TokenInfo('W', 0, 118, 'W'),
-TOKEN_SPECIFICATION[105] = r'\(W+W+W\)+W\b'
+TOKEN_SPECIFICATION[105] = r'W'
 
 # 106: TokenInfo('X', 0, 119, 'X'),
-TOKEN_SPECIFICATION[106] = r'\(X+X+X\)+X\b'
+TOKEN_SPECIFICATION[106] = r'X'
 
 # 107: TokenInfo('Y', 0, 120, 'Y'),
-TOKEN_SPECIFICATION[107] = r'\(Y+Y+Y\)+Y\b'
+TOKEN_SPECIFICATION[107] = r'Y'
 
 # 108: TokenInfo('Z', 0, 121, 'Z'),
-TOKEN_SPECIFICATION[108] = r'\(Z+Z+Z\)+Z\b'
+TOKEN_SPECIFICATION[108] = r'Z'
 
 # 109: TokenInfo('a', 0, 122, 'a'),
-TOKEN_SPECIFICATION[109] = r'\(a+a+a\)+a\b'
+TOKEN_SPECIFICATION[109] = r'a'
 
 # 110: TokenInfo('b', 0, 123, 'b'),
-TOKEN_SPECIFICATION[110] = r'\(b+b+b\)+b\b'
+TOKEN_SPECIFICATION[110] = r'b'
 
 # 111: TokenInfo('c', 0, 124, 'c'),
-TOKEN_SPECIFICATION[111] = r'\(c+c+c\)+c\b'
+TOKEN_SPECIFICATION[111] = r'c'
 
 # 112: TokenInfo('d', 0, 125, 'd'),
-TOKEN_SPECIFICATION[112] = r'\(d+d+d\)+d\b'
+TOKEN_SPECIFICATION[112] = r'd'
 
 # 113: TokenInfo('e', 0, 126, 'e'),
-TOKEN_SPECIFICATION[113] = r'\(e+e+e\)+e\b'
+TOKEN_SPECIFICATION[113] = r'e'
 
 # 114: TokenInfo('f', 0, 127, 'f'),
-TOKEN_SPECIFICATION[114] = r'\(f+f+f\)+f\b'
+TOKEN_SPECIFICATION[114] = r'f'
 
 # 115: TokenInfo('g', 0, 128, 'g'),
-TOKEN_SPECIFICATION[115] = r'\(g+g+g\)+g\b'
+TOKEN_SPECIFICATION[115] = r'g'
 
 # 116: TokenInfo('h', 0, 129, 'h'),
-TOKEN_SPECIFICATION[116] = r'\(h+h+h\)+h\b'
+TOKEN_SPECIFICATION[116] = r'h'
 
 # 117: TokenInfo('i', 0, 130, 'i'),
-TOKEN_SPECIFICATION[117] = r'\(i+i+i\)+i\b'
+TOKEN_SPECIFICATION[117] = r'i'
 
 # 118: TokenInfo('j', 0, 131, 'j'),
-TOKEN_SPECIFICATION[118] = r'\(j+j+j\)+j\b'
+TOKEN_SPECIFICATION[118] = r'j'
 
 # 119: TokenInfo('k', 0, 132, 'k'),
-TOKEN_SPECIFICATION[119] = r'\(k+k+k\)+k\b'
+TOKEN_SPECIFICATION[119] = r'k'
 
 # 120: TokenInfo('l', 0, 133, 'l'),
-TOKEN_SPECIFICATION[120] = r'\(l+l+l\)+l\b'
+TOKEN_SPECIFICATION[120] = r'l'
 
 # 121: TokenInfo('m', 0, 134, 'm'),
-TOKEN_SPECIFICATION[121] = r'\(m+m+m\)+m\b'
+TOKEN_SPECIFICATION[121] = r'm'
 
 # 122: TokenInfo('n', 0, 135, 'n'),
-TOKEN_SPECIFICATION[122] = r'\(n+n+n\)+n\b'
+TOKEN_SPECIFICATION[122] = r'n'
 
 # 123: TokenInfo('o', 0, 136, 'o'),
-TOKEN_SPECIFICATION[123] = r'\(o+o+o\)+o\b'
+TOKEN_SPECIFICATION[123] = r'o'
 
 # 124: TokenInfo('p', 0, 137, 'p'),
-TOKEN_SPECIFICATION[124] = r'\(p+p+p\)+p\b'
+TOKEN_SPECIFICATION[124] = r'p'
 
 # 125: TokenInfo('q', 0, 138, 'q'),
-TOKEN_SPECIFICATION[125] = r'\(q+q+q\)+q\b'
+TOKEN_SPECIFICATION[125] = r'q'
 
 # 126: TokenInfo('r', 0, 139, 'r'),
-TOKEN_SPECIFICATION[126] = r'\(r+r+r\)+r\b'
+TOKEN_SPECIFICATION[126] = r'r'
 
 # 127: TokenInfo('s', 0, 140, 's'),
-TOKEN_SPECIFICATION[127] = r'\(s+s+s\)+s\b'
+TOKEN_SPECIFICATION[127] = r's'
 
 # 128: TokenInfo('t', 0, 141, 't'),
-TOKEN_SPECIFICATION[128] = r'\(t+t+t\)+t\b'
+TOKEN_SPECIFICATION[128] = r't'
 
 # 129: TokenInfo('u', 0, 142, 'u'),
-TOKEN_SPECIFICATION[129] = r'\(u+u+u\)+u\b'
+TOKEN_SPECIFICATION[129] = r'u'
 
 # 130: TokenInfo('v', 0, 143, 'v'),
-TOKEN_SPECIFICATION[130] = r'\(v+v+v\)+v\b'
+TOKEN_SPECIFICATION[130] = r'v'
 
 # 131: TokenInfo('w', 0, 144, 'w'),
-TOKEN_SPECIFICATION[131] = r'\(w+w+w\)+w\b'
+TOKEN_SPECIFICATION[131] = r'w'
 
 # 132: TokenInfo('x', 0, 145, 'x'),
-TOKEN_SPECIFICATION[132] = r'\(x+x+x\)+x\b'
+TOKEN_SPECIFICATION[132] = r'x'
 
 # 133: TokenInfo('y', 0, 146, 'y'),
-TOKEN_SPECIFICATION[133] = r'\(y+y+y\)+y\b'
+TOKEN_SPECIFICATION[133] = r'y'
 
 # 134: TokenInfo('z', 0, 147, 'z'),
-TOKEN_SPECIFICATION[134] = r'\(z+z+z\)+z\b'
+TOKEN_SPECIFICATION[134] = r'z'
 
 # 135: TokenInfo('1', 0, 148, '1'),
-TOKEN_SPECIFICATION[135] = r'\(1+1+1\)+1\b'
+TOKEN_SPECIFICATION[135] = r'1'
 
 # 136: TokenInfo('2', 0, 149, '2'),
-TOKEN_SPECIFICATION[136] = r'\(2+2+2\)+2\b'
+TOKEN_SPECIFICATION[136] = r'2'
 
 # 137: TokenInfo('3', 0, 150, '3'),
-TOKEN_SPECIFICATION[137] = r'\(3+3+3\)+3\b'
+TOKEN_SPECIFICATION[137] = r'3'
 
 # 138: TokenInfo('4', 0, 151, '4'),
-TOKEN_SPECIFICATION[138] = r'\(4+4+4\)+4\b'
+TOKEN_SPECIFICATION[138] = r'4'
 
 # 139: TokenInfo('5', 0, 152, '5'),
-TOKEN_SPECIFICATION[139] = r'\(5+5+5\)+5\b'
+TOKEN_SPECIFICATION[139] = r'5'
 
 # 140: TokenInfo('6', 0, 153, '6'),
-TOKEN_SPECIFICATION[140] = r'\(6+6+6\)+6\b'
+TOKEN_SPECIFICATION[140] = r'6'
 
 # 141: TokenInfo('7', 0, 154, '7'),
-TOKEN_SPECIFICATION[141] = r'\(7+7+7\)+7\b'
+TOKEN_SPECIFICATION[141] = r'7'
 
 # 142: TokenInfo('8', 0, 155, '8'),
-TOKEN_SPECIFICATION[142] = r'\(8+8+8\)+8\b'
+TOKEN_SPECIFICATION[142] = r'8'
 
 # 143: TokenInfo('9', 0, 156, '9'),
-TOKEN_SPECIFICATION[143] = r'\(9+9+9\)+9\b'
+TOKEN_SPECIFICATION[143] = r'9'
 
 # 144: TokenInfo('0', 0, 157, '0')
-TOKEN_SPECIFICATION[144] = r'\(0+0+0\)+0\b'
+TOKEN_SPECIFICATION[144] = r'0'
 
 TOKEN_REGEX = r'|'.join('(?P<%s>%s)' % ('g' + str(id), reg) for (id, reg) in TOKEN_SPECIFICATION.items())
 OCCURENCES = [0] * len(TOKEN_SPECIFICATION.keys())
@@ -447,7 +447,7 @@ OCCURENCES = [0] * len(TOKEN_SPECIFICATION.keys())
 def find_all(string):
     for match in re.finditer(TOKEN_REGEX, string):  # matches first matching regex, atoms last in TOKEN_REGEX
         group = match.lastgroup
-        group_num = int(group[1])  # delete g, group names starting with a number are not allowed
+        group_num = int(group[1:])  # delete g, group names starting with a number are not allowed
         OCCURENCES[group_num] += 1
 
 
@@ -456,7 +456,7 @@ def scan(directory):
     for entry in iterator:
 
         if entry.is_file():
-            if entry.name.endswith('.txt'):
+            if entry.name.endswith('txt') or entry.name.endswith('tex'):
                 with open(directory + '/' + entry.name, 'r') as file:
                     string = file.read()
                     find_all(string)
