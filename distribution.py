@@ -451,7 +451,7 @@ def find_all(string):
         OCCURENCES[group_num] += 1
 
 
-def scan(directory):
+def scan(directory, constrictions):
     iterator = os.scandir(directory)
     for entry in iterator:
 
@@ -461,8 +461,11 @@ def scan(directory):
                     string = file.read()
                     find_all(string)
 
-        if entry.is_dir():
-            scan(directory + '/' + entry.name)
+        if entry.is_dir() and not constrictions:
+            scan(directory + '/' + entry.name, constrictions)
+
+        if entry.is_dir() and entry.name in constrictions:
+            scan(directory + '/' + entry.name, constrictions)
 
     save(config.paths.distribution_bias)
 
@@ -488,6 +491,15 @@ def load(path):
     return distribution
 
 
+def read_file_names():
+    iterator = os.scandir(config.paths.arxiv_data)
+    filenames = []
+    for entry in iterator:
+        if entry.is_dir():
+            filenames.append(entry.name)
+    return filenames
+
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         raise ValueError('Please specify a directory to scan for latex documents.')
@@ -497,4 +509,7 @@ if __name__ == '__main__':
     if not os.path.exists(path):
         raise ValueError('Path does not exist.')
 
-    scan(sys.argv[1])
+    # take only those folders which we actually train on
+    constrictions = read_file_names()
+
+    scan(sys.argv[1], constrictions)
