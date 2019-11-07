@@ -47,8 +47,8 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
 
     num_samples = cfg.general.num_real_samples * 2  # real + synthetic
     num_batches = math.ceil(num_samples / cfg.general.batch_size)
-    average_loss = nn_discriminator.running_loss / num_batches
-    average_acc = nn_discriminator.running_acc / (num_batches * cfg.general.batch_size)  # loss already averaged
+    average_loss = nn_discriminator.running_loss / num_batches  # loss averages over batchsizes
+    average_acc = nn_discriminator.running_acc / num_samples
 
     print('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
     log.info('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))

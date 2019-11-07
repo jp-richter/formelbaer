@@ -42,7 +42,7 @@ class Policy(nn.Module):
             assert bias
             assert len(bias) == self.output_dim
             self.bias = torch.tensor(bias)
-            self.lin.bias = torch.nn.Parameter(self.bias)
+            self.lin.bias = torch.nn.Parameter(self.bias, requires_grad=True)
 
     def forward(self, x, h):
         out, h = self.gru(x, h)
@@ -187,17 +187,17 @@ def policy_gradient_update(nn_policy):
 
     nn_policy.optimizer.zero_grad()
 
-    # compute state action values for each step
-    for reward in nn_policy.rewards[::-1]:
-        total = reward + config.generator.gamma * total
-        returns.insert(0, total)
-
-    # save running reward for logging not distorted by log probs
+    # save running reward for logging not distorted by log probs and gamma
     average = torch.stack(returns, dim=1)
     average = torch.mean(average, dim=1)  # average of steps
     average = torch.mean(average, dim=0)  # average of batch
     nn_policy.running_reward += average.item()
     nn_policy.reward_divisor += 1
+
+    # compute state action values for each step
+    for reward in nn_policy.rewards[::-1]:
+        total = reward + config.generator.gamma * total
+        returns.insert(0, total)
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):

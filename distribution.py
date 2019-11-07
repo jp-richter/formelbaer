@@ -2,6 +2,7 @@ import re
 import sys
 import os
 import config
+import tokens
 
 TOKEN_SPECIFICATION = {}  # (token id, regex)
 
@@ -440,8 +441,18 @@ TOKEN_SPECIFICATION[143] = r'9'
 # 144: TokenInfo('0', 0, 157, '0')
 TOKEN_SPECIFICATION[144] = r'0'
 
+# 145: TokenInfo('infty', 0, 0, '\\infty'),
+TOKEN_SPECIFICATION[145] = r'infty'
+
+# 146: TokenInfo('propto', 0, 0, '\\propto'),
+TOKEN_SPECIFICATION[145] = r'propto'
+
+# 147: TokenInfo('negate', 0, 0, '-{}')
+TOKEN_SPECIFICATION[145] = r'-\w'
+
 TOKEN_REGEX = r'|'.join('(?P<%s>%s)' % ('g' + str(id), reg) for (id, reg) in TOKEN_SPECIFICATION.items())
 OCCURENCES = [0] * len(TOKEN_SPECIFICATION.keys())
+assert len(TOKEN_SPECIFICATION) == len(tokens.possibilities())
 
 
 def find_all(string):

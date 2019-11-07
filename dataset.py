@@ -31,7 +31,8 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         super(Dataset, self).__init__(folder)
 
         self.transform = transforms.Compose([
-            lambda img: img.convert(mode='L'),
+            lambda img: img.convert(mode='LA'),
+
             transforms.CenterCrop((32, 333)),
             transforms.ToTensor()])  # TODO normalisieren?
 
@@ -67,6 +68,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         path, label, form = self.samples[index]
         image = self.protocol[form](path)
         image = self.transform(image)
+        image = image[1]  # alpha channel
 
         return image, label
 

@@ -61,7 +61,7 @@ _tokens = {
     30  : TokenInfo('fract',2,30,'\\frac{{{}}}{{{}}}'),
     31  : TokenInfo('mod',2,31,'{} mod {}'),
     32  : TokenInfo('power',2,32,'{}^{{{}}}'),
-    33  : TokenInfo('derive', 2, None, '\\frac{{\\delta{}}}{{\\delta {}}}'),
+    33  : TokenInfo('derive', 2, 1, '\\frac{{\\delta{}}}{{\\delta {}}}'),
 
     # sequences
     34  : TokenInfo('sum',3,33,'\\sum\\nolimits_{{{}}}^{{{}}} {}'),
@@ -185,8 +185,12 @@ _tokens = {
     141 : TokenInfo('7',0,154,'7'),
     142 : TokenInfo('8',0,155,'8'),
     143 : TokenInfo('9',0,156,'9'),
-    144 : TokenInfo('0',0,157,'0')
+    144 : TokenInfo('0',0,157,'0'),
 
+    # added later
+    145 : TokenInfo('infty', 0, 0, '\\infty'),
+    146 : TokenInfo('propto', 0, 0, '\\propto'),
+    147 : TokenInfo('negate', 0, 0, '-{}')
 }
 
 
