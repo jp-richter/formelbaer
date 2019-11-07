@@ -203,7 +203,10 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             nn_discriminator.optimizer.step()
 
             nn_discriminator.running_loss += loss.item()
+            nn_discriminator.loss_divisor += 1
+            print('OK')
             nn_discriminator.running_acc += torch.sum((outputs > 0.5) == (labels == 1)).item()
+            nn_discriminator.acc_divisor += outputs.shape[0]
 
         log.discriminator_loss(nn_discriminator, epoch, d_epoch)
 
@@ -245,7 +248,7 @@ def training() -> None:
     for epoch in range(a_epochs):
 
         # train discriminator
-        adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)  # TODO reintun
+        adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)
 
         # train generator
         for step in range(g_steps):
