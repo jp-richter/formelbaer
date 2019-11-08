@@ -50,9 +50,9 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     average_acc = nn_discriminator.running_acc / max(nn_discriminator.acc_divisor,1)
 
     msg = '''---
-    Epoch {} D Epoch {}
-    Loss {}
-    Acc {}'''.format(epoch, d_epoch, average_loss, average_acc)
+Epoch {} D Epoch {}
+Loss {}
+Acc {}'''.format(epoch, d_epoch, average_loss, average_acc)
 
     print(msg)
     log.info(msg)
@@ -73,10 +73,10 @@ def generator_loss(nn_policy, epoch, g_step):
     average_prediction = nn_policy.running_prediction / max(nn_policy.prediction_divisor, 1)
 
     msg = '''---
-    Epoch {} G Step {}
-    Reward {}
-    Prediction {}
-    Loss {}'''.format(epoch, g_step, average_reward, average_prediction, average_loss)
+Epoch {} G Step {}
+Reward {}
+Prediction {}
+Loss {}'''.format(epoch, g_step, average_reward, average_prediction, average_loss)
 
     print(msg)
     log.info(msg)
