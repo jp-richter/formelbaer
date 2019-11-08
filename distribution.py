@@ -464,6 +464,8 @@ def find_all(string):
 
 def scan(directory, constrictions):
     iterator = os.scandir(directory)
+    total = len(os.listdir(directory))
+    count = 1
     for entry in iterator:
 
         if entry.is_file():
@@ -477,6 +479,9 @@ def scan(directory, constrictions):
 
         if entry.is_dir() and entry.name in constrictions:
             scan(directory + '/' + entry.name, constrictions)
+
+        print('Directory {} of {} finished..'.format(count, total))
+        count += 1
 
     save(config.paths.distribution_bias)
 

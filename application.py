@@ -91,10 +91,9 @@ def train_with_kldiv(nn_policy, nn_oracle, epochs, num_samples) -> None:
 
 
 def collect_reward(nn_discriminator, batch):
-
     images = loader.prepare_batch(batch)
     output = nn_discriminator(images)
-    reward = torch.empty((batch.shape[0],1), device=config.general.device)
+    reward = torch.empty((batch.shape[0], 1), device=config.general.device)
 
     for r in range(output.shape[0]):
         reward[r][0] = 1 - output[r]
@@ -147,7 +146,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step) 
     generator.policy_gradient_update(nn_policy)
     log.generator_loss(nn_policy, epoch, step)
 
-    # DEBUG
+    # DEBUG PRINT
     batch = batch[-3:]
     trees = tree.to_trees(batch.tolist())
     latexs = [t.latex() for t in trees]

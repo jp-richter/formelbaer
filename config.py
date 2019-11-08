@@ -147,7 +147,7 @@ DEFAULT_PATHS = Paths(
     policies=_home + '/formelbaer-data/policies',
     ray=_home + '/formelbaer-data/ray-plasma-store',
     distribution_bias=str(PurePath(Path(__file__).resolve().parent, 'distribution_bias.txt')),
-    rdata = '/rdata/richter2/experiments'
+    rdata='/rdata/richter2/experiments'
 
 )
 
@@ -168,7 +168,7 @@ DEFAULT_GENERAL = AppConfig(
     d_steps=1,
     g_steps=30,
 
-    batch_size = multiprocessing.cpu_count() * 4,  # computational cost reasons
+    batch_size=multiprocessing.cpu_count() * 4,  # computational cost reasons
 
     sequence_length=20,  # 20
     montecarlo_trials=10,  # 10
@@ -190,7 +190,7 @@ DEFAULT_GENERATOR = GeneratorConfig(
     dropout=0.2,
     learnrate=0.005,
     baseline=0.05,
-    gamma=0.99, # TODO mal gamma=1 probieren?
+    gamma=0.99,  # TODO mal gamma=1 probieren?
     bias=False
 
 )
