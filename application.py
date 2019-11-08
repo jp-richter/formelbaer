@@ -97,8 +97,15 @@ def collect_reward(nn_discriminator, batch):
     reward = torch.empty((batch.shape[0],1), device=config.general.device)
 
     print('DIREKTER OUTPUT DES DISKRS')
+
+    import torchvision
+    transform = torchvision.transforms.ToPILImage()
+
     for i in range(5):
+        transform(images[i]).show()
         print(output[i].item())  # TODO REMOVE
+
+    return
 
     for r in range(output.shape[0]):
         reward[r][0] = 1 - output[r]
