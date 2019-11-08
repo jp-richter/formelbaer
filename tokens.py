@@ -190,7 +190,7 @@ _tokens = {
     # added later
     145 : TokenInfo('infty', 0, 0, '\\infty'),
     146 : TokenInfo('propto', 0, 0, '\\propto'),
-    147 : TokenInfo('negate', 0, 0, '-{}')
+    147 : TokenInfo('negate', 1, 0, '-{}')
 }
 
 
