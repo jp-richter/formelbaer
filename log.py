@@ -8,6 +8,7 @@ log = None
 
 generator_loss_sequence = []
 generator_reward_sequence = []
+generator_prediction_sequence = []
 discriminator_loss_sequence = []
 oracle_score_sequence = []
 
@@ -64,9 +65,10 @@ def generator_loss(nn_policy, epoch, g_step):
 
     average_loss = nn_policy.running_loss / max(nn_policy.loss_divisor,1)
     average_reward = nn_policy.running_reward / max(nn_policy.reward_divisor,1)
+    average_prediction = nn_policy.running_prediction / max(nn_policy.prediction_divisor, 1)
 
-    print('Epoch {} G Step {}  Reward {}'.format(epoch, g_step, average_reward))
-    log.info('Epoch {} G Step {}  Reward {}'.format(epoch, g_step, average_reward))
+    print('Epoch {} G Step {}  Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
+    log.info('Epoch {} G Step {}  Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
 
     generator_loss_sequence.append(average_loss)
     generator_reward_sequence.append(average_reward)
@@ -75,6 +77,8 @@ def generator_loss(nn_policy, epoch, g_step):
     nn_policy.loss_divisor = 0
     nn_policy.running_reward = 0.0
     nn_policy.reward_divisor = 0
+    nn_policy.running_prediction = 0.0
+    nn_policy.prediction_divisor = 0
     nn_policy.save(cfg.paths.policies + '/' + str(epoch) + '.pt')
 
 
