@@ -187,6 +187,15 @@ def policy_gradient_update(nn_policy):
 
     nn_policy.optimizer.zero_grad()
 
+    print('-------')
+
+    example = nn_policy.rewards[0]
+
+    for reward in example:
+        print(reward)
+
+    print('-------')
+
     # save running reward for logging not distorted by log probs and gamma
     average = torch.stack(nn_policy.rewards, dim=1)  # TODO hier stimmt irgendwas nicht avg reward immer 0.5
     average = torch.mean(average, dim=1)  # average of steps
