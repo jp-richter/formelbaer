@@ -96,6 +96,7 @@ def collect_reward(nn_discriminator, batch):
     output = nn_discriminator(images)
     reward = torch.empty((batch.shape[0],1), device=config.general.device)
 
+    print('DIREKTER OUTPUT DES DISKRS')
     for r in range(output.shape[0]):
         print(output[r])  # TODO REMOVE
         reward[r][0] = 1 - output[r]
