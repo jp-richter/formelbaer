@@ -96,29 +96,6 @@ def collect_reward(nn_discriminator, batch):
     output = nn_discriminator(images)
     reward = torch.empty((batch.shape[0],1), device=config.general.device)
 
-    # die sequenzen die generiert werden sind alle verschieden -> es liegt nicht am generator
-
-    # die sequenzen werden zu bildern gemacht, bilder sind verschieden, prozess gleich wie beim fp ?
-
-    print('DIREKTER OUTPUT DES DISKRS')
-
-    # import tokens
-    # import torchvision
-    #
-    # examples = batch[:5]
-    # seqs = []
-    #
-    # for s in examples:
-    #     seqs.append([tokens.id(onehot) for onehot in s])
-    #
-    for i in range(5):
-        # transform = torchvision.transforms.ToPILImage()
-        # transform(images[i].cpu()).save('/home/richter2/{}.png'.format(i))
-        # print(seqs[i])
-        print(output[i].item())  # TODO REMOVE
-    #
-    # return
-
     for r in range(output.shape[0]):
         reward[r][0] = 1 - output[r]
 
