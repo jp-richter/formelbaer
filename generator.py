@@ -190,15 +190,6 @@ def policy_gradient_update(nn_policy):
     assert len(nn_policy.rewards) == config.general.sequence_length
     assert nn_policy.rewards[0].size() == torch.Size([config.general.batch_size])
 
-    print('-------')
-
-    example = nn_policy.rewards[0]
-
-    for reward in example:
-        print(reward)
-
-    print('-------')
-
     # save running reward for logging not distorted by log probs and gamma
     average = torch.stack(nn_policy.rewards, dim=1)  # TODO hier stimmt irgendwas nicht avg reward immer 0.5
     average = torch.mean(average, dim=1)  # average of steps
@@ -208,7 +199,7 @@ def policy_gradient_update(nn_policy):
 
     # compute state action values for each step
     for reward in nn_policy.rewards[::-1]:
-        print(reward[0].item())
+        print(reward[0].item())  # TODO REMOVE
         total = reward + config.generator.gamma * total
         returns.insert(0, total)
 

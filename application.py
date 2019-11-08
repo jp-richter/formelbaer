@@ -97,6 +97,7 @@ def collect_reward(nn_discriminator, batch):
     reward = torch.empty((batch.shape[0],1), device=config.general.device)
 
     for r in range(output.shape[0]):
+        print(output[r])  # TODO REMOVE
         reward[r][0] = 1 - output[r]
 
     return reward
