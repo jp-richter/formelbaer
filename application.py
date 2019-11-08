@@ -205,15 +205,13 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
 
         log.discriminator_loss(nn_discriminator, epoch, d_epoch)
 
-    print('------------------------------')
+    print('---')
     print('DEBUG: DISCRIMINATOR PREDICTIONS')
     log.log.info('DEBUG: DISCRIMINATOR PREDICTIONS')
 
     for output, label in debug:
         print('Prediction ' + output + ' Label ' + label)
         log.log.info('Prediction ' + output + ' Label ' + label)
-
-    print('------------------------------')
 
 
 def training() -> None:
