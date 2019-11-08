@@ -168,7 +168,7 @@ DEFAULT_GENERAL = AppConfig(
     d_steps=1,
     g_steps=20,
 
-    batch_size=multiprocessing.cpu_count() * 4,  # computational cost reasons
+    batch_size=multiprocessing.cpu_count() * 4,  # computational cost reasons TODO kleinere batchsize?
 
     sequence_length=20,  # 20
     montecarlo_trials=10,  # 10

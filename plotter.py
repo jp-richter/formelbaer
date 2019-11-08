@@ -1,66 +1,78 @@
-# This import registers the 3D projection, but is otherwise unused.
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
-
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
+import re
 
 
 # example: x_values = np.arrage(0,100,10)
 #          y_values = np.array(..)
 
 def plot2d(x_values, x_limit, y_values, y_limit, x_label, y_label, title, fontsize):
-    fig, ax = plt.subplots()
-    ax.plot(x_values, y_values)
+    figure, axis = plt.subplots()
+    axis.plot(x_values, y_values)
 
     plt.xlim(xmin=x_limit)
     plt.ylim(ymin=y_limit)
-    ax.set(xlabel=x_label, ylabel=y_label)
+    axis.set(xlabel=x_label, ylabel=y_label)
     plt.title(title, fontsize=fontsize)
 
-    ax.grid()
+    axis.grid()
     plt.show()
 
-    return fig
+    return figure
 
 
-def plot3d(x_values, x_limit, y_values, y_limit, z_values, z_limit,  x_label, y_label, z_label, title, fontsize):
-    x = x_values
-    y = y_values
-    z = z_values
+# example: x_values = np.arrage(0,100,10)
+#          y_values = np.array(..)
+#          z_values = np.array(..) size(x,y)
 
+def plot3d(x_values, x_limit, y_values, y_limit, z_values, z_limit, x_label, y_label, z_label, title, fontsize):
+    x, y = np.meshgrid(x_values, y_values)
+
+    figure = plt.figure()
+    axis = figure.gca(projection='3d')
+
+    surface = axis.plot_surface(x, y, z_values, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    axis.set_xlim(x_limit)
+    axis.set_ylim(y_limit)
+    axis.set_zlim(z_limit)
+
+    plt.gca().invert_xaxis()
+    figure.colorbar(surface, shrink=0.5, aspect=5)
+
+    figure.title(title)
+    plt.xlabel(x_label, fontsize=fontsize)
+    plt.ylabel(y_label, fontsize=fontsize)
+
+    plt.show()
+
+    return figure
 
 
 def save_plot(figure, path):
     figure.savefig(path)
 
 
-def plot_runtime_with_fixed_steps_per_iteration(d_steps, g_steps):
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
+def plot(result_log, target):
+    with open(result_log, 'r') as file:
+        string = file.read()
 
-    seq_len_axis = np.arange(5, 20, 1)  # [5, 6 ..]
-    mc_trials_axis = np.arange(5, 20, 1)
+    targets = {
+        'greward': r'Generator\sReward\sas\sSequence:\s.*',
+        'gloss': r'Generator\sLoss\sas\sSequence:\s.*',
+        'gprediction': r'Generator\sPrediction\sas\sSequence:\s.*',
+        'dloss': r'Discriminator\sLoss\sas\sSequence:\s.*'
+    }
 
-    X, Y = np.meshgrid(seq_len_axis, mc_trials_axis)  # [5][5], [5][6], ..
+    targets_substrings = {
+        'greward': lambda s: s[30:],
+        'gloss': lambda s: s[28],
+        'gprediction': lambda s: s[34],
+        'dloss': lambda s: s[32]
+    }
 
-    results = np.zeros((len(seq_len_axis), len(mc_trials_axis)))
+    pattern = re.compile(targets[target])
+    result = []
 
-    for i in range(len(seq_len_axis)):
-        for j in range(len(mc_trials_axis)):
-            runtime = estimate_runtime_per_iteration(d_steps, g_steps, seq_len_axis[i], mc_trials_axis[j])
-            results[i][j] = ((runtime // 1000) // 60)
-
-    surf = ax.plot_surface(X, Y, results, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-
-    ax.set_zlim(0, 20)
-    plt.gca().invert_xaxis()
-    fig.colorbar(surf, shrink=0.5, aspect=5)
-
-    fig.suptitle('Runtime per iteration with gsteps = {} and dsteps = {} in min'.format(g_steps, d_steps), fontsize=14)
-    plt.xlabel('Sequence Length', fontsize=12)
-    plt.ylabel('Montecarlo Trials', fontsize=12)
-
-    plt.show()
+    for match in re.finditer(pattern, string):
 
