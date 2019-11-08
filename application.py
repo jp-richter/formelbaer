@@ -207,7 +207,6 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             nn_discriminator.running_acc += torch.sum((outputs > 0.5) == (labels == 1)).item()
             nn_discriminator.acc_divisor += outputs.shape[0]
 
-        assert nn_discriminator.acc_divisor == len(data_loader.dataset)
         log.discriminator_loss(nn_discriminator, epoch, d_epoch)
 
     print('------------------------------')

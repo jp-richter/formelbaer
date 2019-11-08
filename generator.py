@@ -187,6 +187,9 @@ def policy_gradient_update(nn_policy):
 
     nn_policy.optimizer.zero_grad()
 
+    assert len(nn_policy.rewards) == config.general.sequence_length
+    assert nn_policy.rewards[0].size() == torch.Size([config.general.batch_size])
+
     print('-------')
 
     example = nn_policy.rewards[0]
