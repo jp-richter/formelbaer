@@ -180,6 +180,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
     data_loader = loader.prepare_loader(num_samples, nn_generator, nn_oracle)
 
     debug = []
+    count = 0
 
     for d_epoch in range(d_epochs):
         for images, labels in data_loader:
@@ -192,7 +193,9 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
             # output[:,0] P(x ~ real)
             # output[:,1] P(x ~ synthetic)
 
-            debug.append((str(outputs[-1].item()), str(labels[-1].item())))
+            count += images.shape[0]
+            if len(data_loader.dataset) - count <= config.general.batch_size:
+                debug = [(out.item(), lab.item()) for (out, lab) in zip(outputs, labels)]
 
             loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
