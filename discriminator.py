@@ -1,6 +1,4 @@
 import torch
-import loader
-import config
 from torch import nn
 
 
@@ -71,3 +69,11 @@ class Discriminator(nn.Module):
     def load(self, file):
 
         self.load_state_dict(torch.load(file))
+
+    def reset(self):
+
+        def weights_reset(model):
+            if isinstance(model, nn.Conv2d) or isinstance(model, nn.Linear):
+                model.reset_parameters()
+
+        self.apply(weights_reset)
