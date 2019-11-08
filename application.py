@@ -195,7 +195,7 @@ def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps
 
             count += images.shape[0]
             if len(data_loader.dataset) - count <= config.general.batch_size:
-                debug = [(out.item(), lab.item()) for (out, lab) in zip(outputs, labels)]
+                debug = [(str(out.item()), str(lab.item())) for (out, lab) in zip(outputs, labels)]
 
             loss = nn_discriminator.criterion(outputs, labels.float())
             loss.backward()
