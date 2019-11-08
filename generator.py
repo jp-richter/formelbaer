@@ -184,19 +184,12 @@ def policy_gradient_update(nn_policy):
     total = 0
     loss = []
     returns = []
+    average = []
 
     nn_policy.optimizer.zero_grad()
 
     assert len(nn_policy.rewards) == config.general.sequence_length
     assert nn_policy.rewards[0].size() == torch.Size([config.general.batch_size])
-
-    # save running reward for logging not distorted by log probs and gamma
-    average = torch.stack(nn_policy.rewards, dim=1)
-    average = torch.mean(average, dim=1)  # average of steps
-    average = torch.mean(average, dim=0)  # average of batch
-    nn_policy.running_reward += average.item()
-    nn_policy.reward_divisor += 1
-
     # compute state action values for each step
     for reward in nn_policy.rewards[::-1]:
         total = reward + config.generator.gamma * total
@@ -205,20 +198,27 @@ def policy_gradient_update(nn_policy):
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
         loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length
+        average.append(reward)
 
     # sum rewards over all steps for each sample
     loss = torch.stack(loss, dim=1)  # (batchsize, sequence length)
     loss = torch.sum(loss, dim=1)  # (batchsize)
 
+    average = torch.stack(average, dim=1)
+    average = torch.sum(average, dim=1)
+
     # average rewards over batch
     batch_size = loss.shape[0]
     loss = torch.sum(loss) / batch_size
+    average = torch.sum(loss) / batch_size
 
     loss.backward()
     nn_policy.optimizer.step()
 
     nn_policy.running_loss += loss.item()
     nn_policy.loss_divisor += 1
+    nn_policy.running_reward += average.item()
+    nn_policy.reward_divisor += 1
 
     del nn_policy.rewards[:]
     del nn_policy.probs[:]
