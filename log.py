@@ -153,11 +153,11 @@ def finish_experiment(directory):
 
         ''')
 
-    generator_loss_sequence_str = ', '.join(map(str, generator_loss_sequence))
-    generator_reward_sequence_str = ', '.join(map(str, generator_reward_sequence))
-    generator_prediction_sequence_str = ', '.join(map(str, generator_prediction_sequence))
-    discriminator_loss_sequence_str = ', '.join(map(str, discriminator_loss_sequence))
-    oracle_score_sequence_str = ', '.join(map(str, oracle_score_sequence))
+    generator_loss_sequence_str = ','.join(map(str, generator_loss_sequence))
+    generator_reward_sequence_str = ','.join(map(str, generator_reward_sequence))
+    generator_prediction_sequence_str = ','.join(map(str, generator_prediction_sequence))
+    discriminator_loss_sequence_str = ','.join(map(str, discriminator_loss_sequence))
+    oracle_score_sequence_str = ','.join(map(str, oracle_score_sequence))
 
     log.info('Generator Loss as Sequence: ' + generator_loss_sequence_str)
     log.info('Generator Reward as Sequence: ' + generator_reward_sequence_str)
