@@ -219,13 +219,6 @@ def initialize() -> None:
 
     global oracle_dataset, arxiv_dataset
 
-    log.init()
-
-    log.start_experiment()
-
-    print('Start initializing..')
-    log.log.info('Start initializing..')
-
     if not os.path.exists(config.paths.app):
         os.makedirs(config.paths.app)
 
@@ -250,6 +243,9 @@ def initialize() -> None:
     else:
         clear_directory(config.paths.policies)
 
+    if not os.path.exists(config.paths.log):
+        open(config.paths.log)
+
     if not ray.is_initialized():
         if torch.cuda.is_available():
             ray.init(plasma_directory=config.paths.ray, memory=20000000000, object_store_memory=20000000000)
@@ -262,8 +258,8 @@ def initialize() -> None:
     else:
         oracle_dataset = Dataset(config.paths.oracle_data, label=config.general.label_real)
 
-    print('Finished initializing.')
-    log.log.info('Finished initializing.')
+    log.init()
+    log.start_experiment()
 
 
 def finish(nn_policy, nn_discriminator, nn_oracle) -> None:

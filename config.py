@@ -1,5 +1,6 @@
 import multiprocessing
 import torch
+import os
 
 from pathlib import Path, PurePath
 from dataclasses import dataclass
@@ -132,7 +133,7 @@ class DiscriminatorConfig:
 # '/rdata/schill/arxiv_processed/all/pngs'
 # '/rdata/schill/arxiv_processed/ba_data/ml_data/train/pngs'
 
-_home = '/ramdisk' if multiprocessing.cpu_count() > 4 else str(Path.home())
+_home = '/ramdisk' if os.path.exists('/ramdisk') else str(Path.home())
 
 DEFAULT_PATHS = Paths(
 

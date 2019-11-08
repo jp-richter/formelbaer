@@ -1,7 +1,7 @@
 import config as cfg
 import logging
 import shutil
-import math
+import os
 
 
 log = None
@@ -52,6 +52,9 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     log.info('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
 
     discriminator_loss_sequence.append(average_loss)
+
+    # TODO REMOVE
+    print(nn_discriminator.running_loss)
 
     nn_discriminator.running_loss = 0.0
     nn_discriminator.loss_divisor = 0
