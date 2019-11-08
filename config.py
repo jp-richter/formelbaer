@@ -157,7 +157,7 @@ DEFAULT_GENERAL = AppConfig(
 
     device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-    num_real_samples=2000,  # 5000
+    num_real_samples=3000,  # 5000
     num_eval_samples=100,  # 100
 
     mle_epochs=2,
