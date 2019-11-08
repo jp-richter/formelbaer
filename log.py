@@ -67,8 +67,8 @@ def generator_loss(nn_policy, epoch, g_step):
     average_reward = nn_policy.running_reward / max(nn_policy.reward_divisor,1)
     average_prediction = nn_policy.running_prediction / max(nn_policy.prediction_divisor, 1)
 
-    print('Epoch {} G Step {}  Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
-    log.info('Epoch {} G Step {}  Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
+    print('Epoch {} G Step {} Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
+    log.info('Epoch {} G Step {} Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
 
     generator_loss_sequence.append(average_loss)
     generator_reward_sequence.append(average_reward)
