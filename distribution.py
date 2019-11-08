@@ -464,7 +464,7 @@ def find_all(string):
 
 def scan(directory, constrictions):
     iterator = os.scandir(directory)
-    total = len(os.listdir(directory))
+    total = len(constrictions)
     count = 1
     for entry in iterator:
 
@@ -480,7 +480,7 @@ def scan(directory, constrictions):
         if entry.is_dir() and entry.name in constrictions:
             scan(directory + '/' + entry.name, constrictions)
 
-        print('Directory {} of {} finished..'.format(count, total))
+        print('Directory {} of {} finished..'.format(count, min(total, 2000)))
         count += 1
 
         if count > 2000:
