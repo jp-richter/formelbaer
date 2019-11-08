@@ -49,8 +49,13 @@ def discriminator_loss(nn_discriminator, epoch, d_epoch):
     average_loss = nn_discriminator.running_loss / max(nn_discriminator.loss_divisor,1)
     average_acc = nn_discriminator.running_acc / max(nn_discriminator.acc_divisor,1)
 
-    print('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
-    log.info('Epoch {} D Epoch {} Loss {} Acc {}'.format(epoch, d_epoch, average_loss, average_acc))
+    msg = '''---
+    Epoch {} D Epoch {}
+    Loss {}
+    Acc {}'''.format(epoch, d_epoch, average_loss, average_acc)
+
+    print(msg)
+    log.info(msg)
 
     discriminator_loss_sequence.append(average_loss)
 
@@ -67,8 +72,14 @@ def generator_loss(nn_policy, epoch, g_step):
     average_reward = nn_policy.running_reward / max(nn_policy.reward_divisor,1)
     average_prediction = nn_policy.running_prediction / max(nn_policy.prediction_divisor, 1)
 
-    print('Epoch {} G Step {} Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
-    log.info('Epoch {} G Step {} Reward {} Prediction {}'.format(epoch, g_step, average_reward, average_prediction))
+    msg = '''---
+    Epoch {} G Step {}
+    Reward {}
+    Prediction {}
+    Loss {}'''.format(epoch, g_step, average_reward, average_prediction, average_loss)
+
+    print(msg)
+    log.info(msg)
 
     generator_loss_sequence.append(average_loss)
     generator_reward_sequence.append(average_reward)
