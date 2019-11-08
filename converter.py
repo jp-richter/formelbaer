@@ -146,8 +146,8 @@ def pdf2png(directory, file, name) -> str:
            '-dSAFER',
            '-dBATCH',
            '-dNOPAUSE',
-           '-sDEVICE=png16m',
-           '-r80',
+           '-sDEVICE=pngalpha',
+           '-r90',
            '-sOutputFile=' + name + '%09d.png',
            file]
 
