@@ -102,7 +102,7 @@ def collect_reward(nn_discriminator, batch):
     transform = torchvision.transforms.ToPILImage()
 
     for i in range(5):
-        transform(images[i]).show()
+        transform(images[i].cpu()).show()
         print(output[i].item())  # TODO REMOVE
 
     return
