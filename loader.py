@@ -248,9 +248,9 @@ def initialize() -> None:
 
     if not ray.is_initialized():
         if torch.cuda.is_available():
-            ray.init(memory=20000000000, object_store_memory=20000000000)
+            ray.init(plasma_directory=config.paths.ray, memory=20000000000, object_store_memory=20000000000)
         else:
-            ray.init(memory=5000000000, object_store_memory=5000000000)
+            ray.init(plasma_directory=config.paths.ray, memory=5000000000, object_store_memory=5000000000)
 
     if not config.general.oracle:
         arxiv_dataset = Dataset(config.paths.arxiv_data, label=config.general.label_real, recursive=True)
