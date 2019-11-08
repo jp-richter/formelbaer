@@ -98,11 +98,17 @@ def collect_reward(nn_discriminator, batch):
 
     print('DIREKTER OUTPUT DES DISKRS')
 
-    import torchvision
-    transform = torchvision.transforms.ToPILImage()
+    import tree
+    import tokens
+
+    examples = batch[:5]
+    seqs = []
+
+    for s in examples:
+        seqs.append([tokens.id(onehot) for onehot in s])
 
     for i in range(5):
-        transform(images[i].cpu()).show()
+        print(seqs[i])
         print(output[i].item())  # TODO REMOVE
 
     return
