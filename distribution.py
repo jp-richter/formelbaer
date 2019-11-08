@@ -483,6 +483,9 @@ def scan(directory, constrictions):
         print('Directory {} of {} finished..'.format(count, total))
         count += 1
 
+        if count > 2000:
+            break
+
     save(config.paths.distribution_bias)
 
 
