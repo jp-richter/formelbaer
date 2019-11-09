@@ -259,7 +259,7 @@ def training() -> None:
     import torchvision
     transform = torchvision.transforms.ToPILImage()
     for i in range(images.shape[0]):
-        img = transform(images[i])
+        img = transform(images[i].cpu())
         img.save(config.paths.synthetic_data + '/{}.png'.format(i))
 
     print('OKAY STOP NOW')
