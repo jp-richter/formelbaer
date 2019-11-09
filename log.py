@@ -107,6 +107,8 @@ def start_experiment():
         
         0.2 Resetting D Weights After Each Step
             Added Bias Initialization
+            
+        0.3 Set Batchsize to cores
         
 
         Total Epochs {}
