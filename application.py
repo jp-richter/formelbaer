@@ -251,20 +251,6 @@ def training() -> None:
     a_epochs = config.general.total_epochs
     d_epochs = config.general.d_epochs
 
-    samples = generator.sample(nn_policy, 1)
-    loader.clear_directory(config.paths.synthetic_data)
-    # loader.save_pngs(samples, config.paths.synthetic_data)
-    images = loader.prepare_batch(samples)
-
-    import torchvision
-    transform = torchvision.transforms.ToPILImage()
-    for i in range(images.shape[0]):
-        img = transform(images[i].cpu())
-        img.save(config.paths.synthetic_data + '/{}.png'.format(i))
-
-    print('OKAY STOP NOW')
-    return
-
     for epoch in range(a_epochs):
 
         # train discriminator
