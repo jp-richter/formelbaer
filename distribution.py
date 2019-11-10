@@ -3,6 +3,7 @@ import sys
 import os
 import config
 import tokens
+import numpy as np
 
 TOKEN_SPECIFICATION = {}  # (token id, regex)
 

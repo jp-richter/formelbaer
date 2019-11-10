@@ -1,7 +1,6 @@
 import config as cfg
 import logging
 import shutil
-import os
 
 
 log = None
@@ -24,23 +23,6 @@ def init():
     handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 
     log.addHandler(handler)
-
-
-def start_loading_data():
-    global log
-
-    if log is None:
-        init()
-
-    log.info('Start loading data..')
-    print('Start loading data..')
-
-
-def finish_loading_data():
-    global log 
-
-    log.info('Data successfully loaded.')
-    print('Data successfully loaded.')
 
 
 def discriminator_loss(nn_discriminator, epoch, d_epoch):

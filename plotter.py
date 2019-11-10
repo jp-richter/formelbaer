@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import numpy as np
+import numpy
 import re
+import sys
 
 
 # example: x_values = np.arrage(0,100,10)
@@ -53,8 +54,8 @@ def save_plot(figure, path):
     figure.savefig(path)
 
 
-def plot(result_log, target):
-    with open(result_log, 'r') as file:
+def plot(filepath, target):
+    with open(filepath, 'r') as file:
         string = file.read()
 
     targets = {
@@ -75,4 +76,19 @@ def plot(result_log, target):
     result = []
 
     for match in re.finditer(pattern, string):
+        result.append(match.group())
 
+    assert len(result) == 1
+    ls = result[0].split(',')
+    assert len(ls) == 150
+    x = numpy.arange(0,150,1)
+    y = numpy.array(ls)
+
+    figure = plot2d(x, 0, y, 0, 'Epoch', target, '', 10)
+    save_plot(figure, '/Users/jan/Desktop/plot.png')
+
+
+if __name__ == '__main__':
+    assert len(sys.argv) == 3
+    _, target, filepath = sys.argv
+    plot(filepath, target)
