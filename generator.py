@@ -203,7 +203,7 @@ def policy_gradient_update(nn_policy):
         loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length
         average.append(reward)
 
-    prediction = returns[-1]  # keep track of the final result prediction
+    prediction = nn_policy.rewards[-1]  # keep track of the final result prediction
 
     # sum rewards over all steps for each sample
     loss = torch.stack(loss, dim=1)  # (batchsize, sequence length)
