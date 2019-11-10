@@ -152,6 +152,7 @@ def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step) 
         q_values = torch.mean(q_values, dim=1)
         nn_policy.rewards.append(q_values)
         generator.policy_gradient_update(nn_policy)  # TODO comment out to reward like in SeqGAN
+        batch, hidden = (batch.detach(), hidden.detach())  # TODO comment out to reward like in SeqGAN
 
     # generator.policy_gradient_update(nn_policy)  TODO comment in to reward like in SeqGAN
     log.generator_loss(nn_policy, epoch, step)
