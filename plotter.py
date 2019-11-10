@@ -23,7 +23,7 @@ def single_plot2d(x_values, y_values, x_label, y_label, title, fontsize):
     return figure, axis
 
 
-def multiple_plot2d(values, x_label, legend, title, fontsize):
+def multiple_plot2d(values, x_label, y_label, legend, title, fontsize):
     figure, axis = plt.subplots()
     lines = ['b', 'r', 'y']
 
@@ -33,6 +33,8 @@ def multiple_plot2d(values, x_label, legend, title, fontsize):
     plt.xlim(xmin=0)
     plt.ylim(ymin=0)
     plt.title(title, fontsize=fontsize)
+    plt.xlabel(x_label, fontsize=fontsize)
+    plt.ylabel(y_label, fontsize=fontsize)
 
     leg = plt.legend()
     # get the individual lines inside legend and set line width
@@ -113,7 +115,12 @@ def parse(filepath, target):
 
 
 def plot(filepath):
-    targets = ['greward', 'gloss'] # prediction
+    targets = ['greward', 'gloss', 'gprediction'] # prediction
+    targets_labels = {
+        'greward': 'Generator Reward',
+        'gloss': 'Generator Loss',
+        'gprediction': 'Generator Prediction'
+    }
     results = []
 
     # single plots
@@ -123,14 +130,16 @@ def plot(filepath):
         y = numpy.array(numbers)
 
         # save single plot
-        figure, _ = single_plot2d(x, y, 'Step', t, '', 12)
+        figure, _ = single_plot2d(x, y, 'Step', targets_labels[t], '', 12)
         save_plot(figure, filepath[:-11] + '{}_plot.png'.format(t))
 
-        results.append((x,y))
+        # numbers are to small in comparison
+        if not t == 'gprediction':
+            results.append((x,y))
 
     # plot all on same surface
     legend = ['Generator Reward', 'Generator Loss']
-    figure, axis = multiple_plot2d(results, 'Step', legend, '', 12)
+    figure, axis = multiple_plot2d(results, 'Step', '', legend, '', 12)
     save_plot(figure, filepath[:-11] + 'generator_plot.png')
 
     numbers = parse(filepath, 'dloss')

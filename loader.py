@@ -277,14 +277,14 @@ def finish(nn_policy, nn_discriminator, nn_oracle) -> None:
     nn_discriminator.save(directory + '/discriminator-net.pt')
     nn_oracle.save(directory + '/oracle-net.pt')
 
-    log.finish_experiment(directory)
-
     evaluation = generator.sample(nn_policy, math.ceil(100 / config.general.batch_size))
 
     os.makedirs(directory + '/pngs')
     os.makedirs(directory + '/sequences')
     save_pngs(evaluation, directory + '/pngs')
     save_sequences(evaluation, directory + '/sequences')
+
+    log.finish_experiment(directory)
 
 
 def shutdown() -> None:

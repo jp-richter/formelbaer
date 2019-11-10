@@ -198,9 +198,11 @@ def policy_gradient_update(nn_policy):
         total = reward + config.generator.gamma * total
         returns.insert(0, total)
 
+    # TODO sign
+
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
-        loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length
+        loss.append(log_prob * reward)  # [tensor(batchsize)] for sequence length
         average.append(reward)
 
     prediction = returns[-1]  # keep track of the final result prediction
