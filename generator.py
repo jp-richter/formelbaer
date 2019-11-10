@@ -218,9 +218,6 @@ def policy_gradient_update(nn_policy):
     average = torch.sum(average) / batch_size
     prediction = torch.sum(prediction) / batch_size
 
-    print(prediction.item())
-    print(average.item())
-
     loss.backward()
     nn_policy.optimizer.step()
 
