@@ -186,7 +186,6 @@ def policy_gradient_update(nn_policy):
     total = 0
     loss = []
     returns = []
-    average = []
 
     nn_policy.optimizer.zero_grad()
 
@@ -201,22 +200,26 @@ def policy_gradient_update(nn_policy):
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
         loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length
-        average.append(reward)
 
-    prediction = nn_policy.rewards[-1]  # keep track of the final result prediction
+    # final prediction
+    prediction = nn_policy.rewards[-1]
+
+    # average reward
+    average = torch.stack(nn_policy.rewards, dim=1)
+    average = torch.sum(average, dim=1)
 
     # sum rewards over all steps for each sample
     loss = torch.stack(loss, dim=1)  # (batchsize, sequence length)
     loss = torch.sum(loss, dim=1)  # (batchsize)
-
-    average = torch.stack(average, dim=1)
-    average = torch.sum(average, dim=1)
 
     # average rewards over batch
     batch_size = loss.shape[0]
     loss = torch.sum(loss) / batch_size
     average = torch.sum(average) / batch_size
     prediction = torch.sum(prediction) / batch_size
+
+    print(prediction.item())
+    print(average.item())
 
     loss.backward()
     nn_policy.optimizer.step()
