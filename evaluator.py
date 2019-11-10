@@ -66,9 +66,15 @@ def plot(filepath=config.paths.policies):
         if entry.name.endswith('.pt'):
             policy_paths.append(filepath + '/' + entry.name)
 
+    names = [tokens.get(id).name for id in tokens.possibilities()]
     for i, path in enumerate(policy_paths):
         if i % stepsize == 0:
             policy = policy_average(path)
+            with open('{}.txt'.format(path[:-2]), 'w', encoding="utf-8") as file:
+                string = ''
+                for name, value in zip(names, policy):
+                    string += '{}: {}\n'.format(name, value)
+                file.write(string)
             policies.append(policy)
 
     x = numpy.array(tokens.possibilities())  # token ids for all tokens
