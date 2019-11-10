@@ -64,6 +64,7 @@ Loss {}'''.format(epoch, g_step, average_reward, average_prediction, average_los
     log.info(msg)
 
     generator_loss_sequence.append(average_loss)
+    generator_prediction_sequence.append(average_prediction)
     generator_reward_sequence.append(average_reward)
 
     nn_policy.running_loss = 0.0
