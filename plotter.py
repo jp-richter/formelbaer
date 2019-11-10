@@ -3,6 +3,7 @@ from matplotlib import cm
 import numpy
 import re
 import sys
+import matplotlib.colors as mcolors
 
 
 # example: x_values = np.arrage(0,100,10)
@@ -23,11 +24,15 @@ def single_plot2d(x_values, y_values, x_label, y_label, title, fontsize):
     return figure, axis
 
 
+# example: values = [(x,y)] with x = np.array(..), ...
+#          legend = ['reward', 'loss', ..]
+
 def multiple_plot2d(values, x_label, y_label, legend, title, fontsize):
     figure, axis = plt.subplots()
     lines = ['b', 'r', 'y']
+    colors = mcolors.CSS4_COLORS.values()  # TODO hier ist noch weiss drin
 
-    for (x,y), line, label in zip(values, lines, legend):
+    for (x,y), line, label in zip(values, colors, legend):
         axis.plot(x, y, line, label=label, linewidth=0.3)
 
     plt.xlim(xmin=0)

@@ -3,7 +3,6 @@ import logging
 import shutil
 import plotter
 
-
 log = None
 
 generator_loss_sequence = []

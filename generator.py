@@ -66,7 +66,7 @@ class Policy(nn.Module):
         torch.save(self.state_dict(), file)
 
     def load(self, file):
-        self.load_state_dict(torch.load(file))
+        self.load_state_dict(torch.load(file, map_location=torch.device(config.general.device)))
 
     def set_parameters_to(self, policy):
         self.load_state_dict(policy.state_dict())

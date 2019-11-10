@@ -8,6 +8,8 @@ import log
 import math
 import tree
 
+# TODO save average policy mit nets
+
 
 def train_with_mle(nn_policy, nn_oracle, epochs, num_samples) -> None:
     """
