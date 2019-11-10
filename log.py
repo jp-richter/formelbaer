@@ -93,6 +93,8 @@ def start_experiment():
             
         0.3 Set Batchsize to cores
         
+        0.4 Switched to update policy after each step in a sequence
+        
 
         Total Epochs {}
         Discriminator Steps {}
