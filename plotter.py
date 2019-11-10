@@ -18,7 +18,7 @@ def single_plot2d(x_values, y_values, x_label, y_label, title, fontsize):
     plt.title(title, fontsize=fontsize)
 
     axis.grid()
-    plt.show()
+    # plt.show()
 
     return figure, axis
 
@@ -46,7 +46,7 @@ def multiple_plot2d(values, x_label, y_label, legend, title, fontsize):
         text.set_fontsize('x-large')
 
     axis.grid()
-    plt.show()
+    # plt.show()
 
     return figure, axis
 
@@ -73,7 +73,7 @@ def plot3d(x_values, x_limit, y_values, y_limit, z_values, z_limit, x_label, y_l
     plt.xlabel(x_label, fontsize=fontsize)
     plt.ylabel(y_label, fontsize=fontsize)
 
-    plt.show()
+    # plt.show()
 
     return figure, axis
 
