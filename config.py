@@ -189,7 +189,7 @@ DEFAULT_GENERATOR = GeneratorConfig(
     layers=2,
     dropout=0.2,
     learnrate=0.005,
-    baseline=0.05,
+    baseline=0.001,
     gamma=0.99,  # TODO mal gamma=1 probieren?
     bias=False
 
