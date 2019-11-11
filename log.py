@@ -1,7 +1,8 @@
 import config as cfg
 import logging
 import shutil
-import plotter
+import plotloss
+import plotpolicy
 
 log = None
 
@@ -167,7 +168,13 @@ def finish_experiment(directory):
     shutil.copytree(cfg.paths.policies, directory + '/policies')
 
     try:
-        plotter.plot(directory + '/results.log')
+        plotloss.plot(directory + '/results.log')
     except:
         print('Failed to plot the results.')
         log.info('Failed to plot the results.')
+
+    try:
+        plotpolicy.plot(directory + '/policies')
+    except:
+        print('Failed to plot policies.')
+        log.info('Failed to plot policies.')

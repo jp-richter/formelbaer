@@ -56,7 +56,7 @@ def policy_average(filepath):
     return results
 
 
-def plot(filepath=config.paths.policies):
+def plot(filepath):
     policy_paths = []  # (path)
     policies = []  # (average policy)
     stepsize = 10

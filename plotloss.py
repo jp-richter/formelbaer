@@ -9,17 +9,13 @@ import matplotlib.colors as mcolors
 # example: x_values = np.arrage(0,100,10)
 #          y_values = np.array(..)
 
-def single_plot2d(x_values, y_values, x_label, y_label, title, fontsize):
+def single_plot2d(x, y, xlabel, ylabel, title, fontsize):
     figure, axis = plt.subplots()
-    axis.plot(x_values, y_values)
+    axis.plot(x, y)
 
-    plt.xlim(xmin=0)
-    plt.ylim(ymin=0)
-    axis.set(xlabel=x_label, ylabel=y_label)
+    axis.set(xlabel=xlabel, ylabel=ylabel)
     plt.title(title, fontsize=fontsize)
-
     axis.grid()
-    # plt.show()
 
     return figure, axis
 
@@ -27,31 +23,25 @@ def single_plot2d(x_values, y_values, x_label, y_label, title, fontsize):
 # example: values = [(x,y)] with x = np.array(..), ...
 #          legend = ['reward', 'loss', ..]
 
-def multiple_plot2d(values, x_label, y_label, legend, title, fontsize):
+def multiple_plot2d(values, xlabel, ylabel, legend, title, fontsize):
     figure, axis = plt.subplots()
     lines = ['b', 'r', 'y']
-    colors = mcolors.CSS4_COLORS.values()  # TODO hier ist noch weiss drin
+    # colors = mcolors.CSS4_COLORS.values()
 
-    for (x,y), line, label in zip(values, colors, legend):
+    for (x,y), line, label in zip(values, lines, legend):
         axis.plot(x, y, line, label=label, linewidth=0.3)
 
-    plt.xlim(xmin=0)
-    plt.ylim(ymin=0)
     plt.title(title, fontsize=fontsize)
-    plt.xlabel(x_label, fontsize=fontsize)
-    plt.ylabel(y_label, fontsize=fontsize)
+    plt.xlabel(xlabel, fontsize=fontsize)
+    plt.ylabel(ylabel, fontsize=fontsize)
 
     leg = plt.legend()
-    # get the individual lines inside legend and set line width
     for line in leg.get_lines():
         line.set_linewidth(1)
-
-    # get label texts inside legend and set font size
     for text in leg.get_texts():
         text.set_fontsize('x-large')
 
     axis.grid()
-    # plt.show()
 
     return figure, axis
 
@@ -120,7 +110,7 @@ def parse(filepath, target):
 
 
 def plot(filepath):
-    targets = ['greward', 'gloss', 'gprediction'] # prediction
+    targets = ['greward', 'gloss'] # prediction
     targets_labels = {
         'greward': 'Generator Reward',
         'gloss': 'Generator Loss',
