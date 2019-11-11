@@ -17,7 +17,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
     This dataset only scans for .png and .pt i.e. tensors serialized with pickle files.
     """
 
-    def __init__(self, folder=None, label=None, recursive=False) -> None:
+    def __init__(self, folder=None, label=None, recursive=False, ordered=False) -> None:
         """
         The constructor of the Dataset class.
 
@@ -38,15 +38,18 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         ])
 
         self.protocol = {
-            '.png': lambda path: PIL.Image.open(path),
-            '.pt': lambda path: torch.load(path)
+            '.png': lambda path: PIL.Image.open(path)
         }
 
-        self.samples = []
+        self.samples = []  # (path, label, protocol, order)
         self.index = 0
+        self.ordered = ordered
 
         if folder is not None and label is not None:
             self.__crawl__(folder, label, recursive)
+
+        if self.ordered:
+            self.samples.sort(key=lambda entry: entry[3])
 
     def __len__(self):
         """
@@ -66,7 +69,7 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
         :return: Returns a tensor of size (32,333) representing an image in the dataset and its label in a tuple.
         """
 
-        path, label, form = self.samples[index]
+        path, label, form, _ = self.samples[index]
         image = self.protocol[form](path)
         image = self.transform(image)
 
@@ -87,9 +90,8 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
                 if entry.is_file():
                     if entry.name.endswith('.png'):
-                        self.samples.append((folder + '/' + entry.name, label, '.png'))
-                    elif entry.name.endswith('.pt'):
-                        self.samples.append((folder + '/' + entry.name, label, '.pt'))
+                        key = entry.name[:-4] if self.ordered else None
+                        self.samples.append((folder + '/' + entry.name, label, '.png', key))
 
                 if entry.is_dir() and recursive:
                     self.__crawl__(folder + '/' + entry.name, label, recursive)
@@ -102,6 +104,8 @@ class Dataset(torchvision.datasets.vision.VisionDataset):
 
         :param other: A list of (file path, label, format) tuples of another instance of this class.
         """
+        if self.ordered:
+            raise NotImplementedError('Can not order merged datasets.')
 
         self.samples += other
 

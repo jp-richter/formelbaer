@@ -2,6 +2,7 @@ import torch
 import numpy
 import matplotlib.pyplot as plt
 
+
 class Net(torch.nn.Module):
 
     def __init__(self):
@@ -34,34 +35,41 @@ class Net(torch.nn.Module):
 
 def main():
     net = Net()
-    opt = torch.optim.Adam(net.parameters(), lr=0.01)
+    opt = torch.optim.Adam(net.parameters(), lr=0.001)
 
     random = torch.randn(10)
-    rewards = torch.tensor([100,50,30,20,10,10,10,10,10,10]).float()
+    rewards = torch.tensor([100, 50, 30, 20, 10, 10, 10, 10, 10, 10]).float()
 
     for i in range(1000):
         opt.zero_grad()
         policy = net(random)
 
         # USE LOG
-        policy = torch.log(policy)
+        # policy = torch.log(policy)
 
         reward = torch.sum(policy * rewards)
         loss = -reward
         loss.backward()
         opt.step()
 
-        if i%100 == 0:
+        if i % 100 == 0:
             print(reward)
 
     policy = net(random)
-    chart_single(numpy.arange(0,10,1), numpy.array(policy.tolist()))
+    chart_single(numpy.arange(0, 10, 1), numpy.array(policy.tolist()))
 
 
 def chart_single(x, y):
     figure, axis = plt.subplots()
     axis.bar(x, y, width=0.5)
     plt.show()
+
+
+def gradient():
+    rewards = [100, 1]
+    # theta = (0.5, 0.5)
+
+    # f(theta) = softmax(theta) * rewards
 
 
 if __name__ == '__main__':

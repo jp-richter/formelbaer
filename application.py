@@ -7,6 +7,8 @@ import loader
 import log
 import math
 import tree
+import tokens
+import torchvision
 
 
 def train_with_mle(nn_policy, nn_oracle, epochs, num_samples) -> None:
@@ -106,6 +108,30 @@ def collect_reward(nn_discriminator, batch):
 
     for r in range(output.shape[0]):
         reward[r][0] = 1 - output[r]
+
+    # DEBUG: print formulars with reward > 0.5
+    # transform = torchvision.transforms.ToPILImage()
+    #
+    # for i, r in enumerate(reward):
+    #     if r.item() > 0.5:
+    #         sample = batch[i]
+    #         sample = [tokens.id(onehot) for onehot in sample]
+    #         sample = tree.to_tree(sample)
+    #         sample = sample.latex()
+    #         print('Reward {} for sample {}'.format(r.item(), sample))
+    #
+    #         image = transform(images[i])
+    #         image.show()
+    #         image.save('/home/richter2/formelbaer-data/{}.png'.format(sample))
+    #
+    #         for i, sample in enumerate(batch):
+    #             sample = batch[i]
+    #             sample = [tokens.id(onehot) for onehot in sample]
+    #             sample = tree.to_tree(sample)
+    #             sample = sample.latex()
+    #             print(sample)
+    #
+    #         return
 
     return reward
 

@@ -123,7 +123,7 @@ def prepare_batch(batch) -> torch.Tensor:
 
     clear_directory(config.paths.synthetic_data)
     save_pngs(batch, config.paths.synthetic_data)
-    dataset = Dataset(config.paths.synthetic_data, config.general.label_synth)
+    dataset = Dataset(config.paths.synthetic_data, config.general.label_synth, ordered=True)  # order critical
     loader = DataLoader(dataset, config.general.batch_size)
     images = next(iter(loader))[0]  # (images, labels)
     images = images.to(config.general.device)

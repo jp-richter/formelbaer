@@ -189,19 +189,18 @@ def policy_gradient_update(nn_policy):
 
     nn_policy.optimizer.zero_grad()
 
-    # assert len(nn_policy.rewards) == config.general.sequence_length
-    assert nn_policy.rewards[0].size() == torch.Size([config.general.batch_size])
-
     # compute state action values for each step
     for reward in nn_policy.rewards[::-1]:
         total = reward + config.generator.gamma * total
         returns.insert(0, total)
 
+    # TODO try baseline
+
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
         loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length
 
-    # final prediction
+    # final prediction / equals reward if update every step
     prediction = nn_policy.rewards[-1]
 
     # average reward
