@@ -97,6 +97,7 @@ def start_experiment():
         
         0.5 Switched learningrate from 0.05 to 0.001
         
+        0.6 Switched back to update after sequence, batchsize to 4*cores
 
         Total Epochs {}
         Discriminator Steps {}
