@@ -157,7 +157,7 @@ DEFAULT_GENERAL = AppConfig(
 
     device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
-    num_real_samples=100,  # 5000 TODO 1000
+    num_real_samples=2000,  # 5000 TODO 1000
     num_eval_samples=100,  # 100
 
     mle_epochs=2,
@@ -166,7 +166,7 @@ DEFAULT_GENERAL = AppConfig(
 
     d_epochs=1,
     d_steps=1,
-    g_steps=20,
+    g_steps=10,
 
     batch_size=multiprocessing.cpu_count(),  # computational cost reasons TODO kleinere batchsize?
 
