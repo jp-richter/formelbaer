@@ -282,12 +282,16 @@ def training() -> None:
 
     for epoch in range(a_epochs):
 
-        # train discriminator
+        # train D
         adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)
 
-        # train generator
+        # train G
         for step in range(g_steps):
             adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step)
+
+        # increase D performance every 20th step
+        if not epoch == 0 and epoch%20 == 0:
+            config.general.num_real_samples += 2000
 
     loader.finish(nn_policy, nn_discriminator, nn_oracle)
 
