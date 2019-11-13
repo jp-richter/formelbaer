@@ -190,7 +190,7 @@ DEFAULT_GENERATOR = GeneratorConfig(
     dropout=0.2,
     learnrate=0.005,
     baseline=0.001,
-    gamma=0.99,  # TODO mal gamma=1 probieren?
+    gamma=1,
     bias=True
 
 )
