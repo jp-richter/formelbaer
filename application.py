@@ -291,7 +291,7 @@ def training() -> None:
 
         # increase D performance every 20th step
         if not epoch == 0 and epoch%20 == 0 and config.general.num_real_samples < 10000:
-            config.general.num_real_samples += 2000
+            config.general.num_real_samples += 1000
 
     loader.finish(nn_policy, nn_discriminator, nn_oracle)
 
