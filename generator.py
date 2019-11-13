@@ -237,3 +237,4 @@ def policy_gradient_update(nn_policy):
 
     del nn_policy.rewards[:]
     del nn_policy.probs[:]
+    del nn_policy.entropies[:]
