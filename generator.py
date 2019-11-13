@@ -220,7 +220,7 @@ def policy_gradient_update(nn_policy):
     prediction = torch.sum(prediction) / batch_size
 
     # add entropy
-    entropy = torch.stack(nn_policy.entropies, dim=1)
+    entropy = torch.stack(nn_policy.entropies, dim=1).to(config.general.device)
     entropy = torch.sum(entropy, dim=1)
     entropy = torch.sum(entropy) / batch_size
 

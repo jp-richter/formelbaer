@@ -45,7 +45,7 @@ def main():
         policy = net(random)
 
         # USE LOG
-        # policy = torch.log(policy)
+        policy = torch.log(policy)
 
         reward = torch.sum(policy * rewards)
         loss = -reward
