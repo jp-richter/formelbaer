@@ -219,12 +219,14 @@ def policy_gradient_update(nn_policy):
     average = torch.sum(average) / batch_size
     prediction = torch.sum(prediction) / batch_size
 
+    # TODO make the entropy more small with beta 0.01
+
     # add entropy
     entropy = torch.stack(nn_policy.entropies, dim=1).to(config.general.device)
     entropy = torch.sum(entropy, dim=1)
     entropy = torch.sum(entropy) / batch_size
 
-    loss = loss + entropy
+    loss = loss + (entropy * 0.01)
 
     nn_policy.optimizer.step()
 
