@@ -30,6 +30,8 @@ class Policy(nn.Module):
 
         self.probs = []
         self.rewards = []
+        self.entropies = []
+
         self.running_loss = 0.0
         self.loss_divisor = 0
         self.running_reward = 0.0
@@ -41,9 +43,9 @@ class Policy(nn.Module):
 
         if config.generator.bias:
             bias = distribution.load(config.paths.distribution_bias)
-            assert bias
+            assert bias is not None
             assert len(bias) == self.output_dim
-            self.bias = torch.tensor(bias)
+            self.bias = torch.tensor(bias).float()
             self.lin.bias = torch.nn.Parameter(self.bias, requires_grad=True)
 
     def forward(self, x, h):
@@ -121,6 +123,8 @@ def step(nn_policy, batch, hidden, save_prob=False):
     if save_prob:
         log_probs = policies.log_prob(actions)
         nn_policy.probs.append(log_probs)
+        entropy = policies.entropy()
+        nn_policy.entropies.append(entropy)
 
     # concat onehot tokens with the batch of sequences
     encodings = torch.tensor([tokens.onehot(id) for id in actions], device=config.general.device)
@@ -191,10 +195,8 @@ def policy_gradient_update(nn_policy):
 
     # compute state action values for each step
     for reward in nn_policy.rewards[::-1]:
-        total = reward + config.generator.gamma * total
+        total = (reward - config.generator.baseline) + config.generator.gamma * total
         returns.insert(0, total)
-
-    # TODO try baseline
 
     # weight state action values by log probability of action
     for log_prob, reward in zip(nn_policy.probs, returns):
@@ -217,7 +219,13 @@ def policy_gradient_update(nn_policy):
     average = torch.sum(average) / batch_size
     prediction = torch.sum(prediction) / batch_size
 
-    loss.backward()
+    # add entropy
+    entropy = torch.stack(nn_policy.entropies, dim=1)
+    entropy = torch.sum(entropy, dim=1)
+    entropy = torch.sum(entropy) / batch_size
+
+    loss = loss + entropy
+
     nn_policy.optimizer.step()
 
     nn_policy.running_loss += loss.item()

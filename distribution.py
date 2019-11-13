@@ -492,8 +492,11 @@ def scan(directory, constrictions):
 
 def save(path):
     with open(path, "w") as file:
+        string = ''
         for count in OCCURENCES:
-            file.write(str(count) + ',')
+            string += str(count) + ','
+        string = string[:-1]
+        file.write(string)
 
 
 def load(path):
@@ -504,7 +507,7 @@ def load(path):
         data = file.read()
         ls = data.split(',')
 
-    occurrences = [int(o) for o in ls]
+    occurrences = [int(o)/100000 for o in ls]  # arbitrary value to prevent overflow
     # total = sum(occurrences)
     # distribution = [o / total for o in occurrences]
 

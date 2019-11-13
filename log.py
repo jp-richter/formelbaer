@@ -100,6 +100,8 @@ def start_experiment():
         0.6 Switched back to update after sequence, batchsize to 4*cores
         
         0.7 Increment real samples D trains by 2000 Samples every 20 Epochs (max 10.000)
+        
+        0.8 Loss + Entropy and bias term
 
         Total Epochs {}
         Discriminator Steps {}
