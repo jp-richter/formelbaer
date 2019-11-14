@@ -189,6 +189,8 @@ def policy_gradient_update(nn_policy):
 
     # assumption: policy stores lists with tensors of size (batchsize) of length (steps until update)
     assert len(nn_policy.rewards) == len(nn_policy.probs)
+    assert nn_policy.probs[0].size() == torch.Size((config.general.batch_size))
+    for tensor in nn_policy.probs: pass
     assert all(tensor.size() == torch.Size((config.general.batch_size)) for tensor in nn_policy.probs)
     assert all(tensor.size() == torch.Size((config.general.batch_size)) for tensor in nn_policy.rewards)
 
