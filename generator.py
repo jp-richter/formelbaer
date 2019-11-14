@@ -180,14 +180,14 @@ def sample(nn_policy, num_batches):
 
 def policy_gradient_update(nn_policy):
     """
-    This function adjusts the parameters of the give policy net with the policy gradient method. The respective returns
-    and probabilities should be saved in the policy.rewards and policy.probs attributes and will be deleted after the
-    update.
+    This function adjusts the parameters of the give policy net with the REINFORCE algorithm.
 
     :param nn_policy: The net which parameters should be updated.
     """
 
     nn_policy.optimizer.zero_grad()
+
+    print(type(nn_policy.probs))
 
     # assumption: policy stores lists with tensors of size (batchsize) of length (steps until update)
     assert len(nn_policy.rewards) == len(nn_policy.probs)
