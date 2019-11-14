@@ -187,8 +187,6 @@ def policy_gradient_update(nn_policy):
 
     nn_policy.optimizer.zero_grad()
 
-    print(nn_policy.probs[0].size())
-
     # assumption: policy stores lists with tensors of size (batchsize) of length (steps until update)
     assert len(nn_policy.rewards) == len(nn_policy.probs)
     assert all(tensor.size() == (config.general.batch_size,) for tensor in nn_policy.probs)
