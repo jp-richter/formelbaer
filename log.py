@@ -102,6 +102,8 @@ def start_experiment():
         0.7 Increment real samples D trains by 2000 Samples every 20 Epochs (max 10.000)
         
         0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
+        
+        0.9 beta 0.01 -> 0.005
 
         Total Epochs {}
         Discriminator Steps {}
