@@ -122,8 +122,8 @@ def step(nn_policy, batch, hidden, save_prob=False):
     # save log probabilities for gradient computation
     if save_prob:
         log_probs = policies.log_prob(actions)
-        nn_policy.probs.append(log_probs)
         entropy = policies.entropy()
+        nn_policy.probs.append(log_probs)
         nn_policy.entropies.append(entropy)
 
     # concat onehot tokens with the batch of sequences
@@ -187,50 +187,48 @@ def policy_gradient_update(nn_policy):
     :param nn_policy: The net which parameters should be updated.
     """
 
-    total = 0
-    loss = []
-    returns = []
-
     nn_policy.optimizer.zero_grad()
 
-    # compute state action values for each step
-    for reward in nn_policy.rewards[::-1]:
-        total = (reward - config.generator.baseline) + config.generator.gamma * total
-        returns.insert(0, total)
+    # assumption: policy stores lists with tensors of size (batchsize) of length (steps until update)
+    assert len(nn_policy.rewards) == len(nn_policy.probs)
+    assert not [tensor for tensor in nn_policy.probs if not tensor.size() == torch.Size((config.general.batch_size))]
+    assert not [tensor for tensor in nn_policy.rewards if not tensor.size() == torch.Size((config.general.batch_size))]
 
     # weight state action values by log probability of action
-    for log_prob, reward in zip(nn_policy.probs, returns):
-        loss.append(-log_prob * reward)  # [tensor(batchsize)] for sequence length
+    total = torch.zeros(config.general.batch_size, device=config.general.device)
+    reward = torch.zeros(config.general.batch_size, device=config.general.device)
+    reward_without_log = torch.zeros(config.general.batch_size, device=config.general.device)
+
+    for log, rew in zip(nn_policy.probs, nn_policy.rewards):
+        reward_without_log = reward_without_log + rew
+        total = total + (rew - config.generator.baseline)
+        reward = reward + (log * total)
+
+    # actual task is to maximize this value
+    reward_without_log = torch.sum(reward_without_log)
+    reward_without_log = reward_without_log / config.general.batch_size
+
+    # average log prob * reward over batchsize
+    reward = torch.sum(reward)
+    reward = reward / config.general.batch_size
 
     # final prediction / equals reward if update every step
     prediction = nn_policy.rewards[-1]
+    prediction = torch.sum(prediction) / config.general.batch_size
 
-    # average reward
-    average = torch.stack(nn_policy.rewards, dim=1)
-    average = torch.sum(average, dim=1)
-
-    # sum rewards over all steps for each sample
-    loss = torch.stack(loss, dim=1)  # (batchsize, sequence length)
-    loss = torch.sum(loss, dim=1)  # (batchsize)
-
-    # average rewards over batch
-    batch_size = loss.shape[0]
-    loss = torch.sum(loss) / batch_size
-    average = torch.sum(average) / batch_size
-    prediction = torch.sum(prediction) / batch_size
-
-    # add entropy
+    # negate for gradient descent and substract entropy
     entropy = torch.stack(nn_policy.entropies, dim=1).to(config.general.device)
     entropy = torch.sum(entropy, dim=1)
-    entropy = torch.sum(entropy) / batch_size
+    entropy = torch.sum(entropy) / config.general.batch_size
+    entropy = entropy * 0.005
 
-    loss = loss + (entropy * 0.005)
-
+    loss = - reward + entropy
+    loss.backward()
     nn_policy.optimizer.step()
 
     nn_policy.running_loss += loss.item()
     nn_policy.loss_divisor += 1
-    nn_policy.running_reward += average.item()
+    nn_policy.running_reward += reward_without_log.item()
     nn_policy.reward_divisor += 1
     nn_policy.running_prediction += prediction.item()
     nn_policy.prediction_divisor += 1

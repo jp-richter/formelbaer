@@ -3,7 +3,6 @@ from matplotlib import cm
 import numpy
 import re
 import sys
-import matplotlib.colors as mcolors
 
 
 # example: x_values = np.arrage(0,100,10)
@@ -26,7 +25,6 @@ def single_plot2d(x, y, xlabel, ylabel, title, fontsize):
 def multiple_plot2d(values, xlabel, ylabel, legend, title, fontsize):
     figure, axis = plt.subplots()
     lines = ['b', 'r', 'y']
-    # colors = mcolors.CSS4_COLORS.values()
 
     for (x,y), line, label in zip(values, lines, legend):
         axis.plot(x, y, line, label=label, linewidth=0.3)
@@ -110,7 +108,7 @@ def parse(filepath, target):
 
 
 def plot(filepath):
-    targets = ['greward', 'gloss'] # prediction
+    targets = ['greward', 'gloss', 'gprediction']
     targets_labels = {
         'greward': 'Generator Reward',
         'gloss': 'Generator Loss',
@@ -128,12 +126,21 @@ def plot(filepath):
         figure, _ = single_plot2d(x, y, 'Step', targets_labels[t], '', 12)
         save_plot(figure, filepath[:-11] + '{}_plot.png'.format(t))
 
-        # numbers are to small in comparison
-        if not t == 'gprediction':
-            results.append((x,y))
+        if t == 'gprediction':
+            pass
+
+        if t == 'gloss':
+            # y = (y - y.mean()) / (y.std() + numpy.finfo(numpy.float32).eps.item())
+            y = (y - y.min()) / (y.max() - y.min())
+
+        if t == 'greward':
+            # y = (y - y.mean()) / (y.std() + numpy.finfo(numpy.float32).eps.item())
+            y = (y - y.min()) / (y.max() - y.min())
+
+        results.append((x, y))
 
     # plot all on same surface
-    legend = ['Generator Reward', 'Generator Loss']
+    legend = ['Generator Reward', 'Generator Loss', 'Discriminator Prediction']
     figure, axis = multiple_plot2d(results, 'Step', '', legend, '', 12)
     save_plot(figure, filepath[:-11] + 'generator_plot.png')
 
