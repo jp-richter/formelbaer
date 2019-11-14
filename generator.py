@@ -220,7 +220,7 @@ def policy_gradient_update(nn_policy):
     entropy = torch.sum(entropy) / config.general.batch_size
     entropy = entropy * 0.005
 
-    loss = - reward + entropy
+    loss = - (reward + entropy)
     loss.backward()
     nn_policy.optimizer.step()
 

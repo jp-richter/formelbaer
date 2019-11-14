@@ -5,101 +5,124 @@ import numpy
 import io
 import logging
 import torchsummary
+import matplotlib.pyplot
 
 from torch.utils.tensorboard import SummaryWriter
 from contextlib import redirect_stdout
 
 
-# class ExperimentInfo():
-#
-#     def __init__(self, folder: str, name: str):
-#         self.folder = folder
-#         self.name = name
-#         self.date = str(datetime.datetime.now()).replace(':', '-').replace(' ', '-')[:-7]
-#         self.dict = {}
-#
-#     def __str__(self) -> str:
-#         string = 'Date: {}\n'.format(self.date) if self.date is not None else ''
-#
-#         for key, value in self.dict.items():
-#             string += '{}: {}\n'.format(key, value)
-#
-#         return string
-#
-#     def __getitem__(self, item: str):
-#         return self.dict[item]
-#
-#     def __setitem__(self, key: str, value):
-#         self.dict[key] = value
-#
-#     def __delitem__(self, key: str):
-#         del self.dict[key]
-#
-#     def __iter__(self):
-#         return iter(self.dict)
-#
-#     def __len__(self):
-#         return len(self.dict)
-#
-#     def items(self):
-#         return self.dict.items()
-#
-#     def values(self):
-#         return self.dict.values()
-#
-#     def keys(self):
-#         return self.dict.keys()
-#
-#     def load(self):
-#         with open('{}/{}_info.json'.format(self.folder, self.name), "r") as file:
-#             dict = json.load(file)
-#             self.__dict__ = dict
-#
-#     def save(self):
-#         parameters = self.__dict__
-#         with open('{}/{}_info.json'.format(self.folder, self.name), "w") as file:
-#             json.dump(parameters, file, indent=4)
-#
-#     def plot(self, keys: list, title: str, labels: list, dtype: str, normalized: bool = False):
-#         if not len(keys) > 0:
-#             print('List of keys to plot is empty.')
-#             traceback.print_last(2)
-#             return
-#
-#         if not len(keys) == len(labels):
-#             print('Amount of keys differs from amount of labels.')
-#             traceback.print_last(2)
-#             return
-#
-#         plotter = Plotter()
-#         dtypes = plotter.types()
-#
-#         if not dtype in dtypes:
-#             print('Type {} is invalid, expected one of {}.'.format(dtype, dtypes))
-#             traceback.print_last(2)
-#             return
-#
-#         ls = []
-#
-#         for key in keys:
-#             try:
-#                 values = numpy.array(self.dict[key])
-#             except KeyError:
-#                 print('Key {} does not exist.'.format(key))
-#                 traceback.print_last(2)
-#                 continue
-#             except TypeError:
-#                 print('Value of {} is of type {}, expected type list.'.format(key, type(self.dict[key])))
-#                 traceback.print_last(2)
-#                 continue
-#
-#             if normalized:
-#                 values = (values - values.min()) / (values.max() - values.min())
-#
-#             ls.append(values)
-#
-#         path = '{}/{}.png'.format(self.folder, title)
-#         plotter.plot(path, ls, title, labels, dtype)
+def plot(path: str, values: list, title: str, labels: list, dtype: str):
+    figure, axis = matplotlib.pyplot.subplots()
+
+    types = {
+        'bar': axis.bar,
+        'plot': axis.plot,
+        'hist': axis.hist
+    }
+
+    colors = ['b', 'r', 'y']
+
+    for y, label, color in zip(values, labels, colors):
+        x = numpy.arange(0, len(y), 1)
+        function = types[dtype]
+        function(x, y, color, alpha=0.5 if len(values)>1 else 1, label=label)
+
+    matplotlib.pyplot.legend(loc='best')
+    matplotlib.pyplot.title(title)
+    axis.grid()
+
+    figure.save_fig(path)
+
+
+class ExperimentInfo():
+
+    def __init__(self, folder: str, name: str):
+        self.folder = folder
+        self.name = name
+        self.date = str(datetime.datetime.now()).replace(':', '-').replace(' ', '-')[:-7]
+        self.dict = {}
+
+    def __str__(self) -> str:
+        string = 'Date: {}\n'.format(self.date) if self.date is not None else ''
+
+        for key, value in self.dict.items():
+            string += '{}: {}\n'.format(key, value)
+
+        return string
+
+    def __getitem__(self, item: str):
+        return self.dict[item]
+
+    def __setitem__(self, key: str, value):
+        self.dict[key] = value
+
+    def __delitem__(self, key: str):
+        del self.dict[key]
+
+    def __iter__(self):
+        return iter(self.dict)
+
+    def __len__(self):
+        return len(self.dict)
+
+    def items(self):
+        return self.dict.items()
+
+    def values(self):
+        return self.dict.values()
+
+    def keys(self):
+        return self.dict.keys()
+
+    def load(self):
+        with open('{}/{}_info.json'.format(self.folder, self.name), "r") as file:
+            dict = json.load(file)
+            self.__dict__ = dict
+
+    def save(self):
+        parameters = self.__dict__
+        with open('{}/{}_info.json'.format(self.folder, self.name), "w") as file:
+            json.dump(parameters, file, indent=4)
+
+    def plot(self, keys: list, title: str, labels: list, dtype: str, normalized: bool = False):
+        if not len(keys) > 0:
+            print('List of keys to plot is empty.')
+            traceback.print_last(2)
+            return
+
+        if not len(keys) == len(labels):
+            print('Amount of keys differs from amount of labels.')
+            traceback.print_last(2)
+            return
+
+        dtypes = ['bar', 'plot']
+
+        if not dtype in dtypes:
+            print('Type {} is invalid, expected one of {}.'.format(dtype, dtypes))
+            traceback.print_last(2)
+            return
+
+        ls = []
+
+        for key in keys:
+            try:
+                values = numpy.array(self.dict[key])
+            except KeyError:
+                print('Key {} does not exist.'.format(key))
+                traceback.print_last(2)
+                continue
+            except TypeError:
+                print('Value of {} is of type {}, expected type list.'.format(key, type(self.dict[key])))
+                traceback.print_last(2)
+                continue
+
+            if normalized:
+                values = (values - values.min()) / (values.max() - values.min())
+
+            ls.append(values)
+
+        path = '{}/{}.png'.format(self.folder, title)
+        plot(path, ls, title, labels, dtype)
 
 
 class Logger():
@@ -135,8 +158,9 @@ class Logger():
 
 class Board(SummaryWriter):
 
-    def __init__(self, folder):
+    def __init__(self, folder: str, name: str):
         super().__init__(folder)
+        self.info = ExperimentInfo(folder, name)
 
     def setup(self, models: list, hyperparameters: dict, notes: str = ''):
         def summary(model):
@@ -146,12 +170,17 @@ class Board(SummaryWriter):
             return channel.getvalue()
 
         for model in models:
-            self.add_text('Models', summary(model))
+            sum = summary(model)
+            self.add_text('Models', sum)
+            self.info['models'] = sum
 
         for parameter, value in hyperparameters.items():
             self.add_text('Hyperparameters', '{}: {}'.format(parameter, value))
+        self.info['hyperparameters'] = hyperparameters
 
         self.add_text('Notes', notes)
+        self.info['notes'] = notes
+
 
 
 # all hyperparameters of a run
