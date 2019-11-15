@@ -1,14 +1,37 @@
 import datetime
 import json
+import os
 import traceback
 import numpy
 import io
 import logging
 import torchsummary
+import torchvision
+import torch
 import matplotlib.pyplot
+import sys
 
 from torch.utils.tensorboard import SummaryWriter
 from contextlib import redirect_stdout
+
+
+class _TracePrints():
+
+    def __init__(self):
+        self.stdout = sys.stdout
+
+    def write(self, s):
+        self.stdout.write("Writing %r\n" % s)
+        traceback.print_stack(file=self.stdout)
+
+
+class Tracer():
+
+    def start(self):
+        sys.stdout = _TracePrints()
+
+    def stop(self):
+        sys.stdout = sys.__stdout__
 
 
 def plot(path: str, values: list, title: str, labels: list, dtype: str):
@@ -25,7 +48,7 @@ def plot(path: str, values: list, title: str, labels: list, dtype: str):
     for y, label, color in zip(values, labels, colors):
         x = numpy.arange(0, len(y), 1)
         function = types[dtype]
-        function(x, y, color, alpha=0.5 if len(values)>1 else 1, label=label)
+        function(x, y, color, alpha=0.5 if len(values) > 1 else 1, label=label)
 
     matplotlib.pyplot.legend(loc='best')
     matplotlib.pyplot.title(title)
@@ -83,6 +106,17 @@ class ExperimentInfo():
         parameters = self.__dict__
         with open('{}/{}_info.json'.format(self.folder, self.name), "w") as file:
             json.dump(parameters, file, indent=4)
+
+        for key, value in self.dict.items():
+            if isinstance(value, list) and isinstance(value[0], torch.Tensor):
+                for i, v in enumerate(value):
+                    try:
+                        os.makedirs('{}/{}'.format(self.folder, key))
+                        pil = torchvision.transforms.ToPILImage()
+                        pil(v).save('{}/{}/{}.png'.format(self.folder, key, i))
+                    except:
+                        break
+
 
     def plot(self, keys: list, title: str, labels: list, dtype: str, normalized: bool = False):
         if not len(keys) > 0:
@@ -158,7 +192,7 @@ class Logger():
 
 class Board(SummaryWriter):
 
-    def __init__(self, folder: str, name: str):
+    def __init__(self, folder: str, name: str = str(datetime.datetime.now()).replace(':', '-').replace(' ', '-')[:-7]):
         super().__init__(folder)
         self.info = ExperimentInfo(folder, name)
 
@@ -173,6 +207,7 @@ class Board(SummaryWriter):
             sum = summary(model)
             self.add_text('Models', sum)
             self.info['models'] = sum
+            self.add_graph(model)
 
         for parameter, value in hyperparameters.items():
             self.add_text('Hyperparameters', '{}: {}'.format(parameter, value))
@@ -181,6 +216,41 @@ class Board(SummaryWriter):
         self.add_text('Notes', notes)
         self.info['notes'] = notes
 
+    def _info(self, function):
+        def wrapper(*args, **kwargs):
+            id, value = (args[0], args[1])
+            self.info[id] = self.info[id].append(value) if id in self.info.keys() else [value]
+            function(*args, **kwargs)
+
+        return wrapper
+
+    @_info
+    def add_scalar(self, tag, scalar_value, global_step=None, walltime=None):
+        super().add_scalar(tag, scalar_value, global_step)
+
+    @_info
+    def add_scalars(self, main_tag, tag_scalar_dict, global_step=None, walltime=None):
+        super().add_scalars(main_tag, tag_scalar_dict, global_step)
+
+    @_info
+    def add_text(self, tag, text_string, global_step=None, walltime=None):
+        super().add_text(tag, text_string, global_step)
+
+    @_info
+    def add_image(self, tag, img_tensor, global_step=None, walltime=None, dataformats='CHW'):
+        super().add_image(tag, img_tensor, global_step, walltime, dataformats)
+
+    @_info
+    def add_images(self, tag, img_tensor, global_step=None, walltime=None, dataformats='NCHW'):
+        super().add_images(tag, img_tensor, global_step, walltime, dataformats)
+
+    @_info
+    def add_histogram(self, tag, values, global_step=None, bins='tensorflow', walltime=None, max_bins=None):
+        super().add_histogram(tag, values, global_step, bins, walltime, max_bins)
+
+    def close(self):
+        self.info.save()
+        super().close()
 
 
 # all hyperparameters of a run
