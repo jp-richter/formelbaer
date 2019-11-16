@@ -1,8 +1,7 @@
 import config as cfg
 import logging
 import shutil
-import plotloss
-import plotpolicy
+import deprecated
 
 log = None
 
@@ -182,7 +181,7 @@ def finish_experiment(directory):
         log.info('Failed to plot the results.')
 
     try:
-        plotpolicy.plot(directory + '/policies')
+        deprecated.plot(directory + '/policies')
     except:
         print('Failed to plot policies.')
         log.info('Failed to plot policies.')

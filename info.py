@@ -7,6 +7,7 @@ import io
 import logging
 import torchsummary
 import torchvision
+import requests
 import torch
 import matplotlib.pyplot
 import sys
@@ -225,32 +226,50 @@ class Board(SummaryWriter):
         return wrapper
 
     @_info
-    def add_scalar(self, tag, scalar_value, global_step=None, walltime=None):
+    def add_scalar(self, tag: str, scalar_value, global_step=None, walltime=None):
         super().add_scalar(tag, scalar_value, global_step)
 
     @_info
-    def add_scalars(self, main_tag, tag_scalar_dict, global_step=None, walltime=None):
+    def add_scalars(self: str, main_tag, tag_scalar_dict, global_step=None, walltime=None):
         super().add_scalars(main_tag, tag_scalar_dict, global_step)
 
     @_info
-    def add_text(self, tag, text_string, global_step=None, walltime=None):
+    def add_text(self, tag: str, text_string, global_step=None, walltime=None):
         super().add_text(tag, text_string, global_step)
 
     @_info
-    def add_image(self, tag, img_tensor, global_step=None, walltime=None, dataformats='CHW'):
+    def add_image(self, tag: str, img_tensor, global_step=None, walltime=None, dataformats='CHW'):
         super().add_image(tag, img_tensor, global_step, walltime, dataformats)
 
     @_info
-    def add_images(self, tag, img_tensor, global_step=None, walltime=None, dataformats='NCHW'):
+    def add_images(self, tag: str, img_tensor, global_step=None, walltime=None, dataformats='NCHW'):
         super().add_images(tag, img_tensor, global_step, walltime, dataformats)
 
     @_info
-    def add_histogram(self, tag, values, global_step=None, bins='tensorflow', walltime=None, max_bins=None):
+    def add_histogram(self, tag: str, values, global_step=None, bins='tensorflow', walltime=None, max_bins=None):
         super().add_histogram(tag, values, global_step, bins, walltime, max_bins)
 
     def close(self):
         self.info.save()
         super().close()
+
+
+class TelegramService():
+    """
+    1. Search for user "PythonPingBot" at Telegram and send a message "/start".
+    """
+
+    SEND = 'https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={bot_chatid}&parse_mode=Markdown&text={message}'
+
+    def __init__(self, user: str):
+        self.user = user
+        self.bot_token = ''
+        self.bot_chatid = ''
+
+    def telegram_bot_sendtext(self, message: str):
+        send_text = self.SEND.format(self.bot_token, self.bot_chatid, message)
+        response = requests.get(send_text)
+        return response.json()
 
 
 # all hyperparameters of a run

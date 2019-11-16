@@ -7,6 +7,8 @@ import loader
 import log
 import tree
 
+# TODO notes here
+
 
 def collect_reward(nn_discriminator, batch):
     """
@@ -156,8 +158,6 @@ def training() -> None:
     Overwrite the configuration variables in config.py instead and start the adversarial training again.
     """
 
-    loader.initialize()
-
     nn_discriminator = discriminator.Discriminator().to(config.general.device)
     nn_policy = generator.Policy().to(config.general.device)
     nn_rollout = generator.Policy().to(config.general.device)
@@ -191,6 +191,7 @@ def training() -> None:
 
 
 def application() -> None:
+    loader.initialize()
     training()
     loader.shutdown()
 
