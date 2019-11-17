@@ -124,3 +124,9 @@ def to_trees(sequences: list):
         trees.append(to_tree(sequence))
 
     return trees
+
+
+def to_latex(sequences: list):
+    trees = to_trees(sequences)
+    latexs = [t.latex() for t in trees]
+    return latexs

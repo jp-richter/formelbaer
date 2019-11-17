@@ -24,12 +24,9 @@ class Discriminator(nn.Module):
 
         self.selu = nn.SELU()
         self.sigmoid = nn.Sigmoid()
-        # self.softmax = nn.Softmax(dim=1)  # (batch_size, probability)
 
-        self.running_loss = 0.0
-        self.loss_divisor = 0
-        self.running_acc = 0.0
-        self.acc_divisor = 0
+        self.loss = []
+        self.acc = []
 
         self.criterion = None
         self.optimizer = None

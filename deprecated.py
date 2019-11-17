@@ -5,6 +5,7 @@ import numpy
 import tokens
 import config
 import generator
+import re
 import matplotlib.pyplot as plt
 
 
@@ -38,7 +39,7 @@ class PolicyEvaluator:
         batch, hidden = nn_policy.initial()
         results = torch.empty((0, batch.shape[0], batch.shape[2]))
 
-        for _ in range(config.general.sequence_length):
+        for _ in range(config.sequence_length):
             policies, batch, hidden = self._policy_step(nn_policy, batch, hidden)
             policies = policies.unsqueeze(dim=0)
             results = torch.cat((results, policies), dim=0)

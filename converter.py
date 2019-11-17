@@ -1,10 +1,11 @@
+from config import config, paths
+
 import subprocess
 import os
 import shutil
 import psutil
 import math
 import pathlib
-import config
 import tree
 import ray
 import template
@@ -24,7 +25,7 @@ def precompile_preamble():
     This function precompiles the preamble of the template and saves the .fmt file at the synthetic data folder.
     """
 
-    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + config.paths.dump
+    precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + paths.dump
     subprocess.run(precompile_cmd, cwd=CODE_DIRECTORY, shell=True)
 
 

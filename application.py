@@ -1,13 +1,77 @@
-import config
+from config import config, paths
+from discriminator import Discriminator
+from collections import Counter
+from progress.bar import Bar
 
 import torch
 import generator
-import discriminator
 import loader
-import log
 import tree
+import info
+import tokens
 
-# TODO notes here
+
+# TODO kein smoothing (curve) fuer median action, vlt stattdessen histogram?
+# TODO bei tensorboard manche sachen out of bounds?
+# TODO mein eigenes experiment info speichert die daten nicht
+
+
+def policy_tensorboard(policy, adversarial_step, g_step, batch, board):
+    """
+
+    :param policy:
+    :param adversarial_step:
+    :param g_step:
+    :param batch:
+    :param board:
+    """
+
+    loss = sum(policy.average_losses) / len(policy.average_losses)
+    prediction = sum(policy.average_predictions) / len(policy.average_predictions)
+    reward = sum(policy.average_rewards) / len(policy.average_rewards)
+    entropy = sum(policy.average_entropies) / len(policy.average_entropies)
+
+    policies = torch.mean(torch.stack(policy.average_policies, dim=0), dim=0)
+    action_dict = Counter([id.item() for sample in policy.sampled_actions for id in sample])  # returns {unique values: counts}
+    actions = [action_dict[index] if index in action_dict.keys() else 0 for index in range(tokens.count())]
+
+    del policy.average_losses[:]
+    del policy.average_predictions[:]
+    del policy.average_rewards[:]
+    del policy.average_entropies[:]
+    del policy.average_policies[:]
+    del policy.sampled_actions[:]
+
+    board.add_scalar('Generator/Loss', loss, adversarial_step + g_step)
+    board.add_scalar('Generator/Prediction', prediction, adversarial_step + g_step)
+    board.add_scalar('Generator/Reward', reward, adversarial_step + g_step)
+    board.add_scalar('Generator/Entropy', entropy, adversarial_step + g_step)
+    board.add_scalars('Generator/Loss-Reward', {'Loss': loss, 'Reward': reward}, adversarial_step + g_step)
+
+    board.add_histogram('Generator/Actions', torch.tensor(actions), adversarial_step + g_step)
+    board.add_histogram('Generator/AveragePolicy', policies, adversarial_step + g_step)  # TODO
+
+    examples = ', '.join(tree.to_latex(batch[-3:].tolist()))
+    board.add_text('Generator/Formulars', examples, adversarial_step + g_step)
+
+
+def discriminator_tensorboard(discriminator, adversarial_step, d_epochs, d_epoch, board):
+    """
+
+    :param discriminator:
+    :param adversarial_step:
+    :param d_epochs:
+    :param d_epoch:
+    """
+
+    loss = sum(discriminator.loss) / len(discriminator.loss)
+    acc = sum(discriminator.acc) / len(discriminator.acc)
+
+    del discriminator.loss[:]
+    del discriminator.acc[:]
+
+    board.add_scalar('Discriminator/Loss', loss, adversarial_step * d_epochs + d_epoch)
+    board.add_scalar('Discriminator/Accuracy', acc, adversarial_step * d_epochs + d_epoch)
 
 
 def collect_reward(nn_discriminator, batch):
@@ -22,7 +86,7 @@ def collect_reward(nn_discriminator, batch):
 
     images = loader.prepare_batch(batch)
     output = nn_discriminator(images)
-    reward = torch.empty((batch.shape[0], 1), device=config.general.device)
+    reward = torch.empty((batch.shape[0], 1), device=config.device)
 
     # TODO punish atomic expressions
 
@@ -32,167 +96,141 @@ def collect_reward(nn_discriminator, batch):
     return reward
 
 
-def adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step) -> None:
-    """
-    The training loop of the generating policy net.
+def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_steps, board):
 
-    :param epoch: The current iteration of the adversarial training for the logging module.
-    :param nn_policy: The policy net that is the training target.
-    :param nn_rollout: The rollout net that is used to complete unfinished sequences for estimation of rewards.
-    :param nn_discriminator: The CNN that estimates the probability that the generated sequences represent the real
-        data distribution, which serve as reward for the policy gradient training of the policy net.
-    """
+    rollout.set_parameters_to(policy)
+    policy.train()
+    rollout.eval()
+    discriminator.eval()
 
-    nn_rollout.set_parameters_to(nn_policy)
-    nn_policy.train()
-    nn_rollout.eval()
-    nn_discriminator.eval()
+    for step in range(g_steps):
+        batch, hidden = policy.initial()
 
-    batch_size = config.general.batch_size
-    sequence_length = config.general.sequence_length
-    montecarlo_trials = config.general.montecarlo_trials
+        for length in range(config.sequence_length):
 
-    batch, hidden = nn_policy.initial()
+            # generate a single next token given the sequences generated so far
+            batch, hidden = generator.step(policy, batch, hidden, save_prob=True)
+            q_values = torch.empty([config.batch_size, 0], device=config.device)
 
-    for length in range(sequence_length):
-
-        # generate a single next token given the sequences generated so far
-        batch, hidden = generator.step(nn_policy, batch, hidden, save_prob=True)
-        q_values = torch.empty([batch_size, 0], device=config.general.device)
-
-        # compute the Q(token,subsequence) values with monte carlo approximation
-        if not batch.shape[1] < sequence_length:
-            for _ in range(montecarlo_trials):
-                samples = generator.rollout(nn_rollout, batch, hidden)
-                reward = collect_reward(nn_discriminator, samples)
+            # compute the Q(token,subsequence) values with monte carlo approximation
+            if not batch.shape[1] < config.sequence_length:
+                for _ in range(config.montecarlo_trials):
+                    samples = generator.rollout(rollout, batch, hidden)
+                    reward = collect_reward(discriminator, samples)
+                    q_values = torch.cat([q_values, reward], dim=1)
+            else:
+                reward = collect_reward(discriminator, batch)
                 q_values = torch.cat([q_values, reward], dim=1)
-        else:
-            reward = collect_reward(nn_discriminator, batch)
-            q_values = torch.cat([q_values, reward], dim=1)
 
-        # average the reward over all trials
-        q_values = torch.mean(q_values, dim=1)
-        nn_policy.rewards.append(q_values)
+            # average the reward over all trials
+            q_values = torch.mean(q_values, dim=1)
+            policy.rewards.append(q_values)
 
-        generator.policy_gradient_update(nn_policy)  # TODO comment out to reward like in SeqGAN
-        batch, hidden = (batch.detach(), hidden.detach())  # TODO comment out to reward like in SeqGAN
+            # generator.policy_gradient_update(policy)  # TODO comment out to reward like in SeqGAN
+            # batch, hidden = (batch.detach(), hidden.detach())  # TODO comment out to reward like in SeqGAN
 
-    # generator.policy_gradient_update(nn_policy)  # TODO comment in to reward like in SeqGAN
-    log.generator_loss(nn_policy, epoch, step)
-
-    # DEBUG PRINT
-    batch = batch[-3:]
-    trees = tree.to_trees(batch.tolist())
-    latexs = [t.latex() for t in trees]
-
-    for l in latexs:
-        print('Example Formular: ' + l)
-        log.log.info('Example Formular: ' + l)
+        generator.policy_gradient_update(policy)  # TODO comment in to reward like in SeqGAN
+        policy_tensorboard(policy, adversarial_step, step, batch, board)
 
 
-def adversarial_discriminator(nn_discriminator, nn_generator, nn_oracle, d_steps, d_epochs, epoch) -> None:
-    """
-    The training loop of the discriminator net.
+def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, d_epochs, board):
+    discriminator.reset()
+    discriminator.train()
+    policy.eval()
 
-    :param epoch: The current iteration of the adversarial training for the logging module.
-    :param d_steps: The amount of steps the discriminator should be trained in one adversarial cycle.
-    :param nn_generator: The policy net which generates the synthetic data the CNN gets trained to classify.
-    :param nn_discriminator: The CNN that outputs an estimation of the probability that a given data point was generated
-        by the policy network.
-    :param nn_oracle: If the script uses oracle training fake real samples will be generated by the oracle net.
-    :param d_epochs: The amount of epochs the discriminator trains per d step. In case of oracle training a samplesize
-        can be specified and one epoch will contain the samplesize of positive and an equal amount of negative samples.
-        In case the discriminator gets trained on arxiv data an upper limit of real samples can be specified and one
-        epoch will contain the limit of real and an equal amount of generated samples.
-    """
+    num_samples = config.num_real_samples * 2 * d_steps  # equal amount of generated data
+    data_loader = loader.prepare_loader(num_samples, policy)
 
-    nn_discriminator.reset()
-    nn_discriminator.train()
-    nn_generator.eval()
-
-    num_samples = config.general.num_real_samples * 2 * d_steps  # equal amount of generated data
-    data_loader = loader.prepare_loader(num_samples, nn_generator, nn_oracle)
-
-    debug = []
-    count = 0
-
-    for d_epoch in range(d_epochs):
+    for epoch in range(d_epochs):
         for images, labels in data_loader:
-            images = images.to(config.general.device)
-            labels = labels.to(config.general.device)
+            images = images.to(config.device)
+            labels = labels.to(config.device)
 
-            nn_discriminator.optimizer.zero_grad()
-            outputs = nn_discriminator(images)
+            discriminator.optimizer.zero_grad()
+            outputs = discriminator(images)
 
             # output[:,0] P(x ~ real)
             # output[:,1] P(x ~ synthetic)
 
-            count += images.shape[0]
-            if len(data_loader.dataset) - count <= config.general.batch_size:
-                debug = [(str(out.item()), str(lab.item())) for (out, lab) in zip(outputs, labels)]
-
-            loss = nn_discriminator.criterion(outputs, labels.float())
+            loss = discriminator.criterion(outputs, labels.float())
             loss.backward()
-            nn_discriminator.optimizer.step()
+            discriminator.optimizer.step()
 
-            nn_discriminator.running_loss += loss.item()
-            nn_discriminator.loss_divisor += 1
-            nn_discriminator.running_acc += torch.sum((outputs > 0.5) == (labels == 1)).item()
-            nn_discriminator.acc_divisor += outputs.shape[0]
+            discriminator.loss.append(loss.item())
+            discriminator.acc.append(torch.sum((outputs > 0.5) == (labels == 1)).item() / outputs.shape[0])
 
-        log.discriminator_loss(nn_discriminator, epoch, d_epoch)
-
-    # DEBUG PRINT
-    print('---')
-    print('DEBUG: DISCRIMINATOR PREDICTIONS')
-    log.log.info('DEBUG: DISCRIMINATOR PREDICTIONS')
-
-    for output, label in debug:
-        print('Prediction ' + output + ' Label ' + label)
-        log.log.info('Prediction ' + output + ' Label ' + label)
+        discriminator_tensorboard(discriminator, adversarial_step, d_epochs, epoch, board)
 
 
-def training() -> None:
+def training(discriminator, policy, rollout, board):
     """
     The main loop of the script. To change parameters of the adversarial training parameters should not be changed here.
     Overwrite the configuration variables in config.py instead and start the adversarial training again.
     """
 
-    nn_discriminator = discriminator.Discriminator().to(config.general.device)
-    nn_policy = generator.Policy().to(config.general.device)
-    nn_rollout = generator.Policy().to(config.general.device)
-    nn_oracle = generator.Oracle().to(config.general.device)
+    print('Starting adversarial training..')
+    progress = Bar('Iteration Progress', max=config.adversarial_steps)
+    for adversarial_step in range(config.adversarial_steps):
 
-    nn_discriminator.criterion = torch.nn.BCELoss()
-    nn_oracle.criterion = torch.nn.NLLLoss()
-    nn_discriminator.optimizer = torch.optim.Adam(nn_discriminator.parameters(), lr=config.discriminator.learnrate)
-    nn_policy.optimizer = torch.optim.Adam(nn_policy.parameters(), lr=config.generator.learnrate)
+        progress.next()
 
-    # start adversarial training
-    d_steps = config.general.d_steps
-    g_steps = config.general.g_steps
-    a_epochs = config.general.total_epochs
-    d_epochs = config.general.d_epochs
+        adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs, board)
+        adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps, board)
 
-    for epoch in range(a_epochs):
+        if not adversarial_step == 0 and adversarial_step%10 == 0:
+            policy.save(paths.policies)
 
-        # train D
-        adversarial_discriminator(nn_discriminator, nn_policy, nn_oracle, d_steps, d_epochs, epoch)
+        if not adversarial_step == 0 and adversarial_step%20 == 0 and config.general.num_real_samples < 10000:
+            config.num_real_samples += 1000
 
-        # train G
-        for step in range(g_steps):
-            adversarial_generator(nn_policy, nn_rollout, nn_discriminator, epoch, step)
+    progress.finish()
+    print('Finished training and saving results.')
+    return discriminator, policy
 
-        # increase D performance every 20th step
-        if not epoch == 0 and epoch%20 == 0 and config.general.num_real_samples < 10000:
-            config.general.num_real_samples += 1000
 
-    loader.finish(nn_policy, nn_discriminator, nn_oracle)
+def initialize(experiment):
+    """
+    Setup neural networks and tensorboard logging.
+    """
+
+    discriminator = Discriminator().to(config.device)
+    policy = generator.Policy().to(config.device)
+    rollout = generator.Policy().to(config.device)
+
+    discriminator.criterion = torch.nn.BCELoss()
+    discriminator.optimizer = torch.optim.Adam(discriminator.parameters(), lr=config.d_learnrate)
+    policy.optimizer = torch.optim.Adam(policy.parameters(), lr=config.g_learnrate)
+
+    hyperparameter = config.__dict__  # TODO fix, kein step hparams
+    experiment['hyperparameter'] = hyperparameter
+
+    notes = '''
+    0.1 Added Multipages   
+    0.2 Resetting D Weights After Each Step
+    0.3 Set Batchsize to cores
+    0.4 Switched to update policy after each step in a sequence
+    0.5 Switched learningrate from 0.05 to 0.001
+    0.6 Switched back to update after sequence, batchsize to 4*cores
+    0.7 Increment real samples D trains by 2000 Samples every 20 Epochs (max 10.000)
+    0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
+    0.9 entropy beta 0.01 -> 0.005
+    '''
+    experiment
+
+    return discriminator, policy, rollout
 
 
 def application() -> None:
     loader.initialize()
-    training()
+
+    # setup logging
+    experiment = info.ExperimentInfo(loader.make_directory_with_timestamp())
+
+    # training
+    discriminator, policy, rollout = initialize(experiment)
+    training(discriminator, policy, rollout, experiment)
+
+    loader.finish(policy, discriminator, experiment)
     loader.shutdown()
 
 

@@ -1,7 +1,8 @@
+from config import paths
+
 import re
 import sys
 import os
-import config
 import tokens
 import numpy as np
 
@@ -487,7 +488,7 @@ def scan(directory, constrictions):
         if count > 2000:
             break
 
-    save(config.paths.distribution_bias)
+    save(paths.distribution_bias)
 
 
 def save(path):
@@ -525,7 +526,7 @@ def load(path):
 
 
 def read_file_names():
-    iterator = os.scandir(config.paths.arxiv_data)
+    iterator = os.scandir(paths.arxiv_data)
     filenames = []
     for entry in iterator:
         if entry.is_dir():

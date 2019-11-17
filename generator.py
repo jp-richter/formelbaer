@@ -1,10 +1,10 @@
 from torch import nn
+from config import config, paths
 
 import tokens
 import torch
-import os
 import distribution
-import config as config
+import statistics
 
 
 class Policy(nn.Module):
@@ -19,30 +19,35 @@ class Policy(nn.Module):
 
         self.input_dim = tokens.count()
         self.output_dim = tokens.count()
-        self.hidden_dim = config.generator.hidden_dim
-        self.dropout = config.generator.dropout
-        self.layers = config.generator.layers
+        self.hidden_dim = config.g_hidden_dim
+        self.dropout = config.g_dropout
+        self.layers = config.g_layers
 
         self.gru = nn.GRU(self.input_dim, self.hidden_dim, self.layers, batch_first=True, dropout=self.dropout)
         self.lin = nn.Linear(self.hidden_dim, self.output_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)  # in forward (batch_size, num_features)
 
+        # lists of elements (batchsize)
         self.probs = []
         self.rewards = []
-        self.entropies = []
 
-        self.running_loss = 0.0
-        self.loss_divisor = 0
-        self.running_reward = 0.0
-        self.reward_divisor = 0
-        self.running_prediction = 0.0
-        self.prediction_divisor = 0
+        # lists of single floats
+        self.average_losses = []
+        self.average_rewards = []
+        self.average_predictions = []
+        self.average_entropies = []
+
+        # lists of policies size (onehot)
+        self.average_policies = []
+
+        # list of tensors size (batchsize) with int action ids
+        self.sampled_actions = []
 
         self.optimizer = None
 
-        if config.generator.bias:
-            bias = distribution.load(config.paths.distribution_bias)
+        if config.g_bias:
+            bias = distribution.load(paths.bias_term)
             assert bias is not None
             assert len(bias) == self.output_dim
             self.bias = torch.tensor(bias).float()
@@ -59,8 +64,8 @@ class Policy(nn.Module):
         return out, h
 
     def initial(self):
-        batch = torch.zeros(config.general.batch_size, 1, self.input_dim, device=config.general.device)
-        hidden = torch.zeros(self.layers, config.general.batch_size, self.hidden_dim, device=config.general.device)
+        batch = torch.zeros(config.batch_size, 1, self.input_dim, device=config.device)
+        hidden = torch.zeros(self.layers, config.batch_size, self.hidden_dim, device=config.device)
 
         return batch, hidden
 
@@ -68,42 +73,17 @@ class Policy(nn.Module):
         torch.save(self.state_dict(), file)
 
     def load(self, file):
-        self.load_state_dict(torch.load(file, map_location=torch.device(config.general.device)))
+        self.load_state_dict(torch.load(file, map_location=torch.device(config.device)))
 
     def set_parameters_to(self, policy):
         self.load_state_dict(policy.state_dict())
 
 
-class Oracle(Policy):
-    """
-    This class represents an oracle. An oracle is a fake real distribution of data which can be very useful to make
-    statements about performance of a policy. If a policy gets trained to model an oracle the oracle distribution is
-    well known in contrast to real data. In theory an unlimited amount of real samples can be generated and measuring
-    the exact difference of distributions is possible. Obviously the oracle does not produce any semantically
-    meaningful data. The weights get initialized following a normal distribution to garantuee variance in the parameters
-    to avoid creating similar policy and oracle models.
-    """
-
-    def __init__(self):
-        super(Oracle, self).__init__()
-
-        self.eval()
-        self.running_score = 0.0
-        self.criterion = None
-
-        if not os.path.exists(config.paths.oracle):
-            [torch.nn.init.normal_(param, 0, 1) for param in self.parameters()]
-            self.save(config.paths.oracle)
-
-        else:
-            self.load(config.paths.oracle)
-
-
-def step(nn_policy, batch, hidden, save_prob=False):
+def step(policy, batch, hidden, save_prob=False):
     """
     This function performs a single step on the given policy net give a batch of unfinished subsequences.
 
-    :param nn_policy: The policy net which guides the decision making process.
+    :param policy: The policy net which guides the decision making process.
     :param batch: The batch of input sequences size (batch size, sequence length, onehot length).
     :param hidden: The hidden state of the policy net.
     :param save_prob: If true, the probabilities for the chosen action will be saved for the policy net. Should be true
@@ -113,21 +93,26 @@ def step(nn_policy, batch, hidden, save_prob=False):
 
     # avoid feeding whole sequences redundantly
     state = batch[:, -1, :][:, None, :]
-    policies, hidden = nn_policy(state, hidden)
+    policies, hidden = policy(state, hidden)
 
     # sample next actions
-    policies = torch.distributions.Categorical(policies)
-    actions = policies.sample()
+    distributions = torch.distributions.Categorical(policies)
+    actions = distributions.sample()
 
     # save log probabilities for gradient computation
     if save_prob:
-        log_probs = policies.log_prob(actions)
-        entropy = policies.entropy()
-        nn_policy.probs.append(log_probs)
-        nn_policy.entropies.append(entropy)
+
+        log_probs = distributions.log_prob(actions)
+        entropy = distributions.entropy()
+        policy.probs.append(log_probs)
+
+        policy.average_entropies.append(torch.mean(entropy, dim=0))  # TODO
+        policy.average_policies.append(torch.mean(policies, dim=0))
+
+        policy.sampled_actions.append(actions)
 
     # concat onehot tokens with the batch of sequences
-    encodings = torch.tensor([tokens.onehot(id) for id in actions], device=config.general.device)
+    encodings = torch.tensor([tokens.onehot(id) for id in actions], device=config.device)
     encodings = encodings[:, None, :].float()
     batch = torch.cat((batch, encodings), dim=1)
 
@@ -138,99 +123,94 @@ def step(nn_policy, batch, hidden, save_prob=False):
     return batch, hidden
 
 
-def rollout(nn_policy, batch, hidden):
+def rollout(policy, batch, hidden):
     """
     This function finished a sequence for a given subsequence without saving probabilities or gradients.
 
-    :param nn_policy: The policy guiding the decision making process.
+    :param policy: The policy guiding the decision making process.
     :param batch: The batch of subsequences to finish.
     :param hidden: The current hidden state of the net.
     :return: Returns a batch of finished sequencens, tensor of size (batchsize, sequence length, onehot length).
     """
 
     with torch.no_grad():
-        while batch.shape[1] < config.general.sequence_length:
+        while batch.shape[1] < config.sequence_length:
 
-            batch, hidden = step(nn_policy, batch, hidden)
+            batch, hidden = step(policy, batch, hidden)
 
     return batch
 
 
-def sample(nn_policy, num_batches):
+def sample(policy, num_batches):
     """
     This function samples finished sequences for a given policy.
 
-    :param nn_policy: The policy guiding the decision making process.
+    :param policy: The policy guiding the decision making process.
     :param num_batches: The amount of batches to generate.
     :return: Returns a python list of tensors of size (batch size, sequence length, onehot length).
     """
 
-    batch = torch.empty((0, config.general.sequence_length, len(tokens.possibilities())), device=config.general.device)
+    batch = torch.empty((0, config.sequence_length, tokens.count()), device=config.device)
 
     with torch.no_grad():
         for _ in range(num_batches):
-            out, hidden = nn_policy.initial()
-            out, hidden = step(nn_policy, out, hidden)
-            out = rollout(nn_policy, out, hidden)
+            out, hidden = policy.initial()
+            out, hidden = step(policy, out, hidden)
+            out = rollout(policy, out, hidden)
 
             batch = torch.cat([batch, out], dim=0)
 
     return batch
 
 
-def policy_gradient_update(nn_policy):
+def policy_gradient_update(policy):
     """
     This function adjusts the parameters of the give policy net with the REINFORCE algorithm.
 
-    :param nn_policy: The net which parameters should be updated.
+    :param policy: The net which parameters should be updated.
     """
 
-    nn_policy.optimizer.zero_grad()
+    policy.optimizer.zero_grad()
 
     # assumption: policy stores lists with tensors of size (batchsize) of length (steps until update)
-    assert len(nn_policy.rewards) == len(nn_policy.probs)
-    assert all(tensor.size() == (config.general.batch_size,) for tensor in nn_policy.probs)
-    assert all(tensor.size() == (config.general.batch_size,) for tensor in nn_policy.rewards)
+    assert len(policy.rewards) == len(policy.probs)
+    assert all(tensor.size() == (config.batch_size,) for tensor in policy.probs)
+    assert all(tensor.size() == (config.batch_size,) for tensor in policy.rewards)
 
     # weight state action values by log probability of action
-    total = torch.zeros(config.general.batch_size, device=config.general.device)
-    reward = torch.zeros(config.general.batch_size, device=config.general.device)
-    reward_without_log = torch.zeros(config.general.batch_size, device=config.general.device)
+    total = torch.zeros(config.batch_size, device=config.device)
+    reward = torch.zeros(config.batch_size, device=config.device)
+    reward_without_log = torch.zeros(config.batch_size, device=config.device)
 
-    for log, rew in zip(nn_policy.probs, nn_policy.rewards):
+    for log, rew in zip(policy.probs, policy.rewards):
         reward_without_log = reward_without_log + rew
-        total = total + (rew - config.generator.baseline)
+        total = total + (rew - config.g_baseline)
         reward = reward + (log * total)
 
-    # actual task is to maximize this value
+    # actual task is to maximize this value !! not average reward
     reward_without_log = torch.sum(reward_without_log)
-    reward_without_log = reward_without_log / config.general.batch_size
+    reward_without_log = reward_without_log / config.batch_size
 
     # average log prob * reward over batchsize
     reward = torch.sum(reward)
-    reward = reward / config.general.batch_size
+    reward = reward / config.batch_size
 
     # final prediction / equals reward if update every step
-    prediction = nn_policy.rewards[-1]
-    prediction = torch.sum(prediction) / config.general.batch_size
+    prediction = policy.rewards[-1]
+    prediction = torch.sum(prediction) / config.batch_size
 
-    # negate for gradient descent and substract entropy
-    entropy = torch.stack(nn_policy.entropies, dim=1).to(config.general.device)
-    entropy = torch.sum(entropy, dim=1)
-    entropy = torch.sum(entropy) / config.general.batch_size
+    # negate for gradient descent and substract entropy !! already averaged over batchsize in step()
+    entropy = sum(policy.average_entropies) / len(policy.average_entropies)
     entropy = entropy * 0.005
 
     loss = - (reward + entropy)
     loss.backward()
-    nn_policy.optimizer.step()
+    policy.optimizer.step()
 
-    nn_policy.running_loss += loss.item()
-    nn_policy.loss_divisor += 1
-    nn_policy.running_reward += reward_without_log.item()
-    nn_policy.reward_divisor += 1
-    nn_policy.running_prediction += prediction.item()
-    nn_policy.prediction_divisor += 1
+    policy.average_losses.append(loss.item())
+    policy.average_rewards.append(reward_without_log.item())
+    policy.average_predictions.append(prediction.item())
+    policy.average_entropies.append(entropy.item())
 
-    del nn_policy.rewards[:]
-    del nn_policy.probs[:]
-    del nn_policy.entropies[:]
+    del policy.rewards[:]
+    del policy.probs[:]
