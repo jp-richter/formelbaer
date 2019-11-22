@@ -14,10 +14,10 @@ import tokens
 
 def store_results(rewards, loss, reward_without_log_prob, entropy, policy):
     prediction = sum(rewards[-1]) / config.batch_size
-    store.add('Generator Prediction', prediction.item(), store.PLOTTABLE)
-    store.add('Generator Loss', loss.item(), store.PLOTTABLE)
-    store.add('Generator Reward', reward_without_log_prob.item(), store.PLOTTABLE)
-    store.add('Generator Entropy ', entropy.item(), store.PLOTTABLE)
+    store.add('Generator Prediction', prediction.item(), [store.PLOTTABLE])
+    store.add('Generator Loss', loss.item(), [store.PLOTTABLE])
+    store.add('Generator Reward', reward_without_log_prob.item(), [store.PLOTTABLE])
+    store.add('Generator Entropy ', entropy.item(), [store.PLOTTABLE])
 
     mean_policies = store.rmget('Generator Policy Means Temp')
     mean_policies = torch.mean(torch.stack(mean_policies, dim=0), dim=0)
@@ -153,8 +153,8 @@ def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, 
 
         loss = store.rmget('Discriminator Loss Temp')
         acc = store.rmget('Discriminator Acc Temp')
-        store.add('Discriminator Loss', sum(loss) / len(loss), store.PLOTTABLE)
-        store.add('Discriminator Acc', sum(acc) / len(acc), store.PLOTTABLE)
+        store.add('Discriminator Loss', sum(loss) / len(loss), [store.PLOTTABLE])
+        store.add('Discriminator Acc', sum(acc) / len(acc), [store.PLOTTABLE])
 
 
 def training(discriminator, policy, rollout):

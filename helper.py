@@ -142,14 +142,14 @@ class _DataStore:
 
         _STORE = self
 
-    def add(self, tag: str, value: Any, attribute: int = None):
+    def add(self, tag: str, value: Any, attributes: list = None):
         if tag in self._data.keys():
             self._data[tag].append(value)
         else:
             self._data[tag] = [value]
 
-        if attribute is not None:
-            self._attributes[tag] = attribute
+        if attributes is not None:
+            self._attributes[tag] = [attributes]
 
     def get(self, tag: str, raise_exception: bool = False) -> Any:
         if tag not in self._data.keys():
@@ -171,8 +171,8 @@ class _DataStore:
         del self._data[tag]
         return temp
 
-    def attribute(self, tag):
-        return self._attributes[tag] if tag in self._attributes.keys() else 0
+    def attributes(self, tag):
+        return self._attributes[tag] if tag in self._attributes.keys() else []
 
     def rm(self, tag: str, raise_exception: bool = False):
         if tag not in self._data.keys() and raise_exception:

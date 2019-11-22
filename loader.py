@@ -224,7 +224,7 @@ def finish(policy, discriminator):
     save_sequences(evaluation, folder + '/sequences')
 
     for tag, value in store:
-        if store.attribute(tag) == store.PLOTTABLE:
+        if store.PLOTTABLE in store.attribute(tag):
             helper.plot('{}/{}'.format(folder, tag), [value], tag, [], 'plot')
 
     g_loss = store.get('Generator Loss')
