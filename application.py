@@ -1,91 +1,84 @@
-from config import config, paths
+from config import config, paths, Config
 from discriminator import Discriminator
-from collections import Counter
 from progress.bar import Bar
+from helper import store
+from collections import Counter
 
 import torch
 import generator
 import loader
 import tree
-import info
+import os
 import tokens
 
 
-# TODO kein smoothing (curve) fuer median action, vlt stattdessen histogram?
-# TODO bei tensorboard manche sachen out of bounds?
-# TODO mein eigenes experiment info speichert die daten nicht
+def store_results(rewards, loss, reward_without_log_prob, entropy, policy):
+    prediction = sum(rewards[-1]) / config.batch_size
+    store.add('Generator Prediction', prediction.item(), store.PLOTTABLE)
+    store.add('Generator Loss', loss.item(), store.PLOTTABLE)
+    store.add('Generator Reward', reward_without_log_prob.item(), store.PLOTTABLE)
+    store.add('Generator Entropy ', entropy.item(), store.PLOTTABLE)
+
+    mean_policies = store.rmget('Generator Policy Means Temp')
+    mean_policies = torch.mean(torch.stack(mean_policies, dim=0), dim=0)
+    store.add('Generator Average Policy', mean_policies.tolist())
+
+    sampled_actions = store.rmget('Generator Sampled Actions Temp')
+    action_counts = Counter([i.item() for s in sampled_actions for i in s])
+    sampled_actions = [action_counts[index] if index in action_counts.keys() else 0 for index in range(tokens.count())]
+    store.add('Generator Sampled Actions', sampled_actions)
+
+    policy.save('{}/policies/{}'.format(store.folder, store.get('Policy Step')))
+    store.add('Policy Step', store.rmget('Policy Step')[0] + 1)
 
 
-def policy_tensorboard(policy, adversarial_step, g_step, batch, board):
-    """
+def policy_gradient(policy):
+    policy.optimizer.zero_grad()
 
-    :param policy:
-    :param adversarial_step:
-    :param g_step:
-    :param batch:
-    :param board:
-    """
+    # weight state action values by log probability of action
+    total = torch.zeros(config.batch_size, device=config.device)
+    reward_with_log_prob = torch.zeros(config.batch_size, device=config.device)
+    reward_without_log_prob = torch.zeros(config.batch_size, device=config.device)
 
-    loss = sum(policy.average_losses) / len(policy.average_losses)
-    prediction = sum(policy.average_predictions) / len(policy.average_predictions)
-    reward = sum(policy.average_rewards) / len(policy.average_rewards)
-    entropy = sum(policy.average_entropies) / len(policy.average_entropies)
+    log_probs = store.rmget('Generator Log Probs Temp')
+    rewards = store.rmget('Generator Rewards Temp')
 
-    policies = torch.mean(torch.stack(policy.average_policies, dim=0), dim=0)
-    action_dict = Counter([id.item() for sample in policy.sampled_actions for id in sample])  # returns {unique values: counts}
-    actions = [action_dict[index] if index in action_dict.keys() else 0 for index in range(tokens.count())]
+    assert len(rewards) == len(log_probs)
+    assert all(tensor.size() == (config.batch_size,) for tensor in log_probs)
+    assert all(tensor.size() == (config.batch_size,) for tensor in rewards)
 
-    del policy.average_losses[:]
-    del policy.average_predictions[:]
-    del policy.average_rewards[:]
-    del policy.average_entropies[:]
-    del policy.average_policies[:]
-    del policy.sampled_actions[:]
+    for log_prob, reward in zip(log_probs, rewards):
+        total = total + (reward - config.g_baseline)
+        reward_with_log_prob = reward_with_log_prob + (log_prob * total)
+        reward_without_log_prob = reward_without_log_prob + total
 
-    board.add_scalar('Generator/Loss', loss, adversarial_step + g_step)
-    board.add_scalar('Generator/Prediction', prediction, adversarial_step + g_step)
-    board.add_scalar('Generator/Reward', reward, adversarial_step + g_step)
-    board.add_scalar('Generator/Entropy', entropy, adversarial_step + g_step)
-    board.add_scalars('Generator/Loss-Reward', {'Loss': loss, 'Reward': reward}, adversarial_step + g_step)
+    # average over batchsize
+    reward_without_log_prob = torch.sum(reward_without_log_prob) / config.batch_size
+    reward_with_log_prob = torch.sum(reward_with_log_prob) / config.batch_size
 
-    board.add_histogram('Generator/Actions', torch.tensor(actions), adversarial_step + g_step)
-    board.add_histogram('Generator/AveragePolicy', policies, adversarial_step + g_step)  # TODO
+    # negate for gradient descent and substract entropy
+    entropies = store.rmget('Generator Entropy Means Temp')
+    entropy = 0.005 * sum(entropies) / len(entropies)
 
-    examples = ', '.join(tree.to_latex(batch[-3:].tolist()))
-    board.add_text('Generator/Formulars', examples, adversarial_step + g_step)
+    loss = - (reward_with_log_prob + entropy)
+    loss.backward()
+    policy.optimizer.step()
+
+    store_results(rewards, loss, reward_without_log_prob, entropy, policy)
 
 
-def discriminator_tensorboard(discriminator, adversarial_step, d_epochs, d_epoch, board):
-    """
-
-    :param discriminator:
-    :param adversarial_step:
-    :param d_epochs:
-    :param d_epoch:
-    """
-
-    loss = sum(discriminator.loss) / len(discriminator.loss)
-    acc = sum(discriminator.acc) / len(discriminator.acc)
-
-    del discriminator.loss[:]
-    del discriminator.acc[:]
-
-    board.add_scalar('Discriminator/Loss', loss, adversarial_step * d_epochs + d_epoch)
-    board.add_scalar('Discriminator/Accuracy', acc, adversarial_step * d_epochs + d_epoch)
-
-
-def collect_reward(nn_discriminator, batch):
+def collect_reward(discriminator, batch):
     """
     This function calculates the rewards given a batch of onehot sequences with the given discriminator. The rewards
     will be the probability that the sequences are no synthetic predicted by the discriminator.
 
-    :param nn_discriminator: The discriminator which predictions the rewards are based on.
+    :param discriminator: The discriminator which predictions the rewards are based on.
     :param batch: The batch of sequences generated by the generator.
     :return: Returns a tensor of size (batchsize, 1).
     """
 
     images = loader.prepare_batch(batch)
-    output = nn_discriminator(images)
+    output = discriminator(images)
     reward = torch.empty((batch.shape[0], 1), device=config.device)
 
     # TODO punish atomic expressions
@@ -96,8 +89,7 @@ def collect_reward(nn_discriminator, batch):
     return reward
 
 
-def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_steps, board):
-
+def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_steps):
     rollout.set_parameters_to(policy)
     policy.train()
     rollout.eval()
@@ -124,16 +116,16 @@ def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_st
 
             # average the reward over all trials
             q_values = torch.mean(q_values, dim=1)
-            policy.rewards.append(q_values)
+            store.add('Generator Rewards Temp', q_values)
 
             # generator.policy_gradient_update(policy)  # TODO comment out to reward like in SeqGAN
             # batch, hidden = (batch.detach(), hidden.detach())  # TODO comment out to reward like in SeqGAN
 
-        generator.policy_gradient_update(policy)  # TODO comment in to reward like in SeqGAN
-        policy_tensorboard(policy, adversarial_step, step, batch, board)
+        store.add('Formular Examples', ', '.join(tree.to_latex(batch[-3:].tolist())))
+        policy_gradient(policy)
 
 
-def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, d_epochs, board):
+def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, d_epochs):
     discriminator.reset()
     discriminator.train()
     policy.eval()
@@ -156,13 +148,16 @@ def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, 
             loss.backward()
             discriminator.optimizer.step()
 
-            discriminator.loss.append(loss.item())
-            discriminator.acc.append(torch.sum((outputs > 0.5) == (labels == 1)).item() / outputs.shape[0])
+            store.add('Discriminator Loss Temp', loss.item())
+            store.add('Discriminator Acc Temp', torch.sum((outputs > 0.5) == (labels == 1)).item() / outputs.shape[0])
 
-        discriminator_tensorboard(discriminator, adversarial_step, d_epochs, epoch, board)
+        loss = store.rmget('Discriminator Loss Temp')
+        acc = store.rmget('Discriminator Acc Temp')
+        store.add('Discriminator Loss', sum(loss) / len(loss), store.PLOTTABLE)
+        store.add('Discriminator Acc', sum(acc) / len(acc), store.PLOTTABLE)
 
 
-def training(discriminator, policy, rollout, board):
+def training(discriminator, policy, rollout):
     """
     The main loop of the script. To change parameters of the adversarial training parameters should not be changed here.
     Overwrite the configuration variables in config.py instead and start the adversarial training again.
@@ -171,16 +166,15 @@ def training(discriminator, policy, rollout, board):
     print('Starting adversarial training..')
     progress = Bar('Iteration Progress', max=config.adversarial_steps)
     for adversarial_step in range(config.adversarial_steps):
-
         progress.next()
 
-        adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs, board)
-        adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps, board)
+        adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs)
+        adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps)
 
-        if not adversarial_step == 0 and adversarial_step%10 == 0:
+        if not adversarial_step == 0 and adversarial_step % 10 == 0:
             policy.save(paths.policies)
 
-        if not adversarial_step == 0 and adversarial_step%20 == 0 and config.general.num_real_samples < 10000:
+        if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.general.num_real_samples < 10000:
             config.num_real_samples += 1000
 
     progress.finish()
@@ -188,7 +182,7 @@ def training(discriminator, policy, rollout, board):
     return discriminator, policy
 
 
-def initialize(experiment):
+def initialize():
     """
     Setup neural networks and tensorboard logging.
     """
@@ -201,8 +195,7 @@ def initialize(experiment):
     discriminator.optimizer = torch.optim.Adam(discriminator.parameters(), lr=config.d_learnrate)
     policy.optimizer = torch.optim.Adam(policy.parameters(), lr=config.g_learnrate)
 
-    hyperparameter = config.__dict__  # TODO fix, kein step hparams
-    experiment['hyperparameter'] = hyperparameter
+    hyperparameter = {k: v for k, v in config.__dict__.items() if not v == config.device}
 
     notes = '''
     0.1 Added Multipages   
@@ -215,7 +208,10 @@ def initialize(experiment):
     0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
     0.9 entropy beta 0.01 -> 0.005
     '''
-    experiment
+
+    store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
+    store.add('Policy Step', 0)
+    os.makedirs('{}/policies'.format(store.folder))
 
     return discriminator, policy, rollout
 
@@ -223,15 +219,11 @@ def initialize(experiment):
 def application() -> None:
     loader.initialize()
 
-    # setup logging
-    experiment = info.ExperimentInfo(loader.make_directory_with_timestamp())
-
     # training
-    discriminator, policy, rollout = initialize(experiment)
-    training(discriminator, policy, rollout, experiment)
+    discriminator, policy, rollout = initialize()
+    training(discriminator, policy, rollout)
 
-    loader.finish(policy, discriminator, experiment)
-    loader.shutdown()
+    loader.finish(policy, discriminator)
 
 
 if __name__ == '__main__':

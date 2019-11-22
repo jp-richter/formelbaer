@@ -1,6 +1,7 @@
 from dataset import Dataset
 from torch.utils.data import DataLoader
 from config import paths, config
+from helper import store
 
 import torch
 import converter
@@ -11,7 +12,7 @@ import generator
 import datetime
 import tokens
 import ray
-import info
+import helper
 
 arxiv_dataset = None
 oracle_dataset = None
@@ -82,7 +83,7 @@ def make_directory_with_timestamp() -> str:
     """
 
     directory = paths.results + '/' + str(datetime.datetime.now())
-    directory = directory.replace(':','-').replace(' ', '-')[:-7]
+    directory = directory.replace(':', '-').replace(' ', '-')[:-7]
     os.makedirs(directory)
 
     return directory
@@ -163,8 +164,8 @@ def prepare_loader(num_samples, policy=None) -> DataLoader:
 
 def initialize():
     """
-    This function sets up arxiv and oracle datasets dependant on the configurations. Ray gets initialized and the shared
-    plasma object store will be created at paths.ray. All directories used by the script will be created here.
+    This function sets up arxiv and oracle datasets dependant on the configurations. Ray gets initialized and the
+    shared plasma object store will be created at paths.ray. All directories used by the script will be created here.
     Not calling this function at the beginning of the script will lead to errors.
     """
 
@@ -188,18 +189,11 @@ def initialize():
     if not os.path.exists(paths.results):
         os.makedirs(paths.results)
 
-    if not os.path.exists(paths.policies):
-        os.makedirs(paths.policies)
-
-    else:
-        clear_directory(paths.policies)
-
     if not os.path.exists(paths.log):
         open(paths.log, 'w')
 
     if not ray.is_initialized():
-        with info.HiddenPrints():
-
+        with helper.HiddenPrints():
             if torch.cuda.is_available():
                 ray.init(plasma_directory=paths.ray_store, memory=20000000000, object_store_memory=20000000000)
             else:
@@ -208,7 +202,7 @@ def initialize():
     arxiv_dataset = Dataset(paths.arxiv_data, label=config.label_real, recursive=True)
 
 
-def finish(policy, discriminator, board):
+def finish(policy, discriminator):
     """
     This function creates a directory with the current timestamp at the application path set in the configurations.
     All experimental result data of a run such as weight parameters and log files will be saved. Additionally 100
@@ -216,27 +210,35 @@ def finish(policy, discriminator, board):
 
     :param policy: The policy net used in the experiment and for which the example data should be generated.
     :param discriminator: The discriminating net used in the experiment.
-    :param nn_oracle: The oracle net used in the experiment, in case oracle training has been used.
     """
-    directory = board.info.folder
-    policy.save(directory + '/policy-net.pt')
-    discriminator.save(directory + '/discriminator-net.pt')
+
+    folder = store.folder
+    policy.save(folder + '/policy-net.pt')
+    discriminator.save(folder + '/discriminator-net.pt')
 
     evaluation = generator.sample(policy, math.ceil(100 / config.batch_size))
 
-    os.makedirs(directory + '/pngs')
-    os.makedirs(directory + '/sequences')
-    save_pngs(evaluation, directory + '/pngs')
-    save_sequences(evaluation, directory + '/sequences')
-    
-    shutil.copyfile(paths.log, directory + '/results.log')
-    shutil.copytree(paths.policies, directory + '/policies')
+    os.makedirs(folder + '/pngs')
+    os.makedirs(folder + '/sequences')
+    save_pngs(evaluation, folder + '/pngs')
+    save_sequences(evaluation, folder + '/sequences')
 
+    for tag, value in store:
+        if store.attribute(tag) == store.PLOTTABLE:
+            helper.plot('{}/{}'.format(folder, tag), [value], tag, [], 'plot')
 
-def shutdown() -> None:
-    """
-    This function shuts down the ray connection and frees the shared memory used by the ray plasma object store. Should
-    be called once at the end of the script.
-    """
+    g_loss = store.get('Generator Loss')
+    g_reward = store.get('Generator Reward')
+    g_policies = store.get('Generator Average Policy')
+    g_actions = store.get('Generator Sampled Actions')
 
+    helper.plot('{}/g'.format(folder), [g_loss, g_reward], 'Generator Loss', ['G Loss', 'G Reward'], 'plot')
+
+    for i, policy in enumerate(g_policies):
+        helper.plot('{}/policy_{}'.format(folder, i), [policy], 'Generator Policy Step {}'.format(i), [], 'bar')
+
+    for i, action in enumerate(g_actions):
+        helper.plot('{}/actions_{}'.format(folder, i), [action], 'Generator Actions Step {}'.format(i), [], 'bar')
+
+    store.save()
     ray.shutdown()

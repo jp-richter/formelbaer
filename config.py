@@ -17,7 +17,6 @@ class Paths:
     synthetic_data: str
     arxiv_data: str
     log: str
-    policies: str
     dump: str
     ray_store: str
     bias_term: str
@@ -32,7 +31,7 @@ class Config:
     to the DEFAUT_APP_CFG instance or overwrite the cfg_app variable with your own instance.
     """
 
-    ### GENERAL
+    # GENERAL
 
     device: torch.device
     num_real_samples: int
@@ -51,7 +50,7 @@ class Config:
     label_synth: int
     label_real: int
 
-    ### GENERATOR
+    # GENERATOR
 
     g_hidden_dim: int
     g_layers: int
@@ -61,7 +60,7 @@ class Config:
     g_gamma: float
     g_bias: bool
 
-    ### DISCRIMINATOR
+    # DISCRIMINATOR
 
     d_dropout: float
     d_learnrate: float
@@ -79,7 +78,6 @@ DEFAULT_PATHS = Paths(
     arxiv_data=_home + '/formelbaer-data/arxiv-data',
     log=_home + '/formelbaer-data/results.log',
     dump=_home + '/formelbaer-data/dump.txt',
-    policies=_home + '/formelbaer-data/policies',
     ray_store=_home + '/formelbaer-data/ray-plasma-store',
     bias_term=str(PurePath(Path(__file__).resolve().parent, 'bias_term.txt')),
     rdata='/rdata/richter2/experiments',
@@ -90,7 +88,7 @@ paths = DEFAULT_PATHS
 
 DEFAULT_CONFIG = Config(
 
-    ### GENERAL
+    # GENERAL
 
     device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'),
 
@@ -110,7 +108,7 @@ DEFAULT_CONFIG = Config(
     label_synth=1,  # discriminator outputs P(x ~ synthetic)
     label_real=0,
 
-    ### GENERATOR
+    # GENERATOR
 
     g_hidden_dim=32,
     g_layers=2,
@@ -120,11 +118,10 @@ DEFAULT_CONFIG = Config(
     g_gamma=1,
     g_bias=True,
 
-    ### DISCRIMINATOR
+    # DISCRIMINATOR
 
     d_dropout=0.2,
     d_learnrate=0.001
-
 )
 
 config = DEFAULT_CONFIG

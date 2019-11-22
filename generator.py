@@ -1,10 +1,10 @@
 from torch import nn
 from config import config, paths
+from helper import store
 
 import tokens
 import torch
 import distribution
-import statistics
 
 
 class Policy(nn.Module):
@@ -27,29 +27,14 @@ class Policy(nn.Module):
         self.lin = nn.Linear(self.hidden_dim, self.output_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)  # in forward (batch_size, num_features)
-
-        # lists of elements (batchsize)
-        self.probs = []
-        self.rewards = []
-
-        # lists of single floats
-        self.average_losses = []
-        self.average_rewards = []
-        self.average_predictions = []
-        self.average_entropies = []
-
-        # lists of policies size (onehot)
-        self.average_policies = []
-
-        # list of tensors size (batchsize) with int action ids
-        self.sampled_actions = []
-
         self.optimizer = None
 
         if config.g_bias:
             bias = distribution.load(paths.bias_term)
+
             assert bias is not None
             assert len(bias) == self.output_dim
+
             self.bias = torch.tensor(bias).float()
             self.lin.bias = torch.nn.Parameter(self.bias, requires_grad=True)
 
@@ -101,15 +86,10 @@ def step(policy, batch, hidden, save_prob=False):
 
     # save log probabilities for gradient computation
     if save_prob:
-
-        log_probs = distributions.log_prob(actions)
-        entropy = distributions.entropy()
-        policy.probs.append(log_probs)
-
-        policy.average_entropies.append(torch.mean(entropy, dim=0))  # TODO
-        policy.average_policies.append(torch.mean(policies, dim=0))
-
-        policy.sampled_actions.append(actions)
+        store.add('Generator Log Probs Temp', distributions.log_prob(actions))
+        store.add('Generator Sampled Actions Temp', actions)
+        store.add('Generator Entropy Means Temp', torch.mean(distributions.entropy(), dim=0))
+        store.add('Generator Policy Means Temp', torch.mean(policies, dim=0))
 
     # concat onehot tokens with the batch of sequences
     encodings = torch.tensor([tokens.onehot(id) for id in actions], device=config.device)
@@ -161,56 +141,3 @@ def sample(policy, num_batches):
             batch = torch.cat([batch, out], dim=0)
 
     return batch
-
-
-def policy_gradient_update(policy):
-    """
-    This function adjusts the parameters of the give policy net with the REINFORCE algorithm.
-
-    :param policy: The net which parameters should be updated.
-    """
-
-    policy.optimizer.zero_grad()
-
-    # assumption: policy stores lists with tensors of size (batchsize) of length (steps until update)
-    assert len(policy.rewards) == len(policy.probs)
-    assert all(tensor.size() == (config.batch_size,) for tensor in policy.probs)
-    assert all(tensor.size() == (config.batch_size,) for tensor in policy.rewards)
-
-    # weight state action values by log probability of action
-    total = torch.zeros(config.batch_size, device=config.device)
-    reward = torch.zeros(config.batch_size, device=config.device)
-    reward_without_log = torch.zeros(config.batch_size, device=config.device)
-
-    for log, rew in zip(policy.probs, policy.rewards):
-        reward_without_log = reward_without_log + rew
-        total = total + (rew - config.g_baseline)
-        reward = reward + (log * total)
-
-    # actual task is to maximize this value !! not average reward
-    reward_without_log = torch.sum(reward_without_log)
-    reward_without_log = reward_without_log / config.batch_size
-
-    # average log prob * reward over batchsize
-    reward = torch.sum(reward)
-    reward = reward / config.batch_size
-
-    # final prediction / equals reward if update every step
-    prediction = policy.rewards[-1]
-    prediction = torch.sum(prediction) / config.batch_size
-
-    # negate for gradient descent and substract entropy !! already averaged over batchsize in step()
-    entropy = sum(policy.average_entropies) / len(policy.average_entropies)
-    entropy = entropy * 0.005
-
-    loss = - (reward + entropy)
-    loss.backward()
-    policy.optimizer.step()
-
-    policy.average_losses.append(loss.item())
-    policy.average_rewards.append(reward_without_log.item())
-    policy.average_predictions.append(prediction.item())
-    policy.average_entropies.append(entropy.item())
-
-    del policy.rewards[:]
-    del policy.probs[:]
