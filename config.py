@@ -81,7 +81,7 @@ DEFAULT_PATHS = Paths(
     ray_store=_home + '/formelbaer-data/ray-plasma-store',
     bias_term=str(PurePath(Path(__file__).resolve().parent, 'bias_term.txt')),
     rdata='/rdata/richter2/experiments',
-    results='/rdata/richter2/experiments' if os.path.exists('/rdata/richter2/experiments') else _home + '/formelbaer-experiments'
+    results='/rdata/richter2/experiments' if os.path.exists('/rdata/richter2/experiments') else _home + '/formelbaer-data/experiments'
 )
 
 paths = DEFAULT_PATHS
