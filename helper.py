@@ -11,6 +11,8 @@ import matplotlib.pyplot
 import sys
 import pickle
 
+import torch
+
 
 class _TracePrints:
 
@@ -51,9 +53,6 @@ def plot(path: str, values: list, title: str, labels: list, dtype: str, normaliz
 
     types = ['bar', 'plot']
     colors = ['b', 'r', 'y']  # TODO more colors
-
-    # TODO buchstaben zuordnen
-    # irgendwie actions rewards zuordnen
 
     assert dtype in types
 
@@ -142,27 +141,29 @@ class _DataStore:
 
         _STORE = self
 
-    def add(self, tag: str, value: Any, attributes: list = None):
-        if tag in self._data.keys():
-            self._data[tag].append(value)
-        else:
-            self._data[tag] = [value]
+    def set(self, tag: str, value: Any, attributes: list = None, if_exists: bool = True):
+        if tag in self._data.keys() and not if_exists:
+            return
+
+        # TODO add type and assert items added are of type and make method get type
+
+        self._data[tag] = value
 
         if attributes is not None:
-            self._attributes[tag] = [attributes]
+            self._attributes[tag] = attributes
 
-    def get(self, tag: str, raise_exception: bool = False) -> Any:
+    def get(self, tag: str, raise_error: bool = False) -> Any:
         if tag not in self._data.keys():
-            if not raise_exception:
+            if not raise_error:
                 return None
             else:
                 raise KeyError('Tag {} not found.'.format(tag))
 
         return self._data[tag]
 
-    def rmget(self, tag: str, raise_exception: bool = False) -> Union[list, None]:
+    def rmget(self, tag: str, raise_error: bool = False) -> Any:
         if tag not in self._data.keys():
-            if not raise_exception:
+            if not raise_error:
                 return None
             else:
                 raise KeyError('Tag {} not found.'.format(tag))

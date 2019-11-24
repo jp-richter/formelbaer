@@ -1,3 +1,6 @@
+import matplotlib.pyplot
+import numpy
+
 from dataset import Dataset
 from torch.utils.data import DataLoader
 from config import paths, config
@@ -224,21 +227,51 @@ def finish(policy, discriminator):
     save_sequences(evaluation, folder + '/sequences')
 
     for tag, value in store:
-        if store.PLOTTABLE in store.attribute(tag):
+        if store.PLOTTABLE in store.attributes(tag):
             helper.plot('{}/{}'.format(folder, tag), [value], tag, [], 'plot')
 
-    g_loss = store.get('Generator Loss')
-    g_reward = store.get('Generator Reward')
-    g_policies = store.get('Generator Average Policy')
-    g_actions = store.get('Generator Sampled Actions')
-
-    helper.plot('{}/g'.format(folder), [g_loss, g_reward], 'Generator Loss', ['G Loss', 'G Reward'], 'plot')
-
-    for i, policy in enumerate(g_policies):
+    policies = store.get('List: Mean Policies Per Generator Step')
+    for i, policy in enumerate(policies):
         helper.plot('{}/policy_{}'.format(folder, i), [policy], 'Generator Policy Step {}'.format(i), [], 'bar')
 
-    for i, action in enumerate(g_actions):
-        helper.plot('{}/actions_{}'.format(folder, i), [action], 'Generator Actions Step {}'.format(i), [], 'bar')
+    def normalize(v):
+        v = numpy.array(v)
+        if max(v) - min(v) == 0:
+            return v
+        return (v - min(v)) / (max(v) - min(v))
+
+    os.makedirs(folder + '/actioninfos')
+
+    action_infos = store.get('List: Action Info Dicts')
+    entropies = store.get('List: Mean Entropies Per Generator Step')
+    for (i, action_info_dict), entropy in zip(enumerate(action_infos), entropies):
+        figure, axis = matplotlib.pyplot.subplots()
+
+        x_pos = numpy.arange(0, len(action_info_dict.keys()), 1)
+        width = 0.9
+
+        actions = action_info_dict.keys()
+        heights_counts = normalize([action_info_dict[a][0] for a in actions])
+        heights_probs = normalize([action_info_dict[a][1]for a in actions])
+        heights_reward = normalize([action_info_dict[a][2] for a in actions])
+
+        axis.bar(x_pos - width/3, heights_reward, width/3, label='Reward')
+        axis.bar(x_pos, heights_probs, width/3, label='Probability')
+        axis.bar(x_pos + width/3, heights_counts, width/3, label='Count')
+
+        ts = [tokens.get(i).name for i in actions]
+        matplotlib.pyplot.xticks(x_pos, ts)
+        axis.tick_params(axis='x', labelsize=8)
+        # axis.grid()
+
+        matplotlib.pyplot.title('Actions In Step {} / Entropy {}'.format(i, entropy))
+        matplotlib.pyplot.legend(loc='best')
+        matplotlib.pyplot.xticks(rotation='vertical')
+
+        # figure.subplots_adjust(bottom=1.1, top=1.2)
+        figure.savefig(folder + '/actioninfos/action_r_{}.png'.format(i), bbox_inches = "tight")
+
+    # TODO gut waere auch noch eine verbindung zum step, wie unterschiedlich die bewertungen an welchem schritt sind
 
     store.save()
     ray.shutdown()

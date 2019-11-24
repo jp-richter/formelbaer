@@ -26,7 +26,7 @@ def precompile_preamble():
     """
 
     precompile_cmd = 'pdflatex -ini -jobname="preamble" "&pdflatex preamble.tex\\dump" > ' + paths.dump
-    subprocess.run(precompile_cmd, cwd=CODE_DIRECTORY, shell=True)
+    subprocess.run(precompile_cmd, cwd=CODE_DIRECTORY, shell=True, timeout=10)
 
 
 @ray.remote

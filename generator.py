@@ -86,10 +86,10 @@ def step(policy, batch, hidden, save_prob=False):
 
     # save log probabilities for gradient computation
     if save_prob:
-        store.add('Generator Log Probs Temp', distributions.log_prob(actions))
-        store.add('Generator Sampled Actions Temp', actions)
-        store.add('Generator Entropy Means Temp', torch.mean(distributions.entropy(), dim=0))
-        store.add('Generator Policy Means Temp', torch.mean(policies, dim=0))
+        store.get('List: Mean Policies Per Single Step').append(torch.mean(policies, dim=0))
+        store.get('List: Mean Entropies Per Single Step').append(torch.mean(distributions.entropy(), dim=0))
+        store.get('List: Sampled Actions Per Single Step').append(actions)
+        store.get('List: Log Probabilites Per Actions Of Single Step').append(distributions.log_prob(actions))
 
     # concat onehot tokens with the batch of sequences
     encodings = torch.tensor([tokens.onehot(id) for id in actions], device=config.device)

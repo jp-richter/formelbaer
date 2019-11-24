@@ -2,34 +2,60 @@ from config import config, paths, Config
 from discriminator import Discriminator
 from progress.bar import Bar
 from helper import store
-from collections import Counter
 
 import torch
 import generator
 import loader
 import tree
 import os
-import tokens
 
 
-def store_results(rewards, loss, reward_without_log_prob, entropy, policy):
-    prediction = sum(rewards[-1]) / config.batch_size
-    store.add('Generator Prediction', prediction.item(), [store.PLOTTABLE])
-    store.add('Generator Loss', loss.item(), [store.PLOTTABLE])
-    store.add('Generator Reward', reward_without_log_prob.item(), [store.PLOTTABLE])
-    store.add('Generator Entropy ', entropy.item(), [store.PLOTTABLE])
+def store_results(loss, reward_without_log_prob, entropy, prediction, policy):
+    store.get('List: Mean Losses Per Generator Step').append(loss)
+    store.get('List: Mean Rewards Per Generator Step').append(reward_without_log_prob)
+    store.get('List: Mean Entropies Per Generator Step').append(entropy)
+    store.get('List: Mean Predictions Per Generator Step').append(prediction)
 
-    mean_policies = store.rmget('Generator Policy Means Temp')
-    mean_policies = torch.mean(torch.stack(mean_policies, dim=0), dim=0)
-    store.add('Generator Average Policy', mean_policies.tolist())
+    mean_policies = store.get('List: Mean Policies Per Single Step')
+    mean_policies = torch.mean(torch.stack(mean_policies, dim=0), dim=0).cpu().detach()
+    store.get('List: Mean Policies Per Generator Step').append(mean_policies)
 
-    sampled_actions = store.rmget('Generator Sampled Actions Temp')
-    action_counts = Counter([i.item() for s in sampled_actions for i in s])
-    sampled_actions = [action_counts[index] if index in action_counts.keys() else 0 for index in range(tokens.count())]
-    store.add('Generator Sampled Actions', sampled_actions)
+    # calculate tuples of (action_id, count, average probability, average reward)
+    sampled_actions = store.get('List: Sampled Actions Per Single Step')
+    log_probs = store.get('List: Log Probabilites Per Actions Of Single Step')
+    rewards = store.get('List: Rewards Per Single Step')
+
+    action_counts = {}
+    action_probs = {}
+    action_rewards = {}
+
+    assert len(sampled_actions) == len(log_probs) == len(rewards)
+    batchsize = sampled_actions[0].shape[0]
+
+    for step in range(len(log_probs)):
+        for sample_id in range(batchsize):
+            action = sampled_actions[step][sample_id]
+            log_prob = log_probs[step][sample_id]
+            reward = rewards[step][sample_id]
+
+            if action in action_probs.keys():
+                action_probs[action].append(log_prob)
+                action_rewards[action].append(reward)
+                action_counts[action] += 1
+            else:
+                action_probs[action] = [log_prob]
+                action_rewards[action] = [reward]
+                action_counts[action] = 1
+
+    for action in action_counts.keys():
+        action_probs[action] = (sum(action_probs[action]) / len(action_probs[action])).item()
+        action_rewards[action] = (sum(action_rewards[action]) / len(action_rewards[action])).item()
+
+    tuples = {a.item(): (action_counts[a], action_probs[a], action_rewards[a]) for a in action_counts.keys()}
+    store.get('List: Action Info Dicts').append(tuples)
 
     policy.save('{}/policies/{}'.format(store.folder, store.get('Policy Step')))
-    store.add('Policy Step', store.rmget('Policy Step')[0] + 1)
+    store.set('Policy Step', store.get('Policy Step') + 1)
 
 
 def policy_gradient(policy):
@@ -40,8 +66,8 @@ def policy_gradient(policy):
     reward_with_log_prob = torch.zeros(config.batch_size, device=config.device)
     reward_without_log_prob = torch.zeros(config.batch_size, device=config.device)
 
-    log_probs = store.rmget('Generator Log Probs Temp')
-    rewards = store.rmget('Generator Rewards Temp')
+    log_probs = store.get('List: Log Probabilites Per Actions Of Single Step')
+    rewards = store.get('List: Rewards Per Single Step')
 
     assert len(rewards) == len(log_probs)
     assert all(tensor.size() == (config.batch_size,) for tensor in log_probs)
@@ -57,14 +83,15 @@ def policy_gradient(policy):
     reward_with_log_prob = torch.sum(reward_with_log_prob) / config.batch_size
 
     # negate for gradient descent and substract entropy
-    entropies = store.rmget('Generator Entropy Means Temp')
+    entropies = store.get('List: Mean Entropies Per Single Step')
     entropy = 0.005 * sum(entropies) / len(entropies)
 
     loss = - (reward_with_log_prob + entropy)
     loss.backward()
     policy.optimizer.step()
 
-    store_results(rewards, loss, reward_without_log_prob, entropy, policy)
+    prediction = sum(rewards[-1]) / config.batch_size
+    store_results(loss.item(), reward_without_log_prob.item(), entropy.item(), prediction.item(), policy)
 
 
 def collect_reward(discriminator, batch):
@@ -95,7 +122,28 @@ def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_st
     rollout.eval()
     discriminator.eval()
 
+    # results of a training step
+    store.set('List: Mean Losses Per Generator Step', [], attributes=[store.PLOTTABLE], if_exists=False)
+    store.set('List: Mean Rewards Per Generator Step', [], attributes=[store.PLOTTABLE], if_exists=False)
+    store.set('List: Mean Entropies Per Generator Step', [], attributes=[store.PLOTTABLE], if_exists=False)
+    store.set('List: Mean Predictions Per Generator Step', [], attributes=[store.PLOTTABLE], if_exists=False)
+
+    store.set('List: Action Info Dicts', [], if_exists=False)
+    store.set('List: Mean Policies Per Generator Step', [], if_exists=False)
+    store.set('List: Action Counts Per Generator Step', [], if_exists=False)
+    store.set('List: Formular Examples', [], if_exists=False)
+
     for step in range(g_steps):
+
+        # temporary store - necessary for loss calculation - should be overwritten each step
+        store.set('List: Log Probabilites Per Actions Of Single Step', [])
+        store.set('List: Rewards Per Single Step', [])
+        store.set('List: Mean Entropies Per Single Step', [])
+
+        # temporary store - not necessary for loss calculation - should be overwritten each step
+        store.set('List: Sampled Actions Per Single Step', [])
+        store.set('List: Mean Policies Per Single Step', [])
+
         batch, hidden = policy.initial()
 
         for length in range(config.sequence_length):
@@ -116,12 +164,12 @@ def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_st
 
             # average the reward over all trials
             q_values = torch.mean(q_values, dim=1)
-            store.add('Generator Rewards Temp', q_values)
+            store.get('List: Rewards Per Single Step').append(q_values)
 
             # generator.policy_gradient_update(policy)  # TODO comment out to reward like in SeqGAN
             # batch, hidden = (batch.detach(), hidden.detach())  # TODO comment out to reward like in SeqGAN
 
-        store.add('Formular Examples', ', '.join(tree.to_latex(batch[-3:].tolist())))
+        store.get('List: Formular Examples').append(', '.join(tree.to_latex(batch[-3:].tolist())))
         policy_gradient(policy)
 
 
@@ -130,10 +178,16 @@ def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, 
     discriminator.train()
     policy.eval()
 
+    store.set('Discriminator Loss', [], attributes=[store.PLOTTABLE], if_exists=False)
+    store.set('Discriminator Accuracy', [], attributes=[store.PLOTTABLE], if_exists=False)
+
     num_samples = config.num_real_samples * 2 * d_steps  # equal amount of generated data
     data_loader = loader.prepare_loader(num_samples, policy)
 
     for epoch in range(d_epochs):
+        store.set('Discriminator Loss Per Batch', [])
+        store.set('Discrmininator Accuracy Per Batch', [])
+
         for images, labels in data_loader:
             images = images.to(config.device)
             labels = labels.to(config.device)
@@ -148,13 +202,14 @@ def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, 
             loss.backward()
             discriminator.optimizer.step()
 
-            store.add('Discriminator Loss Temp', loss.item())
-            store.add('Discriminator Acc Temp', torch.sum((outputs > 0.5) == (labels == 1)).item() / outputs.shape[0])
+            store.get('Discriminator Loss Per Batch').append(loss.item())
+            store.get('Discrmininator Accuracy Per Batch').append(torch.sum((outputs > 0.5) == (labels == 1)).item()
+                                                                  / outputs.shape[0])
 
-        loss = store.rmget('Discriminator Loss Temp')
-        acc = store.rmget('Discriminator Acc Temp')
-        store.add('Discriminator Loss', sum(loss) / len(loss), [store.PLOTTABLE])
-        store.add('Discriminator Acc', sum(acc) / len(acc), [store.PLOTTABLE])
+        loss = store.get('Discriminator Loss Per Batch')
+        acc = store.get('Discrmininator Accuracy Per Batch')
+        store.get('Discriminator Loss').append(sum(loss) / len(loss))
+        store.get('Discriminator Accuracy').append(sum(acc) / len(acc))
 
 
 def training(discriminator, policy, rollout):
@@ -210,7 +265,7 @@ def initialize():
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
-    store.add('Policy Step', 0)
+    store.set('Policy Step', 0)
     os.makedirs('{}/policies'.format(store.folder))
 
     return discriminator, policy, rollout
