@@ -233,10 +233,10 @@ def finish(policy, discriminator):
     action_infos = store.get('List: Action Info Dicts')
 
     plot_action_infos(folder, action_infos)
-    plot_action_deltas(folder, action_infos, 1)
+    plot_action_deltas(folder, action_infos, 10)
 
     plot_action_infos(folder, action_infos, without_count=True)
-    plot_action_deltas(folder, action_infos, 1, without_count=True)
+    plot_action_deltas(folder, action_infos, 10, without_count=True)
 
     store.save()
     ray.shutdown()
@@ -277,6 +277,7 @@ def plot_simple(path, values, title, xlabel, ylabel, plot_type):
     axis.grid()
 
     figure.savefig(path)
+    matplotlib.pyplot.close(figure)
 
 
 def plot_action_infos(folder, action_infos, without_count=False):
@@ -310,6 +311,7 @@ def plot_action_infos(folder, action_infos, without_count=False):
 
         figure.set_size_inches(18, 8)
         figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")
+        matplotlib.pyplot.close(figure)
 
 
 def plot_action_deltas(folder, action_infos, step_difference, without_count=False):
@@ -361,3 +363,4 @@ def plot_action_deltas(folder, action_infos, step_difference, without_count=Fals
 
             figure.set_size_inches(18, 8)
             figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")
+        matplotlib.pyplot.close(figure)
