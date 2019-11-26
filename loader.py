@@ -216,9 +216,33 @@ def finish(policy, discriminator):
     """
 
     folder = store.folder
+
     policy.save(folder + '/policy-net.pt')
     discriminator.save(folder + '/discriminator-net.pt')
 
+    save_policy_examples(folder, policy)
+
+    for tag, value in [(t, v) for (t, v) in store if store.PLOTTABLE in store.attributes(t)]:
+        path = '{}/{}'.format(folder, tag)
+        plot_simple(path, value, tag, 'Steps', '', 'plot')
+
+    for step, policy in enumerate(store.get('List: Mean Policies Per Generator Step')):
+        path = '{}/policy_step_{}'.format(folder, step)
+        plot_simple(path, policy, 'Generator Policy Step {}'.format(step), 'Tokens', 'Probabilities', 'bar')
+
+    action_infos = store.get('List: Action Info Dicts')
+
+    plot_action_infos(folder, action_infos)
+    plot_action_deltas(folder, action_infos, 1)
+
+    plot_action_infos(folder, action_infos, without_count=True)
+    plot_action_deltas(folder, action_infos, 1, without_count=True)
+
+    store.save()
+    ray.shutdown()
+
+
+def save_policy_examples(folder, policy):
     evaluation = generator.sample(policy, math.ceil(100 / config.batch_size))
 
     os.makedirs(folder + '/pngs')
@@ -226,52 +250,114 @@ def finish(policy, discriminator):
     save_pngs(evaluation, folder + '/pngs')
     save_sequences(evaluation, folder + '/sequences')
 
-    for tag, value in store:
-        if store.PLOTTABLE in store.attributes(tag):
-            helper.plot('{}/{}'.format(folder, tag), [value], tag, [], 'plot')
 
-    policies = store.get('List: Mean Policies Per Generator Step')
-    for i, policy in enumerate(policies):
-        helper.plot('{}/policy_{}'.format(folder, i), [policy], 'Generator Policy Step {}'.format(i), [], 'bar')
+def normalize(vector: list):
+    vector = numpy.array(vector)
 
-    def normalize(v):
-        v = numpy.array(v)
-        if max(v) - min(v) == 0:
-            return v
-        return (v - min(v)) / (max(v) - min(v))
+    if max(vector) - min(vector) == 0:
+        return numpy.array([0.5] * len(vector))
 
-    os.makedirs(folder + '/actioninfos')
+    return (vector - min(vector)) / (max(vector) - min(vector))
 
-    action_infos = store.get('List: Action Info Dicts')
-    entropies = store.get('List: Mean Entropies Per Generator Step')
-    for (i, action_info_dict), entropy in zip(enumerate(action_infos), entropies):
+
+def plot_simple(path, values, title, xlabel, ylabel, plot_type):
+    figure, axis = matplotlib.pyplot.subplots()
+
+    x = numpy.arange(0, len(values), 1)
+
+    if plot_type == 'plot':
+        axis.plot(x, values)
+    elif plot_type == 'bar':
+        axis.bar(x, values)
+
+    axis.set_xlabel(xlabel)
+    axis.set_ylabel(ylabel)
+
+    matplotlib.pyplot.title(title)
+    axis.grid()
+
+    figure.savefig(path)
+
+
+def plot_action_infos(folder, action_infos, without_count=False):
+    path = '{}/action_infos_wo_count_{}'.format(folder, without_count)
+    os.makedirs(path)
+
+    for i, action_info in enumerate(action_infos):
         figure, axis = matplotlib.pyplot.subplots()
 
-        x_pos = numpy.arange(0, len(action_info_dict.keys()), 1)
+        x_pos = numpy.arange(0, len(action_info.keys()), 1)
         width = 0.9
 
-        actions = action_info_dict.keys()
-        heights_counts = normalize([action_info_dict[a][0] for a in actions])
-        heights_probs = normalize([action_info_dict[a][1]for a in actions])
-        heights_reward = normalize([action_info_dict[a][2] for a in actions])
+        actions = action_info.keys()
+        heights_counts = normalize([action_info[a][0] for a in actions])
+        heights_probs = normalize([action_info[a][1] for a in actions])
+        heights_reward = normalize([action_info[a][2] for a in actions])
 
-        axis.bar(x_pos - width/3, heights_reward, width/3, label='Reward')
-        axis.bar(x_pos, heights_probs, width/3, label='Probability')
-        axis.bar(x_pos + width/3, heights_counts, width/3, label='Count')
+        if not without_count:
+            axis.bar(x_pos + width / 3, heights_counts, width / 3, label='Count')
+
+        axis.bar(x_pos - width / 3, heights_reward, width / 3, label='Reward')
+        axis.bar(x_pos, heights_probs, width / 3, label='Probability')
 
         ts = [tokens.get(i).name for i in actions]
         matplotlib.pyplot.xticks(x_pos, ts)
         axis.tick_params(axis='x', labelsize=8)
-        # axis.grid()
 
-        matplotlib.pyplot.title('Actions In Step {} / Entropy {}'.format(i, entropy))
+        matplotlib.pyplot.title('Actions In Step {}'.format(i))
         matplotlib.pyplot.legend(loc='best')
         matplotlib.pyplot.xticks(rotation='vertical')
 
-        # figure.subplots_adjust(bottom=1.1, top=1.2)
-        figure.savefig(folder + '/actioninfos/action_r_{}.png'.format(i), bbox_inches = "tight")
+        figure.set_size_inches(18, 8)
+        figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")
 
-    # TODO gut waere auch noch eine verbindung zum step, wie unterschiedlich die bewertungen an welchem schritt sind
 
-    store.save()
-    ray.shutdown()
+def plot_action_deltas(folder, action_infos, step_difference, without_count=False):
+    path = '{}/action_changes_wo_count_{}'.format(folder, without_count)
+    os.makedirs(path)
+
+    count_last = [0] * tokens.count()
+    prob_last = [0.0] * tokens.count()
+    reward_last = [0.0] * tokens.count()
+
+    for i, action_info in enumerate(action_infos):
+        if i % step_difference == 0:
+
+            count_deltas = [0] * tokens.count()
+            prob_deltas = [0.0] * tokens.count()
+            reward_deltas = [0.0] * tokens.count()
+
+            for a in action_info.keys():
+                count = action_info[a][0]
+                prob = action_info[a][1]
+                reward = action_info[a][2]
+
+                count_deltas[a] = count - count_last[a]
+                prob_deltas[a] = prob - prob_last[a]
+                reward_deltas[a] = reward - reward_last[a]
+
+            count_deltas = normalize(count_deltas)
+            prob_deltas = normalize(prob_deltas)
+            reward_deltas = normalize(reward_deltas)
+
+            figure, axis = matplotlib.pyplot.subplots()
+
+            x_pos = numpy.arange(0, tokens.count(), 1)
+            width = 0.9
+
+            if not without_count:
+                axis.bar(x_pos - width / 3, count_deltas, width / 3, label='Count Delta')
+
+            axis.bar(x_pos, prob_deltas, width / 3, label='Probability Delta')
+            axis.bar(x_pos + width / 3, reward_deltas, width / 3, label='Reward Delta')
+
+            ticks = [tokens.get(a).name for a in tokens.possibilities()]
+            matplotlib.pyplot.xticks(x_pos, ticks)
+            axis.tick_params(axis='x', labelsize=8)
+
+            matplotlib.pyplot.title('Deltas Over {} Steps In Step {}'.format(step_difference, i))
+            matplotlib.pyplot.legend(loc='best')
+            matplotlib.pyplot.xticks(rotation='vertical')
+
+            figure.set_size_inches(18, 8)
+            figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")

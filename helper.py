@@ -1,17 +1,12 @@
-from typing import Any, Iterable, KeysView, Union
+from typing import Any, Iterable, KeysView
 
 import datetime
-import json
 import os
 import traceback
-import numpy
 import logging
 import requests
-import matplotlib.pyplot
 import sys
 import pickle
-
-import torch
 
 
 class _TracePrints:
@@ -46,45 +41,6 @@ class HiddenPrints:
         sys.stderr.close()
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-
-
-def plot(path: str, values: list, title: str, labels: list, dtype: str, normalized: bool = True):
-    figure, axis = matplotlib.pyplot.subplots()
-
-    types = ['bar', 'plot']
-    colors = ['b', 'r', 'y']  # TODO more colors
-
-    assert dtype in types
-
-    if normalized and len(values) > 1:
-        for i in range(len(values)):
-            array = numpy.array(values[i])
-            array = (array - min(array)) / (max(array) - min(array))
-            values[i] = array
-
-    if dtype == 'bar':
-        for i, y in enumerate(values):
-            x = numpy.arange(0, len(y), 1)
-            if labels:
-                axis.bar(x, y, alpha=0.5 if len(values) > 1 else 1, label=labels[i])
-            else:
-                axis.bar(x, y, alpha=0.5 if len(values) > 1 else 1)
-
-    if dtype == 'plot':
-        for i, y in enumerate(values):
-            x = numpy.arange(0, len(y), 1)
-            if labels:
-                axis.plot(x, y, colors[i], alpha=0.5 if len(values) > 1 else 1, label=labels[i])
-            else:
-                axis.plot(x, y, colors[i], alpha=0.5 if len(values) > 1 else 1)
-
-    matplotlib.pyplot.title(title)
-    axis.grid()
-
-    if labels:
-        matplotlib.pyplot.legend(loc='best')
-
-    figure.savefig(path)
 
 
 class _DataStore:
