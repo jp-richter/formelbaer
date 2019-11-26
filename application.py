@@ -1,7 +1,7 @@
 from config import config, paths, Config
 from discriminator import Discriminator
 from progress.bar import Bar
-from helper import store
+from helper import store, Logger
 
 import torch
 import generator
@@ -268,17 +268,25 @@ def initialize():
     store.set('Policy Step', 0)
     os.makedirs('{}/policies'.format(store.folder))
 
-    return discriminator, policy, rollout
+    logger = Logger(store.folder)
+    logger.setup('error_log')
+
+    return discriminator, policy, rollout,  logger
 
 
-def application() -> None:
-    loader.initialize()
+def application():
+    logger = None
 
-    # training
-    discriminator, policy, rollout = initialize()
-    training(discriminator, policy, rollout)
+    try:
+        loader.initialize()
 
-    loader.finish(policy, discriminator)
+        discriminator, policy, rollout, logger = initialize()
+        training(discriminator, policy, rollout)
+
+        loader.finish(policy, discriminator)
+
+    except Exception as e:
+        logger.write('error_log', 'critical', str(e))
 
 
 if __name__ == '__main__':
