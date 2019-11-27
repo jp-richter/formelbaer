@@ -226,9 +226,6 @@ def training(discriminator, policy, rollout):
         adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs)
         adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps)
 
-        if not adversarial_step == 0 and adversarial_step % 10 == 0:
-            policy.save(paths.policies)
-
         if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.general.num_real_samples < 10000:
             config.num_real_samples += 1000
 
