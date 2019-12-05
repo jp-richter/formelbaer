@@ -283,7 +283,8 @@ def application():
         loader.finish(policy, discriminator)
 
     except Exception as e:
-        logger.write('error_log', 'critical', str(e))
+        # logger.write('error_log', 'critical', str(e))
+        print(e)
 
 
 if __name__ == '__main__':
