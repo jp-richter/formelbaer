@@ -314,13 +314,15 @@ def plot_action_infos(folder, action_infos, without_count=False):
         matplotlib.pyplot.close(figure)
 
 
-def plot_action_deltas(folder, action_infos, step_difference, without_count=False):
-    path = '{}/action_changes_wo_count_{}'.format(folder, without_count)
+def plot_action_deltas(folder, action_infos, step_difference, without_count=False, with_last_reward=False):
+    path = '{}/action_changes_wo_count_{}_w_last_reward_{}'.format(folder, without_count, with_last_reward)
     os.makedirs(path)
 
     count_last = [0] * tokens.count()
     prob_last = [0.0] * tokens.count()
     reward_last = [0.0] * tokens.count()
+
+    reward_last_deltas = [0.0] * tokens.count()
 
     for i, action_info in enumerate(action_infos):
         if i % step_difference == 0:
@@ -338,6 +340,10 @@ def plot_action_deltas(folder, action_infos, step_difference, without_count=Fals
                 prob_deltas[a] = prob - prob_last[a]
                 reward_deltas[a] = reward - reward_last[a]
 
+                count_last[a] = count
+                prob_last[a] = prob
+                reward_last[a] = reward
+
             count_deltas = normalize(count_deltas)
             prob_deltas = normalize(prob_deltas)
             reward_deltas = normalize(reward_deltas)
@@ -351,7 +357,9 @@ def plot_action_deltas(folder, action_infos, step_difference, without_count=Fals
                 axis.bar(x_pos - width / 3, count_deltas, width / 3, label='Count Delta')
 
             axis.bar(x_pos, prob_deltas, width / 3, label='Probability Delta')
-            axis.bar(x_pos + width / 3, reward_deltas, width / 3, label='Reward Delta')
+            axis.bar(x_pos + width / 3, reward_last_deltas, width / 3, label='Last Reward Delta')
+
+            reward_last_deltas = reward_deltas
 
             ticks = [tokens.get(a).name for a in tokens.possibilities()]
             matplotlib.pyplot.xticks(x_pos, ticks)
@@ -363,4 +371,4 @@ def plot_action_deltas(folder, action_infos, step_difference, without_count=Fals
 
             figure.set_size_inches(18, 8)
             figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")
-        matplotlib.pyplot.close(figure)
+            matplotlib.pyplot.close(figure)
