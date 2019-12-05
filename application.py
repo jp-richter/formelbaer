@@ -1,7 +1,7 @@
 from config import config
 from discriminator import Discriminator
 from progress.bar import Bar
-from helper import store, Logger
+from helper import store, get_logger
 
 import torch
 import generator
@@ -226,7 +226,7 @@ def training(discriminator, policy, rollout):
         adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs)
         adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps)
 
-        if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.general.num_real_samples < 10000:
+        if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.num_real_samples < 10000:
             config.num_real_samples += 1000
 
     progress.finish()
@@ -259,32 +259,32 @@ def initialize():
     0.7 Increment real samples D trains by 2000 Samples every 20 Epochs (max 10.000)
     0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
     0.9 entropy beta 0.01 -> 0.005
+    1.0 learnrate 0.005 -> 0.01
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
     store.set('Policy Step', 0)
     os.makedirs('{}/policies'.format(store.folder))
 
-    logger = Logger(store.folder)
-    logger.setup('error_log')
+    log = get_logger(store.folder, 'errors')
 
-    return discriminator, policy, rollout,  logger
+    return discriminator, policy, rollout,  log
 
 
 def application():
-    logger = None
+    log = None
 
     try:
         loader.initialize()
 
-        discriminator, policy, rollout, logger = initialize()
+        discriminator, policy, rollout, log = initialize()
         training(discriminator, policy, rollout)
 
         loader.finish(policy, discriminator)
 
     except Exception as e:
-        # logger.write('error_log', 'critical', str(e))
-        print(e)
+        print(str(e))
+        log.error(str(e))
 
 
 if __name__ == '__main__':

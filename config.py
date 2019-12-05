@@ -97,10 +97,10 @@ DEFAULT_CONFIG = Config(
     num_real_samples=2000,  # 5000
     num_eval_samples=100,  # 100
 
-    adversarial_steps=2,  # 150
+    adversarial_steps=150,  # 150
     d_epochs=1,
     d_steps=1,
-    g_steps=2,  # 10
+    g_steps=10,  # 10
 
     batch_size=multiprocessing.cpu_count() * 4,  # computational cost reasons
     montecarlo_trials=10,  # 10
@@ -115,7 +115,7 @@ DEFAULT_CONFIG = Config(
     g_hidden_dim=32,
     g_layers=2,
     g_dropout=0.2,
-    g_learnrate=0.005,
+    g_learnrate=0.01,
     g_baseline=0.001,
     g_gamma=1,
     g_bias=True,

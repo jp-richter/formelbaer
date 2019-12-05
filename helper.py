@@ -163,35 +163,16 @@ class _DataStore:
 store = _DataStore()
 
 
-class Logger:
+def get_logger(path: str, name: str):
+    log = logging.getLogger(name)
+    log.setLevel(logging.INFO)
 
-    def __init__(self, path: str):
-        self.path = path
-        self.logs = {}
-        self.levels = {
-            'debug': 10,
-            'info': 20,
-            'warning': 30,
-            'error': 40,
-            'critical': 50
-        }
+    handler = logging.FileHandler('{}/{}.log'.format(path, name), mode='w')
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
 
-    def setup(self, id: str):
-        log = logging.getLogger(id)
-        log.setLevel(logging.INFO)
-
-        handler = logging.FileHandler('{}/{}.log'.format(self.path, id), mode='w')
-        handler.setLevel(logging.INFO)
-        handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-
-        log.addHandler(handler)
-        self.logs[id] = log
-
-    def write(self, id: str, level: str, message: str):
-        self.logs[id].log(self.levels[level], message)
-
-    def set_level(self, id: str, level: str):
-        self.logs[id] = self.levels[level]
+    log.addHandler(handler)
+    return log
 
 
 class TelegramService:
