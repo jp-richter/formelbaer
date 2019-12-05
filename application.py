@@ -1,4 +1,4 @@
-from config import config, paths, Config
+from config import config
 from discriminator import Discriminator
 from progress.bar import Bar
 from helper import store, Logger
