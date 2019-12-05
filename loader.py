@@ -237,6 +237,7 @@ def finish(policy, discriminator):
 
     plot_action_infos(folder, action_infos, without_count=True)
     plot_action_deltas(folder, action_infos, 10, without_count=True)
+    plot_action_deltas(folder, action_infos, 1, without_count=True, with_last_reward=True)
 
     store.save()
     ray.shutdown()
