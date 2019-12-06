@@ -226,8 +226,10 @@ def finish(policy, discriminator):
         path = '{}/{}'.format(folder, tag)
         plot_simple(path, value, tag, 'Steps', '', 'plot')
 
+    os.makedirs(folder + '/policy_steps')
+
     for step, policy in enumerate(store.get('List: Mean Policies Per Generator Step')):
-        path = '{}/policy_step_{}'.format(folder, step)
+        path = '{}/policy_steps/policy_step_{}'.format(folder, step)
         plot_simple(path, policy, 'Generator Policy Step {}'.format(step), 'Tokens', 'Probabilities', 'bar')
 
     action_infos = store.get('List: Action Info Dicts')

@@ -1,6 +1,5 @@
 from config import config
 from discriminator import Discriminator
-from progress.bar import Bar
 from helper import store, get_logger
 
 import torch
@@ -223,17 +222,14 @@ def training(discriminator, policy, rollout):
     """
 
     print('Starting adversarial training..')
-    progress = Bar('Iteration Progress', max=config.adversarial_steps)
     for adversarial_step in range(config.adversarial_steps):
-        progress.next()
 
         adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs)
         adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps)
 
-        if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.num_real_samples < 10000:
-            config.num_real_samples += 1000
+        # if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.num_real_samples < 10000:
+        #     config.num_real_samples += 1000
 
-    progress.finish()
     print('Finished training and saving results.')
     return discriminator, policy
 
@@ -264,6 +260,7 @@ def initialize():
     0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
     0.9 entropy beta 0.01 -> 0.005
     1.0 learnrate 0.005 -> 0.01
+        learnrate 0.01 -> 0.025
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
