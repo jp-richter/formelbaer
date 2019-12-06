@@ -135,6 +135,8 @@ def adversarial_generator(policy, rollout, discriminator, adversarial_step, g_st
 
     for step in range(g_steps):
 
+        print('Global Step {} - Generator Step {}'.format(adversarial_step, step))
+
         # temporary store - necessary for loss calculation - should be overwritten each step
         store.set('List: Log Probabilites Per Actions Of Single Step', [])
         store.set('List: Rewards Per Single Step', [])
@@ -187,6 +189,8 @@ def adversarial_discriminator(discriminator, policy, adversarial_step, d_steps, 
     for epoch in range(d_epochs):
         store.set('Discriminator Loss Per Batch', [])
         store.set('Discrmininator Accuracy Per Batch', [])
+
+        print('Global Step {} - Discriminator Epoch {}'.format(adversarial_step, epoch))
 
         for images, labels in data_loader:
             images = images.to(config.device)
