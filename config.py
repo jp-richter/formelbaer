@@ -97,10 +97,10 @@ DEFAULT_CONFIG = Config(
     num_real_samples=2000,  # 5000
     num_eval_samples=100,  # 100
 
-    adversarial_steps=150,  # 150
+    adversarial_steps=10,  # 150
     d_epochs=1,
     d_steps=1,
-    g_steps=10,  # 10
+    g_steps=2,  # 10
 
     batch_size=multiprocessing.cpu_count() * 4,  # computational cost reasons
     montecarlo_trials=10,  # 10
