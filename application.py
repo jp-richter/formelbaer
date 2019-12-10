@@ -53,8 +53,11 @@ def store_results(loss, reward_without_log_prob, entropy, prediction, policy):
     tuples = {a.item(): (action_counts[a], action_probs[a], action_rewards[a]) for a in action_counts.keys()}
     store.get('List: Action Info Dicts').append(tuples)
 
-    policy.save('{}/policies/{}'.format(store.folder, store.get('Policy Step')))
-    store.set('Policy Step', store.get('Policy Step') + 1)
+    step = store.get('Policy Step')
+    store.set('Policy Step', step + 1)
+
+    if step % 10 == 0:
+        policy.save('{}/policies/{}'.format(store.folder, step))
 
 
 def policy_gradient(policy):
@@ -260,7 +263,7 @@ def initialize():
     0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
     0.9 entropy beta 0.01 -> 0.005
     1.0 learnrate 0.005 -> 0.01
-        learnrate 0.01 -> 0.025
+        learnrate 0.01 -> 0.02
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
