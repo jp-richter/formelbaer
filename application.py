@@ -88,7 +88,7 @@ def policy_gradient(policy):
     entropies = store.get('List: Mean Entropies Per Single Step')
     entropy = 0.005 * sum(entropies) / len(entropies)
 
-    loss = - (reward_with_log_prob + entropy)
+    loss = - reward_with_log_prob
     loss.backward()
     policy.optimizer.step()
 
@@ -263,7 +263,7 @@ def initialize():
     0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
     0.9 entropy beta 0.01 -> 0.005
     1.0 learnrate 0.005 -> 0.01
-        learnrate 0.01 -> 0.02
+    1.1 learnrate 0.01 -> 0.02, removed entropy
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)

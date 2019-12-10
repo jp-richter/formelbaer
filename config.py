@@ -100,12 +100,12 @@ DEFAULT_CONFIG = Config(
     adversarial_steps=10,  # 150
     d_epochs=1,
     d_steps=1,
-    g_steps=2,  # 10
+    g_steps=1,  # 10
 
     batch_size=multiprocessing.cpu_count() * 4,  # computational cost reasons
-    montecarlo_trials=10,  # 10
+    montecarlo_trials=2,  # 10
 
-    sequence_length=20,  # 20
+    sequence_length=2,  # 20
 
     label_synth=1,  # discriminator outputs P(x ~ synthetic)
     label_real=0,

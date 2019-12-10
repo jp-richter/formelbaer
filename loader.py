@@ -235,7 +235,7 @@ def finish(policy, discriminator):
 
     action_infos = store.get('List: Action Info Dicts')
 
-    plot_action_infos(folder, action_infos)
+    plot_action_infos(folder, action_infos, 10)
     plot_action_deltas(folder, action_infos, 10)
 
     plot_action_infos(folder, action_infos, 10, without_count=True)
@@ -284,38 +284,39 @@ def plot_simple(path, values, title, xlabel, ylabel, plot_type):
     matplotlib.pyplot.close(figure)
 
 
-def plot_action_infos(folder, action_infos, without_count=False):
+def plot_action_infos(folder, action_infos, step_difference, without_count=False):
     path = '{}/action_infos_wo_count_{}'.format(folder, without_count)
     os.makedirs(path)
 
     for i, action_info in enumerate(action_infos):
-        figure, axis = matplotlib.pyplot.subplots()
+        if i % step_difference == 0:
+            figure, axis = matplotlib.pyplot.subplots()
 
-        x_pos = numpy.arange(0, len(action_info.keys()), 1)
-        width = 0.9
+            x_pos = numpy.arange(0, len(action_info.keys()), 1)
+            width = 0.9
 
-        actions = action_info.keys()
-        heights_counts = normalize([action_info[a][0] for a in actions])
-        heights_probs = normalize([action_info[a][1] for a in actions])
-        heights_reward = normalize([action_info[a][2] for a in actions])
+            actions = action_info.keys()
+            heights_counts = normalize([action_info[a][0] for a in actions])
+            heights_probs = normalize([action_info[a][1] for a in actions])
+            heights_reward = normalize([action_info[a][2] for a in actions])
 
-        if not without_count:
-            axis.bar(x_pos + width / 3, heights_counts, width / 3, label='Count')
+            if not without_count:
+                axis.bar(x_pos + width / 3, heights_counts, width / 3, label='Count')
 
-        axis.bar(x_pos - width / 3, heights_reward, width / 3, label='Reward')
-        axis.bar(x_pos, heights_probs, width / 3, label='Probability')
+            axis.bar(x_pos - width / 3, heights_reward, width / 3, label='Reward')
+            axis.bar(x_pos, heights_probs, width / 3, label='Probability')
 
-        ts = [tokens.get(i).name for i in actions]
-        matplotlib.pyplot.xticks(x_pos, ts)
-        axis.tick_params(axis='x', labelsize=8)
+            ts = [tokens.get(i).name for i in actions]
+            matplotlib.pyplot.xticks(x_pos, ts)
+            axis.tick_params(axis='x', labelsize=8)
 
-        matplotlib.pyplot.title('Actions In Step {}'.format(i))
-        matplotlib.pyplot.legend(loc='best')
-        matplotlib.pyplot.xticks(rotation='vertical')
+            matplotlib.pyplot.title('Actions In Step {}'.format(i))
+            matplotlib.pyplot.legend(loc='best')
+            matplotlib.pyplot.xticks(rotation='vertical')
 
-        figure.set_size_inches(18, 8)
-        figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")
-        matplotlib.pyplot.close(figure)
+            figure.set_size_inches(18, 8)
+            figure.savefig('{}/step_{}.png'.format(path, i), bbox_inches="tight")
+            matplotlib.pyplot.close(figure)
 
 
 def plot_action_deltas(folder, action_infos, step_difference, without_count=False, with_last_reward=False):
