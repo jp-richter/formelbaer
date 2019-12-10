@@ -296,9 +296,15 @@ def plot_action_infos(folder, action_infos, step_difference, without_count=False
             width = 0.9
 
             actions = action_info.keys()
-            heights_counts = normalize([action_info[a][0] for a in actions])
-            heights_probs = normalize([action_info[a][1] for a in actions])
-            heights_reward = normalize([action_info[a][2] for a in actions])
+            heights_counts = [action_info[a][0] for a in actions]
+            heights_probs = [action_info[a][1] for a in actions]
+            heights_reward = [action_info[a][2] for a in actions]
+
+            heights_probs = [math.exp(p) for p in heights_probs]
+
+            heights_counts = normalize(heights_counts)
+            # heights_probs = normalize(heights_probs)
+            # heights_reward = normalize(heights_reward)
 
             if not without_count:
                 axis.bar(x_pos + width / 3, heights_counts, width / 3, label='Count')
@@ -341,6 +347,8 @@ def plot_action_deltas(folder, action_infos, step_difference, without_count=Fals
                 prob = action_info[a][1]
                 reward = action_info[a][2]
 
+                prob = math.exp(prob)
+
                 count_deltas[a] = count - count_last[a]
                 prob_deltas[a] = prob - prob_last[a]
                 reward_deltas[a] = reward - reward_last[a]
@@ -350,8 +358,8 @@ def plot_action_deltas(folder, action_infos, step_difference, without_count=Fals
                 reward_last[a] = reward
 
             count_deltas = normalize(count_deltas)
-            prob_deltas = normalize(prob_deltas)
-            reward_deltas = normalize(reward_deltas)
+            # prob_deltas = normalize(prob_deltas)
+            # reward_deltas = normalize(reward_deltas)
 
             figure, axis = matplotlib.pyplot.subplots()
 
