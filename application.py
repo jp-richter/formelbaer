@@ -264,6 +264,7 @@ def initialize():
     0.9 entropy beta 0.01 -> 0.005
     1.0 learnrate 0.005 -> 0.01
     1.1 learnrate 0.01 -> 0.02, removed entropy
+    1.2 learnrate 0.02 -> 0.04
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
