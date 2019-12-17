@@ -111,6 +111,7 @@ def collect_reward(discriminator, batch):
     reward = torch.empty((batch.shape[0], 1), device=config.device)
 
     # TODO punish atomic expressions
+    # TODO minimize negative output instead of maximizing 1-output !
 
     for r in range(output.shape[0]):
         reward[r][0] = 1 - output[r]
@@ -266,6 +267,7 @@ def initialize():
     1.1 learnrate 0.01 -> 0.02, removed entropy
     1.2 learnrate 0.02 -> 0.03
     1.3 learnrate 0.03 -> 0.04
+    1.4 learnrate 0.04 -> 0.05
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
