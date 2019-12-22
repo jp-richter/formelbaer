@@ -253,6 +253,8 @@ def initialize():
 
     hyperparameter = {k: v for k, v in config.__dict__.items() if not v == config.device}
 
+    # TODO Plan: 0.25 Spruenge machen und dann das ganze noch mal, mit der Modifikation in collect reward etc.
+
     notes = '''
     0.1 Added Multipages   
     0.2 Resetting D Weights After Each Step
@@ -268,6 +270,7 @@ def initialize():
     1.2 learnrate 0.02 -> 0.03
     1.3 learnrate 0.03 -> 0.04
     1.4 learnrate 0.04 -> 0.05
+    1.5 learnrate 0.05 -> 0.075
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
