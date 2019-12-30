@@ -272,9 +272,8 @@ def initialize():
     1.3 learnrate 0.03 -> 0.04
     1.4 learnrate 0.04 -> 0.05
     1.5 learnrate 0.05 -> 0.075
-    1.6 learnrate 0.075 -> 1
-    1.7 learnrate 1 -> 1.25
-    1.8 learnrate 1.25 -> 1.5
+    1.6 learnrate 0.075 -> 0.1
+    1.7 learnrate 0.1 -> 0.5
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
