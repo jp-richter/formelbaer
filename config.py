@@ -97,7 +97,7 @@ DEFAULT_CONFIG = Config(
     num_real_samples=2000,  # 2000
     num_eval_samples=100,  # 100
 
-    adversarial_steps=150,  # 150
+    adversarial_steps=50,  # 150
     d_epochs=1,  # 1
     d_steps=1,  # 1
     g_steps=10,  # 10
