@@ -232,8 +232,8 @@ def training(discriminator, policy, rollout):
         adversarial_discriminator(discriminator, policy, adversarial_step, config.d_steps, config.d_epochs)
         adversarial_generator(policy, rollout, discriminator, adversarial_step, config.g_steps)
 
-        # if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.num_real_samples < 10000:
-        #     config.num_real_samples += 1000
+        if not adversarial_step == 0 and adversarial_step % 20 == 0 and config.num_real_samples < 10000:
+            config.num_real_samples += 1000
 
     print('Finished training and saving results.')
     return discriminator, policy
