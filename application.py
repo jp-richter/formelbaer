@@ -88,7 +88,7 @@ def policy_gradient(policy):
     entropies = store.get('List: Mean Entropies Per Single Step')
     entropy = 0.005 * sum(entropies) / len(entropies)
 
-    loss = - reward_with_log_prob
+    loss = - (reward_with_log_prob + entropy)
     loss.backward()
     policy.optimizer.step()
 
@@ -114,7 +114,8 @@ def collect_reward(discriminator, batch):
     # TODO minimize negative output instead of maximizing 1-output !
 
     for r in range(output.shape[0]):
-        reward[r][0] = 1 - output[r]
+        # reward[r][0] = 1 - output[r]
+        reward[r][0] = - output[r]
 
     return reward
 
@@ -275,6 +276,7 @@ def initialize():
     1.6 learnrate 0.075 -> 0.1
     1.7 learnrate 0.1 -> 0.5
     0.5 -> 1
+    entropy wieder rein, objective umgedreht, lr 0.25
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
