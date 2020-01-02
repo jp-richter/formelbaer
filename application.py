@@ -86,7 +86,7 @@ def policy_gradient(policy):
 
     # negate for gradient descent and substract entropy
     entropies = store.get('List: Mean Entropies Per Single Step')
-    entropy = 0.005 * sum(entropies) / len(entropies)
+    entropy = 0.01 * sum(entropies) / len(entropies)
 
     loss = - (reward_with_log_prob + entropy)
     loss.backward()
@@ -276,8 +276,8 @@ def initialize():
     1.6 learnrate 0.075 -> 0.1
     1.7 learnrate 0.1 -> 0.5
     0.5 -> 1
-    entropy wieder rein, objective umgedreht, lr 0.1
-    lr 0.2
+    entropy wieder rein, objective umgedreht, lr 0.1, baseline 0.1, 
+    entropyz von 0.005 auf 0.01
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
