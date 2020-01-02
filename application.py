@@ -276,7 +276,8 @@ def initialize():
     1.6 learnrate 0.075 -> 0.1
     1.7 learnrate 0.1 -> 0.5
     0.5 -> 1
-    entropy wieder rein, objective umgedreht, lr 0.25
+    entropy wieder rein, objective umgedreht, lr 0.1
+    lr 0.2
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
