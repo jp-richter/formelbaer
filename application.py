@@ -277,7 +277,7 @@ def initialize():
     1.7 learnrate 0.1 -> 0.5
     0.5 -> 1
     entropy wieder rein, objective umgedreht, lr 0.2, baseline 0.1, 
-    entropyz von 0.005 auf 0.01, lr 0.1, 0.008, 0.06, 0.04
+    entropyz von 0.005 auf 0.01, lr 0.1, 0.008, 0.06, 0.04, 0.02
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
