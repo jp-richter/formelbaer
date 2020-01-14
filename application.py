@@ -254,30 +254,7 @@ def initialize():
 
     hyperparameter = {k: v for k, v in config.__dict__.items() if not v == config.device}
 
-    # TODO Plan: 0.25 Spruenge machen und dann das ganze noch mal, mit der Modifikation in collect reward etc.
-    # TODO: dabei auch dings wieder reinnehmen: entropie
-
     notes = '''
-    0.1 Added Multipages   
-    0.2 Resetting D Weights After Each Step
-    0.3 Set Batchsize to cores
-    0.4 Switched to update policy after each step in a sequence
-    0.5 Switched learningrate from 0.05 to 0.001
-    0.6 Switched back to update after sequence, batchsize to 4*cores
-    0.7 Increment real samples D trains by 2000 Samples every 20 Epochs (max 10.000)
-    0.8 Loss + Entropy * beta - Gamma 1 - Bias - switched to 1000 samples per epoch
-    0.9 entropy beta 0.01 -> 0.005
-    1.0 learnrate 0.005 -> 0.01
-    1.1 learnrate 0.01 -> 0.02, removed entropy
-    1.2 learnrate 0.02 -> 0.03
-    1.3 learnrate 0.03 -> 0.04
-    1.4 learnrate 0.04 -> 0.05
-    1.5 learnrate 0.05 -> 0.075
-    1.6 learnrate 0.075 -> 0.1
-    1.7 learnrate 0.1 -> 0.5
-    0.5 -> 1
-    entropy wieder rein, objective umgedreht, lr 0.2, baseline 0.1, 
-    entropyz von 0.005 auf 0.01, lr 0.1, 0.008, 0.06, 0.04, 0.02, 0.01, 0.4, 0.5, 0.08
     '''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
