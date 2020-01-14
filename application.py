@@ -254,8 +254,7 @@ def initialize():
 
     hyperparameter = {k: v for k, v in config.__dict__.items() if not v == config.device}
 
-    notes = '''
-    '''
+    notes = ''''''
 
     store.setup(loader.make_directory_with_timestamp(), hyperparameter, notes)
     store.set('Policy Step', 0)
