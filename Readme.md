@@ -12,9 +12,7 @@ policy gradient.
 
 I used a dataset of formulars extracted from scientific papers downloaded from 
 https://arxiv.org/. Similar datasets are available at https://whadup.github.io/EquationLearning/. The LaTeX formulars
-have been compiled to an image format.
-
-Unlike SeqGAN I don't employ a pre-training, since the image training data can not be used for maximum-likelihood 
+have been compiled to an image format. Unlike SeqGAN I don't employ a pre-training, since the image training data can not be used for maximum-likelihood 
 estimation on sequences. 
 
 
